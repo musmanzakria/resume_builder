@@ -1,0 +1,243 @@
+{
+  "personal": {
+    "name": "Usman Zakria",
+    "email": "m.usmanzakria@gmail.com",
+    "phone": "+49 170 695 9515",
+    "location": "Berlin, Germany",
+    "website": "https://usmanzakria.com",
+    "linkedin": "https://linkedin.com/in/usman-zakria",
+    "availability": "Student Visa — Available 12+ months",
+    "languages": [
+      { "language": "English", "proficiency": "IELTS 8.5 (C2 / Top 3% globally)" },
+      { "language": "German", "proficiency": "A2 (Growing proficiency)" },
+      { "language": "Urdu/Hindi", "proficiency": "Native / Bilingual" }
+    ]
+  },
+  "professional_bio": {
+    "title": "Data-Driven Product Analyst & Growth Specialist",
+    "summary_foundation": "Data-driven product analyst with experience managing the full product lifecycle. Specialized in translating user needs into market-ready solutions, guiding products from initial user research and requirements gathering through to go-to-market strategy, launch, and optimization for lead generation. Adept at bridging technical systems (Python, SQL, R, n8n, APIs) with commercial product strategies (GTM, pricing playbooks, UX/SEO, multi-channel growth).",
+    "mandatory_closing_template": "I look forward to working as a {TARGET_ROLE} in your {TARGET_TEAM_OR_COMPANY} team."
+  },
+  "core_competencies": {
+    "product_management": [
+      "Product Strategy & Roadmapping",
+      "User Research & Journey Mapping",
+      "Feature Research, Process Mapping & Wireframing",
+      "Sprint Planning, Agile & Scrum Methodologies",
+      "Requirements Gathering & User Stories",
+      "Agentic AI Workflow Architecture & Automation (n8n)",
+      "Backlog Prioritization & Technical Roadmapping",
+      "GDPR Compliance & Regulatory Product Implementation"
+    ],
+    "growth_and_marketing": [
+      "Go-to-Market (GTM) Strategy & Execution",
+      "Hyper-personalized B2B Enterprise Demand Gen (LinkedIn Ads, Apollo, Clay)",
+      "Multi-channel Content Architecture (Video tutorials, Sales Decks, SEO)",
+      "Conversion Rate Optimization (CRO) & A/B Testing",
+      "Technical SEO/AEO/GEO & Web UX Overhaul (Webflow, GA4, Semrush)",
+      "PR, Editorial Planning & Brand Positioning"
+    ],
+    "analytics_and_engineering": [
+      "Data Modeling & Forecasting (Excel LAMBDA/VLOOKUP, Python, R)",
+      "Business Intelligence Dashboards (Power BI, Tableau, Mixpanel)",
+      "SQL Querying & ETL Pipeline Construction",
+      "Predictive Modeling & Statistical Inference (Regression, Decision Trees, Saliency)",
+      "Live Tracking API Integrations & Telematics Migration",
+      "AI Engineering (Agentic AI, LLM Prompt Chains, Psychographic Persona Cloning)"
+    ]
+  },
+  "experience_deep_dive": [
+    {
+      "company": "HashMove",
+      "business_type": "B2B SaaS Logistics ERP",
+      "role": "Product Marketing Analyst",
+      "duration": "10/2023 – 04/2025",
+      "location": "Dubai / Remote / International",
+      "narrative": "Spearheaded product-led growth, data modeling, feature discovery, and GTM execution across core ERP modules.",
+      "key_achievements": [
+        {
+          "domain": "Product Management",
+          "title": "Yard Management Vertical",
+          "details": "Directed end-to-end product development for a new yard management vertical (user interviews, feature research, process flow diagrams, interactive wireframing), cutting yard manhours by 33% during enterprise pilot through intelligent task assignment automation."
+        },
+        {
+          "domain": "Agentic AI & Commercials",
+          "title": "Agentic AI Logistics PoC",
+          "details": "Designed high-impact Figma interactive demos and system architecture addressing freight rate optimization using Agentic AI workflows, securing a multi-million-dollar Proof of Concept (PoC) and accelerating enterprise sales cycles by 20%."
+        },
+        {
+          "domain": "Go-to-Market & Sales Enablement",
+          "title": "SaaS Modules GTM & Playbooks",
+          "details": "Developed go-to-market strategies for two new SaaS modules (AI-powered Logistics & Yard Management), partnering with design and sales engineering to equip commercial teams with playbooks that drove a 24% increase in average deal size."
+        },
+        {
+          "domain": "Demand Generation & Paid Growth",
+          "title": "Hyper-personalized LinkedIn Campaigns",
+          "details": "Executed hyper-personalized LinkedIn campaigns targeting tier-1 enterprise logistics accounts with personalized ad copies and landing page variants, boosting conversion rates by 213% while almost doubling ROAS QoQ."
+        },
+        {
+          "domain": "Content & Partner Enablement",
+          "title": "Multi-Channel Content Library",
+          "details": "Engineered and managed a comprehensive multi-channel content library (sales pitch decks, technical whitepapers, blogs, and video walk-throughs), driving a 362% increase in feature adoption for key institutional partners including the Arab British Chamber of Commerce."
+        },
+        {
+          "domain": "Analytics & Automation",
+          "title": "Sales Forecasting & Proposal Automation",
+          "details": "Built advanced Excel forecasting models, Python data processing scripts, and Power BI commercial dashboards for dynamic proposal automation and value proposition pricing, reducing commercials processing time by 13%."
+        },
+        {
+          "domain": "API Integrations & Sustainability",
+          "title": "Live Tracking & Carbon APIs",
+          "details": "Evaluated 13 vendor tracking APIs, architecting the migration of 1,500+ annual shipments to real-time live telematics tracking and automated carbon emissions calculation; increasing user adoption by 132%."
+        },
+        {
+          "domain": "Compliance & Security",
+          "title": "100% GDPR Compliance",
+          "details": "Led comprehensive GDPR compliance and data privacy implementation across the SaaS platform, ensuring full regulatory alignment and secure user data flows."
+        }
+      ]
+    },
+    {
+      "company": "GoodCore Software",
+      "business_type": "Software Engineering Consultancy",
+      "role": "SEO Content Writer (Part-time)",
+      "duration": "03/2024 – 08/2024",
+      "narrative": "Bridged technical software development topics with organic search strategy and visual architecture.",
+      "key_achievements": [
+        "Authored in-depth technical guides on Agile SDLC, Scrum frameworks, and DevOps workflows accompanied by custom Figma illustrations, driving an 18% lift in organic search traffic.",
+        "Utilized Semrush, GA4, Mixpanel, and Webflow to analyze keyword intent, perform on-page SEO optimization, and optimize conversion funnels."
+      ]
+    },
+    {
+      "company": "L'Oréal Pakistan",
+      "business_type": "Beauty & FMCG Enterprise",
+      "role": "Final Year Project Trainee",
+      "duration": "01/2023 – 06/2023",
+      "narrative": "Developed complete digital transformation product strategy and salon tech platform.",
+      "key_achievements": [
+        "Created an end-to-end business case, high-fidelity interactive prototype in Figma, and go-to-market roadmap for an on-demand salon booking application.",
+        "Conducted extensive text and sentiment analysis using R (tidytext, tm, sentimentr) on consumer review data alongside Google Trends and AnswerThePublic insights."
+      ]
+    },
+    {
+      "company": "Institute of Business Administration (IBA)",
+      "business_type": "Higher Education",
+      "role": "Teaching Assistant - Analytical Approach to Decisions",
+      "duration": "04/2022 – 06/2023",
+      "narrative": "Mentored undergraduate students in quantitative decision-making, statistical modeling, and programming.",
+      "key_achievements": [
+        "Mentored and guided 250+ students in business analytics, statistical modeling, and decision trees using Advanced Excel, SQL, and R (ggplot2, dplyr, caret, lm) in Google Colab."
+      ]
+    },
+    {
+      "company": "Dawlance (Arçelik Group)",
+      "business_type": "Consumer Durables & Electronics",
+      "role": "Consumer Insights Intern",
+      "duration": "07/2022 – 10/2022",
+      "narrative": "Delivered consumer behavior intelligence for direct-to-consumer digital channels.",
+      "key_achievements": [
+        "Led 5 consumer research studies involving 200+ participants via IPSOS digital communities, mapping end-to-end consumer drop-off journeys to improve eCommerce CTR by 6.3%.",
+        "Synthesized digital listening data using Brandwatch, Tableau, and R to formulate quarterly brand positioning decks for executive leadership."
+      ]
+    }
+  ],
+  "projects_master_pool": [
+    {
+      "id": "proj-sdlc-illustrations",
+      "title": "Agile SDLC Article Illustrations",
+      "category": "Product & UX Design",
+      "short_description": "Designed Figma illustrations to simplify complex topics like Agile, Scrum, DevOps for non-technical audiences.",
+      "deep_context": "Created custom visual schemas, workflow maps, and architecture diagrams for software engineering blogs, translating complex DevOps pipelines into engaging, digestible infographics.",
+      "tags": ["Figma", "Agile", "Scrum", "DevOps", "Technical Writing", "UX Design"]
+    },
+    {
+      "id": "proj-agentic-finance",
+      "title": "Agentic AI in Finance (Beam AI)",
+      "category": "AI & Automation",
+      "short_description": "Explored Agentic AI players and use cases in Finance, creating a PoC automation workflow using n8n.",
+      "deep_context": "Researched autonomous agent frameworks in enterprise fintech. Built an automated n8n workflow simulating financial report analysis, invoice parsing, and dynamic reconciliation triggers.",
+      "tags": ["Agentic AI", "n8n", "FinTech", "Workflow Automation", "LLM Agents"]
+    },
+    {
+      "id": "proj-airbnb-pricing",
+      "title": "Property Price Prediction (Airbnb NYC)",
+      "category": "Data Science & Machine Learning",
+      "short_description": "Developed and compared 4 regression models (Step, Decision Tree, Lasso, Ridge) to predict property prices and identify key valuation drivers using R.",
+      "deep_context": "Engineered features from over 40,000 listings in NYC Airbnb dataset. Performed cross-validation, hyperparameter tuning, and regularization (L1/L2) to identify proximity to transit and host responsiveness as primary valuation drivers.",
+      "tags": ["R", "Machine Learning", "Lasso", "Ridge", "Decision Trees", "Predictive Analytics"]
+    },
+    {
+      "id": "proj-digital-twin",
+      "title": "AI Digital Twin Persona",
+      "category": "GenAI & Conversational Systems",
+      "short_description": "Synthesized 11-factor psychographics data into a functional AI clone of myself, testing with blind Turing Test.",
+      "deep_context": "Constructed a multi-layered LLM system prompt embedding personal decision heuristics, communication tone, and autobiographical memory, evaluating consistency with human evaluators in double-blind Q&A trials.",
+      "tags": ["Generative AI", "Prompt Engineering", "Psychometrics", "LLM Personas"]
+    },
+    {
+      "id": "proj-visual-saliency",
+      "title": "AI in Marketing Analytics - Visual Saliency",
+      "category": "Computer Vision & Marketing Science",
+      "short_description": "Compared deep learning and neuroscience-based AI saliency models, studying key drivers of Ad/Brand Gaze.",
+      "deep_context": "Analyzed neural heatmaps of brand creatives to determine visual focal points in digital advertising. Correlated algorithmic saliency scores with actual user click-through and attention retention rates.",
+      "tags": ["Deep Learning", "Computer Vision", "Visual Saliency", "Consumer Neuroscience", "Marketing Analytics"]
+    },
+    {
+      "id": "proj-signavio-celonis",
+      "title": "Signavio Competitive Analysis",
+      "category": "Business Process Management & Strategy",
+      "short_description": "Compared leading BPM and Process Mining solutions, Signavio and Celonis, identifying strategic advantages, differentiators and competitive intelligence initiatives.",
+      "deep_context": "Conducted a detailed competitive intelligence benchmark on enterprise process mining platforms, analyzing feature parity, integration ecosystems, and GTM positioning.",
+      "tags": ["BPM", "Process Mining", "Signavio", "Celonis", "Competitive Intelligence"]
+    },
+    {
+      "id": "proj-consumer-insights",
+      "title": "Consumer Insights Research",
+      "category": "Consumer Research & eCommerce",
+      "short_description": "Mapped user journeys, benchmarking against competitors, optimizing Dawlance's DTC eCommerce strategy.",
+      "deep_context": "Conducted ethnographic interviews and digital surveys across 200+ consumers, surfacing critical friction points during appliance checkout flows and delivering actionable UX wireframe recommendations.",
+      "tags": ["User Research", "Consumer Insights", "eCommerce", "Journey Mapping"]
+    },
+    {
+      "id": "proj-onboarding-tutorials",
+      "title": "Product Onboarding Tutorials",
+      "category": "Product Enablement & Video",
+      "short_description": "Leveraged ElevenLabs, Play.ht, Synthesia, and DaVinci Resolve to create intuitive user onboarding tutorials.",
+      "deep_context": "Produced AI-narrated, high-retention video guides for complex SaaS ERP navigation, reducing customer onboarding ramp-up time by 40%.",
+      "tags": ["ElevenLabs", "Synthesia", "DaVinci Resolve", "Product Onboarding", "SaaS Training"]
+    },
+    {
+      "id": "proj-ai-logistics-platform",
+      "title": "AI-Powered Logistics Platform",
+      "category": "Product Architecture & AI",
+      "short_description": "Architected Agentic AI-powered logistics platform including Conversational, Analytics, and Automation AI.",
+      "deep_context": "Designed system topology connecting multi-modal conversational interfaces with back-office supply chain ERP databases, enabling natural language freight queries and proactive route deviation alerts.",
+      "tags": ["Product Architecture", "Agentic AI", "Supply Chain ERP", "Conversational AI"]
+    },
+    {
+      "id": "proj-loreal-finance",
+      "title": "L'Oréal Financial Analysis",
+      "category": "Corporate Finance & Valuation",
+      "short_description": "Conducted detailed financial analysis of L'Oréal estimating WACC, Valuation, and Strategic Assessment.",
+      "deep_context": "Built DCF valuation models, sensitivity tables, and capital structure forecasts evaluating L'Oréal's mergers & acquisitions positioning and beauty tech investments.",
+      "tags": ["Financial Modeling", "DCF", "WACC", "Valuation", "Strategic Assessment"]
+    }
+  ],
+  "certifications": [
+    { "name": "Associate Data Analyst", "issuer": "DataCamp", "badge": "Associate Data Analyst" },
+    { "name": "Intermediate Python", "issuer": "DataCamp", "badge": "Intermediate Python" },
+    { "name": "Intermediate SQL", "issuer": "DataCamp", "badge": "Intermediate SQL" },
+    { "name": "Joining Data in SQL", "issuer": "DataCamp", "badge": "SQL Joining" },
+    { "name": "Customer Analytics", "issuer": "University of Pennsylvania / Coursera", "badge": "Wharton Online" },
+    { "name": "Bloomberg Market Concepts (BMC)", "issuer": "Bloomberg for Education", "badge": "BMC" },
+    { "name": "Bloomberg Finance Fundamentals (BFF)", "issuer": "Bloomberg for Education", "badge": "BFF" },
+    { "name": "Bloomberg ESG Concepts", "issuer": "Bloomberg for Education", "badge": "ESG" }
+  ],
+  "awards": [
+    "L'Oréal Brandstorm National Finalist (2023)",
+    "Dawlance Top Intern & Job Offer Recipient",
+    "Quora Top Writer (846k+ views)",
+    "IELTS Academic Band 8.5 / C2 (Top 3% globally)",
+    "Dean's List Honoree, Institute of Business Administration"
+  ]
+}

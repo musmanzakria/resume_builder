@@ -1,0 +1,301 @@
+{
+  "personal": {
+    "fullName": "Usman Zakria",
+    "email": "m.usmanzakria@gmail.com",
+    "phone": "+49 170 695 9515",
+    "location": "Berlin, Germany",
+    "portfolioLabel": "Portfolio Link",
+    "portfolioUrl": "https://usmanzakria.com"
+  },
+  "summary": {
+    "content": "Data-driven Product Analyst and Growth Specialist with experience across SaaS GTM, product lifecycle management, and analytics. Proven track record in developing high-converting marketing campaigns, driving automated workflows, and translating user needs into scalable features.",
+    "closingLine": "I look forward to working as a Working Student in your team."
+  },
+  "education": [
+    {
+      "id": "edu-1",
+      "degree": "Master's in International Business",
+      "institution": "Hochschule für Technik und Wirtschaft Berlin",
+      "grade": "CGPA 1.8/1.0",
+      "period": "2025 – Present",
+      "electives": "",
+      "visible": true
+    },
+    {
+      "id": "edu-2",
+      "degree": "Bachelor's in Business Administration",
+      "institution": "Institute of Business Administration",
+      "grade": "Dean's List | 3.74/4.00 (90.95%)",
+      "period": "2019 – 2023",
+      "electives": "Marketing Analytics, Digital Marketing, Product Management, Consumer Behavior, Brand Management, Media Management, Trade Marketing.",
+      "visible": true
+    }
+  ],
+  "experience_presets": {
+    "hashmove": {
+      "company": "HashMove",
+      "business_type": "B2B SaaS Logistics ERP",
+      "title": "Product Marketing Analyst",
+      "period": "10/2023 – 04/2025",
+      "activePreset": "product_marketing",
+      "presets": {
+        "product_marketing": {
+          "label": "Growth & Product Marketing Focus",
+          "description": "Highlights GTM playbooks, LinkedIn enterprise campaigns, multi-channel content, and website UX/SEO",
+          "bullets": [
+            "Developed go-to-market strategies for two new SaaS modules (AI-powered Logistics, Yard Management), collaborating with design teams to create sales playbooks, driving a 24% increase in average deal size.",
+            "Executed hyper-personalized LinkedIn campaigns for large enterprises with custom ad copies and landing pages, increasing conversion rate by 213% while almost doubling ROAS QoQ.",
+            "Managed a multi-channel content library (sales decks, brochures, blogs, video tutorials), increasing feature adoption by 362% for key partners like the Arab British Chamber of Commerce.",
+            "Led end-to-end website redesign, optimizing UX and SEO, resulting in a 36% increase in organic traffic.",
+            "Designed high-impact Figma demos addressing freight optimization using Agentic AI, securing a multi-million-dollar PoC; accelerating sales cycle by 20%.",
+            "Used Figma, Clay, Apollo, Mailjet, LinkedIn Ads, SQL, Python, Trello, Jira, PowerPoint, Excel (ETL, VLOOKUP, Pivot Tables, LAMBDA), Power BI, Claude, ElevenLabs, Play.ht, Synthesia, Slack."
+          ]
+        },
+        "data_analytics": {
+          "label": "Data Analytics & Commercials Focus",
+          "description": "Highlights Excel modeling, Python BI dashboards, and live tracking API integrations",
+          "bullets": [
+            "Developed go-to-market strategies for two new SaaS modules (AI-powered Logistics, Yard Management), collaborating with design to equip sales with new playbooks that led to a 24% increase in average deal size.",
+            "Built advanced Excel models, Python scripts, and BI dashboards for sales forecasting, proposal automation, and value proposition analysis, reducing commercials' processing time by 13%.",
+            "Evaluated 13 vendor solutions for live tracking APIs, migrating 1,500+ annual shipments to enhanced tracking and carbon calculation; increasing user adoption by 132%.",
+            "Led end-to-end website redesign, optimizing UX and SEO, resulting in a 36% increase in organic traffic.",
+            "Designed high-impact Figma demos addressing freight optimization using Agentic AI, securing a multi-million-dollar PoC; accelerating sales cycle by 20%.",
+            "Used Figma, Clay, Apollo, Mailjet, LinkedIn Ads, SQL, Python, Trello, Jira, PowerPoint, Excel (ETL, VLOOKUP, Pivot Tables, LAMBDA), Power BI, Claude, ElevenLabs, Play.ht, Synthesia, Slack."
+          ]
+        },
+        "product_management": {
+          "label": "Product Management & Yard Vertical Focus",
+          "description": "Highlights yard management feature research, process mapping, and wireframing",
+          "bullets": [
+            "Developed go-to-market strategies for two new SaaS modules (AI-powered Logistics, Yard Management), collaborating with design teams to create sales playbooks, driving a 24% increase in average deal size.",
+            "Managed a multi-channel content library (sales decks, brochures, blogs, video tutorials), increasing feature adoption by 362% for key partners like the Arab British Chamber of Commerce.",
+            "Directed product development for a new yard management vertical (feature research, process mapping, wireframing), cutting yard manhours by 33% in pilot through automated task assignment.",
+            "Designed high-impact Figma demos addressing freight optimization using Agentic AI, securing a multi-million-dollar PoC; accelerating sales cycle by 20%.",
+            "Executed hyper-personalized LinkedIn campaigns for large enterprises with custom ad copies and landing pages, increasing conversion rate by 213% while almost doubling ROAS QoQ.",
+            "Used Figma, Clay, Apollo, Mailjet, LinkedIn Ads, SQL, Python, Trello, Jira, PowerPoint, Excel (ETL, VLOOKUP, Pivot Tables, LAMBDA), Power BI, Claude, ElevenLabs, Play.ht, Synthesia, Slack."
+          ]
+        },
+        "gdpr_operations": {
+          "label": "GDPR & Technical Operations Focus",
+          "description": "Highlights 100% GDPR compliance, data regulation alignment, and API telemetry",
+          "bullets": [
+            "Developed go-to-market strategies for two new SaaS modules (AI-powered Logistics, Yard Management), collaborating with design to equip sales with new playbooks that led to a 24% increase in average deal size.",
+            "Built advanced Excel models, Python scripts, and BI dashboards for sales forecasting, proposal automation, and value proposition analysis, reducing commercials' processing time by 13%.",
+            "Evaluated 13 vendor solutions for live tracking APIs, migrating 1,500+ annual shipments to enhanced tracking and carbon calculation; increasing user adoption by 132%.",
+            "Led end-to-end website redesign, optimizing UX and SEO, resulting in a 36% increase in organic traffic.",
+            "Designed high-impact Figma demos addressing freight optimization using Agentic AI, securing a multi-million-dollar PoC; accelerating sales cycle by 20%.",
+            "Led 100% GDPR compliance and implementation, ensuring product alignment with data regulation.",
+            "Used Figma, Clay, Apollo, Mailjet, LinkedIn Ads, SQL, Python, Trello, Jira, PowerPoint, Excel (ETL, VLOOKUP, Pivot Tables, LAMBDA), Power BI, Claude, ElevenLabs, Play.ht, Synthesia, Slack."
+          ]
+        }
+      }
+    }
+  },
+  "other_experiences": [
+    {
+      "id": "exp-goodcore",
+      "role": "SEO Content Writer (Part-time)",
+      "company": "GoodCore Software",
+      "period": "03/2024 – 08/2024",
+      "visible": true,
+      "bullets": [
+        "Authored multiple articles on Agile SDLC with Figma illustrations, increasing organic traffic by 18%.",
+        "Operated Semrush, Figma, Notion, Webflow, Google Analytics (GA4), Mixpanel, Grammarly, HubSpot."
+      ]
+    },
+    {
+      "id": "exp-loreal",
+      "role": "Final Year Project Trainee",
+      "company": "L'Oréal Pakistan",
+      "period": "01/2023 – 06/2023",
+      "visible": true,
+      "bullets": [
+        "Created a business case, high-fidelity prototype, and go-to-market strategy for a salon booking app.",
+        "Utilized Figma, Canva, NVIVO, R (tidytext, tm, sentimentr), AnswerThePublic, Google Trends."
+      ]
+    },
+    {
+      "id": "exp-iba-ta",
+      "role": "Teaching Assistant - Analytical Approach to Decisions",
+      "company": "IBA",
+      "period": "04/2022 – 06/2023",
+      "visible": true,
+      "bullets": [
+        "Guided 250+ students through business analytics projects by creating an interactive learning environment.",
+        "Employed Advanced Excel, SQL, R (ggplot2, dplyr, tidyr, lm, caret, tm), Google Colabs."
+      ]
+    },
+    {
+      "id": "exp-dawlance",
+      "role": "Consumer Insights Intern",
+      "company": "Dawlance",
+      "period": "07/2022 – 10/2022",
+      "visible": true,
+      "bullets": [
+        "Led 5 consumer research projects with IPSOS (200+ participants), generating insights that optimized e-commerce strategy by mapping end-to-end consumer journeys, improving CTR by 6.3%.",
+        "Leveraged IPSOS digital communities, Brandwatch, Tableau, R, Google Workspace, Microsoft Office."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "title": "Agile SDLC Article Illustrations",
+      "description": "Designed Figma illustrations to simplify complex topics like Agile, Scrum, DevOps for non-technical audiences.",
+      "url": "https://usmanzakria.com",
+      "visible": true,
+      "defaultOrder": 1
+    },
+    {
+      "id": "proj-2",
+      "title": "Agentic AI in Finance (Beam AI)",
+      "description": "Explored Agentic AI players and use cases in Finance, creating a PoC automation workflow using n8n.",
+      "url": "https://usmanzakria.com",
+      "visible": true,
+      "defaultOrder": 2
+    },
+    {
+      "id": "proj-3",
+      "title": "Property Price Prediction (Airbnb NYC)",
+      "description": "Developed and compared 4 regression models (Step, Decision Tree, Lasso, Ridge) to predict property prices and identify key valuation drivers using R.",
+      "url": "https://usmanzakria.com",
+      "visible": true,
+      "defaultOrder": 3
+    },
+    {
+      "id": "proj-4",
+      "title": "AI Digital Twin Persona",
+      "description": "Synthesized 11-factor psychographics data into a functional AI clone of myself, testing with blind Turing Test.",
+      "url": "https://usmanzakria.com",
+      "visible": true,
+      "defaultOrder": 4
+    },
+    {
+      "id": "proj-5",
+      "title": "AI in Marketing Analytics - Visual Saliency",
+      "description": "Compared deep learning and neuroscience-based AI saliency models, studying key drivers of Ad/Brand Gaze.",
+      "url": "https://usmanzakria.com",
+      "visible": true,
+      "defaultOrder": 5
+    },
+    {
+      "id": "proj-6",
+      "title": "Signavio Competitive Analysis",
+      "description": "Compared leading BPM and Process Mining solutions, Signavio and Celonis, identifying strategic advantages, differentiators and competitive intelligence initiatives.",
+      "url": "https://usmanzakria.com",
+      "visible": false,
+      "defaultOrder": 6
+    },
+    {
+      "id": "proj-7",
+      "title": "Consumer Insights Research",
+      "description": "Mapped user journeys, benchmarking against competitors, optimizing Dawlance's DTC eCommerce strategy.",
+      "url": "https://usmanzakria.com",
+      "visible": false,
+      "defaultOrder": 7
+    },
+    {
+      "id": "proj-8",
+      "title": "Product Onboarding Tutorials",
+      "description": "Leveraged ElevenLabs, Play.ht, Synthesia, and DaVinci Resolve to create intuitive user onboarding tutorials.",
+      "url": "https://usmanzakria.com",
+      "visible": false,
+      "defaultOrder": 8
+    },
+    {
+      "id": "proj-9",
+      "title": "AI-Powered Logistics Platform",
+      "description": "Architected Agentic AI-powered logistics platform including Conversational, Analytics, and Automation AI.",
+      "url": "https://usmanzakria.com",
+      "visible": false,
+      "defaultOrder": 9
+    },
+    {
+      "id": "proj-10",
+      "title": "L'Oréal Financial Analysis",
+      "description": "Conducted detailed financial analysis of L'Oreal estimating WACC, Valuation, and Strategic Assessment.",
+      "url": "https://usmanzakria.com",
+      "visible": false,
+      "defaultOrder": 10
+    }
+  ],
+  "skills_categories": {
+    "product_management": {
+      "id": "skill-pm",
+      "name": "Product Management",
+      "content": "Product Strategy, User Stories, User Research, Sprint Planning, Agile & Scrum, SaaS, Requirements Gathering, Feature Specification, UI/UX Design, Roadmapping, Backlog Management, Process Mapping",
+      "visible": false,
+      "isVariable": true
+    },
+    "product_marketing": {
+      "id": "skill-pmm",
+      "name": "Product Marketing",
+      "content": "Digital Marketing, CRM, SEO & Analytics, Content Writing, Go-to-Market, Social Media Campaigns, B2B Market Research, Consumer Insights, A/B Testing, UI/UX Design, User Journey Mapping, Cross-functional Collaboration",
+      "visible": true,
+      "isVariable": true
+    },
+    "product_and_data_analytics": {
+      "id": "skill-pda",
+      "name": "Product & Data Analytics",
+      "content": "SQL, Python, R, n8n, Tableau, Power BI, Advanced Excel, Project Documentation, Machine Learning, SPSS, User Research, Agile & Scrum, Requirements Gathering, Process Mapping, SaaS, Product Strategy",
+      "visible": false,
+      "isVariable": true
+    },
+    "data_analytics": {
+      "id": "skill-da",
+      "name": "Data Analytics",
+      "content": "SQL, Python, R, Tableau, Power BI, Advanced Excel, Data Visualization, Machine Learning, SPSS",
+      "visible": true,
+      "isVariable": false
+    },
+    "certifications_and_tools": {
+      "id": "skill-tools",
+      "name": "Certification & Tools",
+      "content": "Associate Data Analyst, Intermediate Python, Intermediate SQL, Customer Analytics (UPenn), Figma, GA4, Canva, MixPanel, Clay, LinkedIn Ads, Notion, Jira, Trello, Microsoft Office, Google Workspace",
+      "visible": true,
+      "isVariable": false
+    }
+  },
+  "awards": {
+    "title": "Awards",
+    "visible": true,
+    "items": [
+      { "id": "award-1", "title": "L'Oréal Brandstorm National Finalist", "visible": true },
+      { "id": "award-2", "title": "Dawlance Top Intern", "visible": true },
+      { "id": "award-3", "title": "Quora (846k views)", "visible": true },
+      { "id": "award-4", "title": "IELTS 8.5 (Top 3% globally)", "visible": true }
+    ],
+    "content": "L'Oréal Brandstorm National Finalist | Dawlance Top Intern | Quora (846k views) | IELTS 8.5 (Top 3% globally)"
+  },
+  "languages_availability": {
+    "title": "Languages & Availability",
+    "content": "English — IELTS 8.5 (C2) • German — A2 • Urdu/Hindi • Student Visa — Available 12+ months",
+    "visible": true
+  },
+  "settings": {
+    "aiProjectCount": 5,
+    "typography": {
+      "fontFamily": "Merriweather",
+      "headerFontSize": "22px",
+      "sectionHeadingSize": "13px",
+      "bodyFontSize": "10px",
+      "lineHeight": "1.35"
+    },
+    "spacing": {
+      "pageMarginX": "36px",
+      "pageMarginY": "32px",
+      "sectionGap": "12px",
+      "itemGap": "6px"
+    },
+    "sectionOrder": [
+      "header",
+      "summary",
+      "education",
+      "experience",
+      "projects",
+      "skills",
+      "awards",
+      "languages"
+    ]
+  }
+}

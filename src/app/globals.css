@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --border: #e2e8f0;
+  --card-bg: #ffffff;
+  --card-border: #cbd5e1;
+  --accent-primary: #4f46e5;
+  --accent-glow: rgba(79, 70, 229, 0.1);
+}
+
+body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars for Light Mode */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* A4 Resume Page Preview Simulation (Screen Mode) */
+.resume-a4-sheet {
+  width: 210mm;
+  min-height: 297mm;
+  background-color: #ffffff;
+  color: #111827;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15), 0 0 1px 1px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  margin: 0 auto;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.section-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.item-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* ── STRICT ATS-FRIENDLY VECTOR PRINT & PDF EXPORT RULES ── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0mm !important;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: auto !important;
+    min-height: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow: visible !important;
+  }
+
+  header, nav, aside, .no-print, [role="navigation"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  main, section, div:has(> .resume-page-sheet) {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 210mm !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .resume-canvas-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    transform: none !important;
+    gap: 0 !important;
+    display: block !important;
+  }
+
+  .resume-canvas-container > * + * {
+    margin-top: 0 !important;
+  }
+
+  .resume-sheet-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  .resume-page-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    position: relative !important;
+  }
+
+  .resume-page-sheet:last-of-type {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .section-block {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .item-block {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
