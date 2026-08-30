@@ -59,10 +59,10 @@ export const AiTailorPanel: React.FC = () => {
   }, [consoleLogs]);
 
   const availableModels = [
-    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (Fastest / Recommended)" },
-    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash" },
-    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
-    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+    { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash (Fastest & Stable)" },
+    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (High Demand)" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Deep Context)" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Lightweight)" },
     { id: "custom", name: "Custom Model..." },
   ];
 
