@@ -12,6 +12,9 @@ import {
   Loader2,
   AlertCircle,
   KeyRound,
+  Cpu,
+  Save,
+  Check,
 } from "lucide-react";
 import { NumberStepper } from "@/components/common/NumberStepper";
 
@@ -20,20 +23,42 @@ export const AiTailorPanel: React.FC = () => {
     targetJobDescription,
     targetCompany,
     targetRole,
+    geminiApiKey,
+    selectedAiModel,
     setTargetInfo,
+    setGeminiApiKey,
+    setSelectedAiModel,
     applyAiTailoringResult,
     resume,
+    masterContext,
     updateSettings,
   } = useResumeStore();
 
   const [jd, setJd] = useState(targetJobDescription || "");
   const [company, setCompany] = useState(targetCompany || "");
   const [role, setRole] = useState(targetRole || "");
-  const [apiKey, setApiKey] = useState("");
+  const [apiKeyInput, setApiKeyInput] = useState(geminiApiKey || "");
+  const [modelInput, setModelInput] = useState(selectedAiModel || "gemini-2.0-flash");
+  const [customModel, setCustomModel] = useState("");
+  const [apiKeySaved, setApiKeySaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+
+  const availableModels = [
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (Fast & Recommended)" },
+    { id: "gemini-2.0-flash-thinking-exp-01-21", name: "Gemini 2.0 Flash Thinking (Deep Reasoning)" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Comprehensive Analysis)" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Lightweight)" },
+    { id: "custom", name: "Custom / Experimental Model..." },
+  ];
+
+  const handleSaveApiKey = () => {
+    setGeminiApiKey(apiKeyInput.trim());
+    setApiKeySaved(true);
+    setTimeout(() => setApiKeySaved(false), 2000);
+  };
 
   const handleTailor = async () => {
     if (!jd.trim()) {
@@ -46,6 +71,8 @@ export const AiTailorPanel: React.FC = () => {
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    const activeModel = modelInput === "custom" && customModel.trim() ? customModel.trim() : modelInput;
+
     try {
       const res = await fetch("/api/tailor", {
         method: "POST",
@@ -54,8 +81,10 @@ export const AiTailorPanel: React.FC = () => {
           jobDescription: jd,
           targetCompany: company,
           targetRole: role,
-          apiKey,
+          apiKey: apiKeyInput.trim(),
+          modelName: activeModel,
           masterResumeData: resume,
+          masterContext,
           topN: resume.settings.aiProjectCount || 5,
         }),
       });
@@ -78,7 +107,7 @@ export const AiTailorPanel: React.FC = () => {
       });
 
       setSuccessMsg(
-        `Resume successfully tailored for ${company || "Target Role"}!`
+        `Resume successfully tailored for ${company || "Target Role"} using ${activeModel}!`
       );
     } catch (err: any) {
       console.error(err);
@@ -99,31 +128,89 @@ export const AiTailorPanel: React.FC = () => {
           </div>
           <button
             onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-            className="text-[11px] text-slate-500 hover:text-indigo-600 flex items-center gap-1"
+            className="text-[11px] text-slate-600 hover:text-indigo-600 font-medium flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-xs"
           >
-            <KeyRound className="w-3 h-3" />
-            <span>{apiKey ? "Custom Key Set" : "Gemini API Key"}</span>
+            <KeyRound className="w-3 h-3 text-indigo-500" />
+            <span>{geminiApiKey ? "API Key & Model" : "Configure AI"}</span>
           </button>
         </div>
         <p className="text-xs text-slate-600 leading-relaxed">
-          Paste the job description. The AI analyzes the role, selects your optimal HashMove experience preset, ranks and picks the top projects, tailor-writes the profile summary & closing sentence, and drafts a custom cover letter.
+          Paste the job description. Gemini AI analyzes the role, selects your optimal HashMove experience preset, ranks and picks the top projects, tailor-writes the profile summary & closing sentence, and drafts a custom cover letter.
         </p>
       </div>
 
-      {/* API Key Modal / Dropdown */}
+      {/* Model & API Key Configuration Drawer */}
       {showApiKeyInput && (
-        <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2 text-xs shadow-sm">
-          <label className="font-semibold text-slate-700 block">Gemini 3.1 Pro API Key (Optional)</label>
-          <p className="text-[11px] text-slate-500">
-            Leave blank to use the system default server key, or provide your personal Gemini key:
-          </p>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="AIzaSy..."
-            className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 font-mono"
-          />
+        <div className="p-4 bg-white border border-indigo-200 rounded-xl space-y-3 text-xs shadow-sm animate-in fade-in">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <span className="font-bold text-slate-800 flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-indigo-600" />
+              Gemini Model & API Key Configuration
+            </span>
+          </div>
+
+          {/* Model Selector Dropdown */}
+          <div className="space-y-1">
+            <label className="font-semibold text-slate-700 block">Select Gemini AI Model</label>
+            <select
+              value={modelInput}
+              onChange={(e) => {
+                setModelInput(e.target.value);
+                setSelectedAiModel(e.target.value);
+              }}
+              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-medium focus:outline-none focus:border-indigo-500"
+            >
+              {availableModels.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+
+            {modelInput === "custom" && (
+              <input
+                type="text"
+                value={customModel}
+                onChange={(e) => setCustomModel(e.target.value)}
+                placeholder="Enter model string, e.g. gemini-3.7-flash"
+                className="w-full mt-1.5 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-mono text-xs focus:outline-none focus:border-indigo-500"
+              />
+            )}
+          </div>
+
+          {/* API Key Input & Persistent Save */}
+          <div className="space-y-1 pt-1">
+            <label className="font-semibold text-slate-700 block">Gemini API Key</label>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                placeholder="AQ.Ab8RN6K..."
+                className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 font-mono text-xs"
+              />
+              <button
+                type="button"
+                onClick={handleSaveApiKey}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors shrink-0"
+              >
+                {apiKeySaved ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-white" />
+                    <span>Saved</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Save Key</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 pt-0.5">
+              Key is securely saved to your browser local storage.
+            </p>
+          </div>
         </div>
       )}
 
@@ -211,7 +298,7 @@ export const AiTailorPanel: React.FC = () => {
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Analyzing JD & Tailoring Resume with Gemini AI...</span>
+            <span>Analyzing JD & Tailoring with Gemini ({modelInput})...</span>
           </>
         ) : (
           <>

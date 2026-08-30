@@ -11,6 +11,7 @@ import {
   CustomSectionItem,
   ExperiencePreset
 } from "@/types/resume";
+import { initialMasterContext } from "./initialData";
 
 const defaultInitialResumeData: ResumeData = {
   personal: {
@@ -342,6 +343,8 @@ const defaultInitialResumeData: ResumeData = {
 interface ResumeStoreState {
   resume: ResumeData;
   masterContext: any;
+  geminiApiKey: string;
+  selectedAiModel: string;
   activeCoverLetter: string;
   targetRole: string;
   targetCompany: string;
@@ -354,6 +357,8 @@ interface ResumeStoreState {
   aiStatusMessage: string;
 
   // Actions
+  setGeminiApiKey: (key: string) => void;
+  setSelectedAiModel: (model: string) => void;
   updatePersonalInfo: (data: Partial<ResumeData["personal"]>) => void;
   updateSummary: (content: string, closingLine?: string) => void;
 
@@ -448,7 +453,9 @@ export const useResumeStore = create<ResumeStoreState>()(
   persist(
     (set, get) => ({
       resume: defaultInitialResumeData,
-      masterContext: {},
+      masterContext: initialMasterContext,
+      geminiApiKey: "",
+      selectedAiModel: "gemini-2.0-flash",
       activeCoverLetter: "",
       targetRole: "",
       targetCompany: "",
@@ -459,6 +466,9 @@ export const useResumeStore = create<ResumeStoreState>()(
       previewZoom: 1.0,
       isAiLoading: false,
       aiStatusMessage: "",
+
+      setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+      setSelectedAiModel: (model) => set({ selectedAiModel: model }),
 
       updatePersonalInfo: (data) =>
         set((state) => ({
@@ -1145,7 +1155,7 @@ export const useResumeStore = create<ResumeStoreState>()(
         })),
     }),
     {
-      name: "flowcv-resume-storage-v4",
+      name: "flowcv-resume-storage-v5",
       storage: createJSONStorage(() => localStorage),
     }
   )

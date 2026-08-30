@@ -1,11 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useResumeStore } from "@/lib/store";
-import { History, ArrowRight, Building2, Calendar, FileText, Sparkles } from "lucide-react";
+import { History, ArrowRight, Building2, Calendar, FileText, Sparkles, Trash2, Check } from "lucide-react";
 
 export const ApplicationHistory: React.FC = () => {
-  const { savedApplications, loadApplication, setActiveTab } = useResumeStore();
+  const { savedApplications, loadApplication, deleteApplication, setActiveTab } = useResumeStore();
+  const [deletedId, setDeletedId] = useState<string | null>(null);
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    deleteApplication(id);
+    setDeletedId(id);
+    setTimeout(() => setDeletedId(null), 2000);
+  };
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10 max-w-5xl mx-auto w-full space-y-6 bg-slate-100">
@@ -56,10 +64,22 @@ export const ApplicationHistory: React.FC = () => {
                       {app.role || "Role unspecified"}
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-slate-400" />
-                    {new Date(app.createdAt).toLocaleDateString()}
-                  </span>
+                  
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-slate-400" />
+                      {new Date(app.createdAt).toLocaleDateString()}
+                    </span>
+
+                    {/* Delete Snapshot Button */}
+                    <button
+                      onClick={(e) => handleDelete(e, app.id)}
+                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete Snapshot"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="text-[11px] text-slate-500 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
