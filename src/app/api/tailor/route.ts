@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       masterContext,
       topN = 5,
       apiKey: userApiKey,
-      modelName = "gemini-2.0-flash",
+      modelName = "gemini-3.7-flash",
     } = body;
 
     const apiKey =

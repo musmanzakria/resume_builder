@@ -455,7 +455,7 @@ export const useResumeStore = create<ResumeStoreState>()(
       resume: defaultInitialResumeData,
       masterContext: initialMasterContext,
       geminiApiKey: "",
-      selectedAiModel: "gemini-2.0-flash",
+      selectedAiModel: "gemini-3.7-flash",
       activeCoverLetter: "",
       targetRole: "",
       targetCompany: "",
@@ -1155,7 +1155,7 @@ export const useResumeStore = create<ResumeStoreState>()(
         })),
     }),
     {
-      name: "flowcv-resume-storage-v5",
+      name: "flowcv-resume-storage-v6",
       storage: createJSONStorage(() => localStorage),
     }
   )
