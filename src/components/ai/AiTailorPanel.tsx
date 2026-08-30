@@ -47,11 +47,14 @@ export const AiTailorPanel: React.FC = () => {
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
   const availableModels = [
-    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (Fast & Recommended)" },
+    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Ultra Fast / Latest)" },
+    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" },
+    { id: "gemini-3.1-pro", name: "Gemini 3.1 Pro (Deep Career Specialist)" },
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (Recommended Standard)" },
     { id: "gemini-2.0-flash-thinking-exp-01-21", name: "Gemini 2.0 Flash Thinking (Deep Reasoning)" },
-    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Comprehensive Analysis)" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Deep Context)" },
     { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Lightweight)" },
-    { id: "custom", name: "Custom / Experimental Model..." },
+    { id: "custom", name: "Custom / Experimental Model String..." },
   ];
 
   const handleSaveApiKey = () => {
