@@ -55,6 +55,8 @@ export const AiTailorPanel: React.FC = () => {
           targetCompany: company,
           targetRole: role,
           apiKey,
+          masterResumeData: resume,
+          topN: resume.settings.aiProjectCount || 5,
         }),
       });
 
@@ -63,14 +65,16 @@ export const AiTailorPanel: React.FC = () => {
         throw new Error(errData.error || "Failed to tailor resume with AI.");
       }
 
-      const tailoredData = await res.json();
+      const resJson = await res.json();
+      const tailoredData = resJson.data || resJson;
+
       applyAiTailoringResult({
-        selectedPresetKey: tailoredData.classification?.experience_preset || tailoredData.selectedPresetKey,
-        selectedSkillKey: tailoredData.classification?.variable_skill || tailoredData.selectedSkillKey,
+        selectedPresetKey: tailoredData.selectedPresetKey || tailoredData.classification?.experience_preset,
+        selectedSkillKey: tailoredData.selectedSkillKey || tailoredData.classification?.variable_skill,
         selectedProjectIds: tailoredData.selectedProjectIds || tailoredData.project_ranking?.slice(0, resume.settings.aiProjectCount || 5),
-        tailoredSummary: tailoredData.tailored_summary || tailoredData.tailoredSummary,
-        closingLine: tailoredData.closing_line || tailoredData.closingLine,
-        coverLetter: tailoredData.cover_letter || tailoredData.coverLetter,
+        tailoredSummary: tailoredData.tailoredSummary || tailoredData.tailored_summary,
+        closingLine: tailoredData.closingLine || tailoredData.closing_line,
+        coverLetter: tailoredData.coverLetter || tailoredData.cover_letter,
       });
 
       setSuccessMsg(
