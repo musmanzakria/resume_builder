@@ -473,12 +473,10 @@ export const MasterSettingsView: React.FC = () => {
                 onChange={(e) => setSelectedAiModel(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-indigo-500"
               >
-                <option value="gemini-3.7-flash">Gemini 3.7 Flash — 1M Context, Agentic & Fast (Recommended)</option>
-                <option value="gemini-3.6-flash">Gemini 3.6 Flash — Fast Multitask Workhorse</option>
-                <option value="gemini-2.0-flash">Gemini 2.0 Flash — High-Speed Multimodal</option>
-                <option value="gemini-2.0-flash-thinking-exp-01-21">Gemini 2.0 Flash Thinking — Deep Analytical Reasoning</option>
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro — 2M Massive Context Analysis</option>
-                <option value="gemini-1.5-flash">Gemini 1.5 Flash — Ultra-Lightweight & Fast</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fastest / Recommended)</option>
+                <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
               </select>
             </div>
           </div>

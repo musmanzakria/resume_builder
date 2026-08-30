@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       masterContext,
       topN = 5,
       apiKey: userApiKey,
-      modelName = "gemini-3.7-flash",
+      modelName = "gemini-2.0-flash",
     } = body;
 
     const apiKey =
@@ -42,7 +42,7 @@ CRITICAL CONSTRAINTS (ZERO-HALLUCINATION POLICY):
 6. FOR COVER LETTER: Draft a compelling, professional German/English standard cover letter referencing Usman's real achievements and 2-3 specific relevant projects from the master context.
 
 OUTPUT FORMAT:
-Respond with ONLY a valid, raw JSON object (no markdown code block fences if possible, or standard \`\`\`json) matching this exact schema:
+Respond with ONLY a valid, raw JSON object matching this exact schema:
 {
   "selectedPresetKey": "growth_marketing" | "data_analytics" | "product_management" | "gdpr_operations",
   "selectedSkillKey": "growth_marketing" | "product_management" | "product_and_data_analytics",
@@ -65,13 +65,25 @@ ${JSON.stringify(masterContext || {})}
     if (apiKey) {
       try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: modelName || "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ 
+          model: modelName || "gemini-2.0-flash",
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.2,
+          }
+        });
 
-        const result = await model.generateContent([
+        // Fast race timeout (10 seconds max)
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Gemini API request timed out after 10s")), 10000)
+        );
+
+        const generatePromise = model.generateContent([
           { text: systemPrompt },
           { text: userPrompt },
         ]);
 
+        const result: any = await Promise.race([generatePromise, timeoutPromise]);
         const responseText = result.response.text();
         const cleaned = responseText
           .replace(/```json/g, "")
@@ -81,7 +93,7 @@ ${JSON.stringify(masterContext || {})}
         const parsed = JSON.parse(cleaned);
         return NextResponse.json({ success: true, data: parsed, modelUsed: modelName });
       } catch (aiErr: any) {
-        console.warn("Gemini API direct call returned error, applying intelligent heuristic fallback:", aiErr.message);
+        console.warn("Gemini API call warning:", aiErr.message, "Falling back to instant intelligent heuristic.");
       }
     }
 
@@ -130,7 +142,7 @@ ${JSON.stringify(masterContext || {})}
         closingLine: fallbackClosing,
         coverLetter: fallbackCoverLetter,
       },
-      modelUsed: "heuristic-fallback",
+      modelUsed: "instant-heuristic",
     });
   } catch (error: any) {
     console.error("AI Tailor error:", error);

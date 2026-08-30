@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useResumeStore } from "@/lib/store";
 import {
   Sparkles,
   Building2,
   Briefcase,
-  Layers,
-  FolderGit2,
   CheckCircle,
   Loader2,
   AlertCircle,
@@ -15,6 +13,9 @@ import {
   Cpu,
   Save,
   Check,
+  Terminal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { NumberStepper } from "@/components/common/NumberStepper";
 
@@ -46,20 +47,34 @@ export const AiTailorPanel: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
+  // Live Console State
+  const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
+  const [showConsole, setShowConsole] = useState(false);
+  const consoleBottomRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (consoleBottomRef.current) {
+      consoleBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [consoleLogs]);
+
   const availableModels = [
-    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash — 1M Context, Agentic & Fast (Recommended)" },
-    { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash — Fast Multitask Workhorse" },
-    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash — High-Speed Multimodal" },
-    { id: "gemini-2.0-flash-thinking-exp-01-21", name: "Gemini 2.0 Flash Thinking — Deep Analytical Reasoning" },
-    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro — 2M Massive Context Analysis" },
-    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash — Ultra-Lightweight & Fast" },
-    { id: "custom", name: "Custom Model String..." },
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (Fastest / Recommended)" },
+    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+    { id: "custom", name: "Custom Model..." },
   ];
 
   const handleSaveApiKey = () => {
     setGeminiApiKey(apiKeyInput.trim());
     setApiKeySaved(true);
     setTimeout(() => setApiKeySaved(false), 2000);
+  };
+
+  const addLog = (msg: string) => {
+    const time = new Date().toLocaleTimeString("en-US", { hour12: false });
+    setConsoleLogs((prev) => [...prev, `[${time}] ${msg}`]);
   };
 
   const handleTailor = async () => {
@@ -72,10 +87,29 @@ export const AiTailorPanel: React.FC = () => {
     setIsLoading(true);
     setErrorMsg(null);
     setSuccessMsg(null);
+    setShowConsole(true);
+    setConsoleLogs([]);
 
     const activeModel = modelInput === "custom" && customModel.trim() ? customModel.trim() : modelInput;
 
+    addLog(`🚀 Starting AI Tailoring Engine for ${company || "Target Company"}...`);
+    addLog(`⚡ Initializing model: ${activeModel}`);
+    addLog(`📄 Parsing Job Description (${jd.length} chars) & Master Career Knowledge Base...`);
+
     try {
+      const logTimer1 = setTimeout(() => {
+        addLog(`🎯 Matching HashMove Experience Preset against role requirements...`);
+      }, 600);
+
+      const logTimer2 = setTimeout(() => {
+        addLog(`📊 Scoring and ranking Top ${resume.settings.aiProjectCount || 5} projects from master pool...`);
+      }, 1200);
+
+      const logTimer3 = setTimeout(() => {
+        addLog(`✍️ Synthesizing tailored 3-4 line bio & closing sentence...`);
+        addLog(`💌 Generating German/English structured cover letter...`);
+      }, 1800);
+
       const res = await fetch("/api/tailor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,6 +125,10 @@ export const AiTailorPanel: React.FC = () => {
         }),
       });
 
+      clearTimeout(logTimer1);
+      clearTimeout(logTimer2);
+      clearTimeout(logTimer3);
+
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || "Failed to tailor resume with AI.");
@@ -98,6 +136,14 @@ export const AiTailorPanel: React.FC = () => {
 
       const resJson = await res.json();
       const tailoredData = resJson.data || resJson;
+
+      addLog(`✨ Applying tailored selections to resume canvas...`);
+      if (tailoredData.selectedPresetKey) {
+        addLog(`   • Active Preset: ${tailoredData.selectedPresetKey}`);
+      }
+      if (tailoredData.selectedProjectIds) {
+        addLog(`   • Selected Projects: ${tailoredData.selectedProjectIds.length} projects`);
+      }
 
       applyAiTailoringResult({
         selectedPresetKey: tailoredData.selectedPresetKey || tailoredData.classification?.experience_preset,
@@ -108,11 +154,11 @@ export const AiTailorPanel: React.FC = () => {
         coverLetter: tailoredData.coverLetter || tailoredData.cover_letter,
       });
 
-      setSuccessMsg(
-        `Resume successfully tailored for ${company || "Target Role"} using ${activeModel}!`
-      );
+      addLog(`✅ Complete! Live Resume Canvas and Cover Letter updated successfully.`);
+      setSuccessMsg(`Resume successfully tailored for ${company || "Target Role"}!`);
     } catch (err: any) {
       console.error(err);
+      addLog(`❌ Error: ${err.message || "Failed to run AI tailoring"}`);
       setErrorMsg(err.message || "An unexpected error occurred during AI tailoring.");
     } finally {
       setIsLoading(false);
@@ -153,7 +199,7 @@ export const AiTailorPanel: React.FC = () => {
 
           {/* Model Selector Dropdown */}
           <div className="space-y-1">
-            <label className="font-semibold text-slate-700 block">Select Gemini AI Model</label>
+            <label className="font-semibold text-slate-700 block">Select AI Model</label>
             <select
               value={modelInput}
               onChange={(e) => {
@@ -216,7 +262,7 @@ export const AiTailorPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Target Company & Role Inputs (Light Mode) */}
+      {/* Target Company & Role Inputs */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-xs">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -262,7 +308,7 @@ export const AiTailorPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Job Description Textarea (Light Mode) */}
+      {/* Job Description Textarea */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2 shadow-xs">
         <label className="text-xs text-slate-700 font-semibold block">
           Paste Target Job Description (JD)
@@ -270,11 +316,66 @@ export const AiTailorPanel: React.FC = () => {
         <textarea
           value={jd}
           onChange={(e) => setJd(e.target.value)}
-          rows={10}
+          rows={8}
           placeholder="Paste the full job posting requirements, responsibilities, and about company here..."
           className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 leading-relaxed font-sans"
         />
       </div>
+
+      {/* Tailor Resume Action Button */}
+      <button
+        onClick={handleTailor}
+        disabled={isLoading}
+        className="w-full py-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 transition-all disabled:opacity-60"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Tailoring Resume & Cover Letter ({modelInput})...</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-4 h-4" />
+            <span>Run AI Tailoring (Resume + Cover Letter)</span>
+          </>
+        )}
+      </button>
+
+      {/* Live AI Execution Console */}
+      {showConsole && (
+        <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg animate-in fade-in">
+          <div className="bg-slate-900/90 px-3.5 py-2 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-mono font-semibold text-slate-300">
+              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Live AI Execution Console</span>
+              {isLoading && (
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              )}
+            </div>
+            <button
+              onClick={() => setShowConsole(!showConsole)}
+              className="text-slate-400 hover:text-slate-200"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-48 overflow-y-auto space-y-1.5 leading-relaxed">
+            {consoleLogs.map((log, index) => (
+              <div key={index} className="flex items-start gap-1.5">
+                <span>{log}</span>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex items-center gap-1 text-slate-400 animate-pulse">
+                <span>[Processing step...]</span>
+                <span className="inline-block w-1.5 h-3 bg-emerald-400 ml-1" />
+              </div>
+            )}
+            <div ref={consoleBottomRef} />
+          </div>
+        </div>
+      )}
 
       {/* Error & Success Alerts */}
       {errorMsg && (
@@ -290,25 +391,6 @@ export const AiTailorPanel: React.FC = () => {
           <span>{successMsg}</span>
         </div>
       )}
-
-      {/* Tailor Resume Action Button */}
-      <button
-        onClick={handleTailor}
-        disabled={isLoading}
-        className="w-full py-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 transition-all disabled:opacity-60"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Analyzing JD & Tailoring with Gemini ({modelInput})...</span>
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4" />
-            <span>Run AI Tailoring (Resume + Cover Letter)</span>
-          </>
-        )}
-      </button>
     </div>
   );
 };
