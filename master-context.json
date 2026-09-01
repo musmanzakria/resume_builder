@@ -16,7 +16,74 @@
   "professional_bio": {
     "title": "Data-Driven Product Analyst & Growth Specialist",
     "summary_foundation": "Data-driven product analyst with experience managing the full product lifecycle. Specialized in translating user needs into market-ready solutions, guiding products from initial user research and requirements gathering through to go-to-market strategy, launch, and optimization for lead generation. Adept at bridging technical systems (Python, SQL, R, n8n, APIs) with commercial product strategies (GTM, pricing playbooks, UX/SEO, multi-channel growth).",
-    "mandatory_closing_template": "I look forward to working as a {TARGET_ROLE} in your {TARGET_TEAM_OR_COMPANY} team."
+    "mandatory_closing_template": "I am eager to be an integral part of {TARGET_COMPANY}'s {TARGET_TEAM} team, {ACTION_1}, {ACTION_2}, and help {MISSION_IMPACT} as a {CLEANED_TARGET_ROLE} in {LOCATION}.",
+    "profile_summary_rulebook": {
+      "objective": "Generate high-converting, authentic, ATS-optimized 3-4 sentence professional summaries that seamlessly fuse Usman's authentic track record with the target Job Description (JD).",
+      "core_rules": [
+        "HUMAN & NATURAL VOICE: Sound confident, articulate, and authentic—never robotic or formulaic.",
+        "NO LONG DASHES: Never use em-dashes (—) or en-dashes (–) within narrative sentences. Use commas, parentheses, or fluid syntax.",
+        "EMBOLDEN KEYWORDS & METRICS: Strategically bold 3-5 high-impact keywords, core tools, and certifications matching the JD (e.g., **SEO, Social Media, and Content**, **8.5 IELTS / C2**, **Excel and SQL**, **n8n workflow automation**, **Merchant Operations Performance Working Student in Berlin**).",
+        "CLEAN STANDARDIZED ROLE NAMES: Strip out administrative hiring noise like (m/f/d), (m/w/d), m/w/x, or dangling dashes. Standardize to clean professional titles.",
+        "RELEVANCE MATCHING: Dynamically highlight the exact subset of Usman's skills (Product, Growth/SEO, Analytics/SQL/n8n, Operations, or Design/Figma) that directly addresses the employer's pain points.",
+        "CLOSING PARAGRAPH STRUCTURE: Always separate the mandatory forward-looking closing commitment into its own sentence or sub-block, formatted as: 'I am eager to be an integral part of [Company]'s [Team] team, [Value Proposition 1], [Value Proposition 2], and help [Company Impact] as a [Target Role] in [City].'"
+      ],
+      "few_shot_benchmark_samples": [
+        {
+          "company": "eBay",
+          "target_role": "Working Student Internal Product Marketing",
+          "summary": "Product Marketing professional with experience in **SaaS and ecommerce**, skilled at transforming complex technical tools like **CRM systems and Insight & Reporting Tools** into compelling narratives and training materials that drive internal adoption and continuous improvement. I bring strong communication skills for creating user-facing content like short videos and how-to guides, complemented by data-driven research and feedback. I've worked in international, cross-functional environments across Product, Engineering, and Go-to-Market teams and have a tech-savvy attitude toward leveraging new tools, including AI.",
+          "closing_line": "I am eager to be a part of eBay's Global Seller Development team, driving internal product marketing for Insight & Reporting Tools, supporting the team's enablement as a **Working Student Internal Product Marketing in Berlin**."
+        },
+        {
+          "company": "Marvelous",
+          "target_role": "Working Student Founders Associate",
+          "summary": "B2B Product Analyst with experience in **startups and SaaS ERP ecosystems**, skilled at conducting independent analysis on emerging trends and driving execution & operations. I bring advanced skills in **PowerPoint, Excel, and CRM tools**, a strong understanding of innovation scouting, and a proactive spirit for fundraising support like developing sales collateral (**Pitch Decks, Demos, Website Content**). Having worked closely across stakeholders, I possess excellent verbal and written communication skills backed by an **8.5 IELTS score** and \"builder\" mentality.",
+          "closing_line": "I am eager to be an integral part of Marvelous' founding team, drive fundraising efforts, support internal strategy, and scale sustainable industries as a **Working Student Founders Associate in Berlin**."
+        },
+        {
+          "company": "Tradebyte",
+          "target_role": "Working Student Growth Strategy",
+          "summary": "A data-driven professional with strong analytical skills, experienced in leveraging data and performance metrics to inform business strategies, optimize business operations, and drive impactful, data-led decisions. I am a comfortable communicator (**IELTS 8.5**) who thrives in data-driven, commercially-focused teams and has strong experience with **Excel/Google Sheets, CRM systems (Salesforce/Pipedrive), and Tableau**. I am skilled at collecting, analyzing, and maintaining key performance data and automating processes using tools like **n8n** to ensure timely and up-to-date information.",
+          "closing_line": "I am eager to be an integral part of Tradebyte's Growth Strategy Team, conduct market and competitor analysis, and help work with the biggest players in e-comm as a **Working Student Growth Strategy in Berlin**."
+        },
+        {
+          "company": "Zalando",
+          "target_role": "Merchant Operations Performance Working Student",
+          "summary": "A data-driven professional with a strong analytical background, experienced in leveraging **Excel and Google Sheets** to inform business strategies, optimize inventory availability, and drive operational excellence. Previously working for a Logistics ERP, I have successful work experience running data deep-dives on core operational metrics like **inbound performance and MCF KPIs**. I possess a highly organized way of working, utilizing my skills in automating tasks using platforms like **n8n** and building clean tracking tools to design practical, user-friendly tracking dashboards. Working closely with cross-functional teams, I excel at translating ambiguous challenges into structured solutions through clear process documentation, a skill I honed while teaching advanced Excel and data analytics to 250+ students.",
+          "closing_line": "I am eager to be an integral part of Zalando's ZEOS Logistics department, automate manual workflows, help build operational stability for major strategic accounts, and drive operational excellence as a **Merchant Operations Performance Working Student in Berlin**."
+        },
+        {
+          "company": "Synthflow AI",
+          "target_role": "Marketing & Growth Working Student",
+          "summary": "Product Marketing professional with a proven record of transforming complex tech like **voice AI, Agentic AI, and Workflow Automation** into compelling, data-driven narratives that drive adoption and business impact. I bring practical skills in **SEO, paid acquisition, and marketing automation**, a strong understanding of messaging, positioning, and competitive intelligence, and a data-driven mindset for growth experiments and funnel optimization. Having worked closely with cross-functional teams, I thrive in international environments, own tasks, and enjoy transforming complex topics into engaging case studies and webpages.",
+          "closing_line": "I am eager to be an integral part of Synthflow AI's marketing team, running growth experiments across channels, and educating the market on voice as a **Marketing & Growth Working Student in Berlin**."
+        },
+        {
+          "company": "Flink",
+          "target_role": "Working Student Operational Intelligence & Automation",
+          "summary": "Product Analyst with experience in **SaaS, AI, and workflow automation**, skilled at translating user insights and business needs into product strategies that drive efficiency and measurable impact. I enjoy working in dynamic, fast-paced environments and can explain complex topics in a simple way with excellent communication skills in English (**IELTS 8.5**). I have successful experience with **n8n, SQL, Python, data analytics, and process mapping** to support operational excellence.",
+          "closing_line": "I am eager to be a part of Flink's Operations department, automate internal processes, analyze operational data, and give people back time as a **Working Student Operational Intelligence & Automation in Berlin**."
+        },
+        {
+          "company": "Physikit",
+          "target_role": "Communications Working Student",
+          "summary": "B2B Marketing and Communications professional with expertise in **design, sales, and social media**, experienced in creating impactful content that drives engagement. I enjoy working in dynamic environments, and bring practical skills in design tools like **Figma**, professional PowerPoint presentation design, excellent communication skills in English (**8.5 IELTS**), and a detail-oriented mindset supporting sales content.",
+          "closing_line": "I am eager to be an integral part of Physikit's team, supporting communications across social media and design, helping patients/HCPs with innovative diagnostic solutions as a **Communications Working Student**."
+        },
+        {
+          "company": "Parloa",
+          "target_role": "Working Student - Agent Architect Team",
+          "summary": "A data-driven professional and Master's student with expertise in **AI projects and process optimization**, experienced in ensuring smooth project execution through strong organizational and communication skills. I bring hands-on experience with key internal tools and systems including **Jira, Notion, Excel, and Google Workspace**, combined with a proactive mindset. I've worked closely with cross-functional engineering and sales teams, helping ship Conversational AI experts for SaaS Logistics ERPs.",
+          "closing_line": "I am eager to be an integral part of Parloa's Agent Architect Team, supporting project coordination, assisting with the creation and maintenance of internal resources as a **Working Student - Agent Architect Team**."
+        },
+        {
+          "company": "Bruker",
+          "target_role": "Event Marketing Working Student",
+          "summary": "Marketing professional with expertise in **social media, campaign management, and market research**, experienced in delivering business impact through cross-functional collaboration. I bring practical skills in MS Office, a strong understanding of marketing content, and a data-driven mindset for event management and communication. Having worked closely with sales teams and international partners, I thrive in international environments, take ownership of tasks, and enjoy transforming complex topics into engaging reports and online events.",
+          "closing_line": "I am eager to be an integral part of Bruker's BioAFM Business and marketing team, assisting with the design, planning, preparation, and follow-up of international events, acting as the intermediary between event organizers and the European sales team as an **Event Marketing Working Student in Berlin**."
+        }
+      ]
+    }
   },
   "core_competencies": {
     "product_management": [

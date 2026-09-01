@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       masterContext,
       topN = 5,
       apiKey: userApiKey,
-      modelName = "gemini-2.0-flash",
+      modelName = "gemini-3.6-flash",
     } = body;
 
     const apiKey =
@@ -29,7 +29,17 @@ export async function POST(req: NextRequest) {
 
     const projectPool = masterResumeData?.projects || [];
 
-    const systemPrompt = `You are a precision AI Resume & Career Strategist for Usman Zakria.
+    // Extract few-shot samples and rulebook from master context
+    const rulebook = masterContext?.professional_bio?.profile_summary_rulebook;
+    const fewShotSamples = rulebook?.few_shot_benchmark_samples || [];
+
+    // Clean target role: remove (m/f/d), (m/w/d), m/w/x, dashes
+    const cleanedRole = (targetRole || "Working Student")
+      .replace(/\s*[\(\[\{]?(?:m\/w\/d|m\/f\/d|m\/w\/x|all genders|d\/m\/w)[\)\]\}]?\s*/gi, "")
+      .replace(/^[–—\-\s]+|[–—\-\s]+$/g, "")
+      .trim();
+
+    const systemPrompt = `You are a precision AI Resume & Career Strategist for Usman Zakria (Berlin, Germany).
 Your objective is to tailor Usman's existing resume presets and generate an editable Cover Letter for a specific job application.
 
 CRITICAL CONSTRAINTS (ZERO-HALLUCINATION POLICY):
@@ -37,9 +47,25 @@ CRITICAL CONSTRAINTS (ZERO-HALLUCINATION POLICY):
 2. FOR SKILLS: You must STRICTLY CHOOSE the single best matching variable skill category key from: ${JSON.stringify(availableVariableSkills.map(s => s.key))}.
 3. FOR PROJECTS: You must RANK all available projects from the provided pool and return an array of strictly the TOP ${topN} project IDs that are most relevant to the Target Role and Job Description.
    Available projects pool: ${JSON.stringify(projectPool.map((p: any) => ({ id: p.id, title: p.title, description: p.description, tags: p.tags })))}
-4. FOR PROFILE SUMMARY: Write a tailored 3-4 line bio in first-person ("Marketing professional with expertise in..."), naturally incorporating core keywords from the job description and candidate background.
-5. FOR SUMMARY CLOSING LINE: You MUST end with this exact structure: "I am eager to be an integral part of ${targetCompany || "the company"}'s team, contribute to key goals, and help drive impact as a ${targetRole || "Working Student in Berlin"}."
-6. FOR COVER LETTER: Draft a compelling, professional German/English standard cover letter referencing Usman's real achievements and 2-3 specific relevant projects from the master context.
+
+════════════════════════════════════════════════════════════════════════════════
+PROFILE SUMMARY MASTER RULEBOOK & ATS FORMULA:
+════════════════════════════════════════════════════════════════════════════════
+1. VOICE & TONE: Write in confident, articulate, authentic first-person ("Product Marketing professional with experience in...", "A data-driven professional with strong analytical skills..."). Must sound 100% human, never robotic.
+2. STRICT NO LONG DASHES: NEVER use em-dashes (—) or en-dashes (–) within narrative sentences. Use commas, parentheses, or smooth connective syntax.
+3. STRATEGIC KEYWORD BOLDING: You MUST boldly highlight 3-5 high-impact keywords, core tools, KPIs, and certifications using markdown double asterisks (e.g. **SEO, Social Media, and Content**, **8.5 IELTS / C2**, **Excel and SQL**, **n8n workflow automation**, **CRM systems (Salesforce/Pipedrive)**).
+4. ROLE CLEANLINESS: Strip all hiring noise like (m/f/d) or (m/w/d) from the role name.
+5. SUMMARY ANATOMY (3-4 SENTENCES TOTAL):
+   - Sentence 1: Professional identity hook fusing Usman's core domain (Product, Growth, Analytics, AI) with target employer's field (**SaaS, e-commerce, ERP, AI, Fintech**).
+   - Sentence 2: Key technical toolkit & communication strengths (**Excel/SQL/n8n/Figma**, **8.5 IELTS**, cross-functional stakeholder management).
+   - Sentence 3: Demonstrated commercial/operational impact (growth experiments, workflow automation, complex-to-simple translation).
+6. MANDATORY CLOSING SENTENCE: Formatted as:
+   "I am eager to be an integral part of ${targetCompany || "the company"}'s team, [Value Proposition 1], [Value Proposition 2], and help [Company Mission Impact] as a **${cleanedRole} in Berlin**."
+
+BENCHMARK EXAMPLES OF USMAN'S REAL PROFILE SUMMARIES:
+${JSON.stringify(fewShotSamples.slice(0, 4), null, 2)}
+
+7. FOR COVER LETTER: Draft a compelling, professional German/English standard cover letter referencing Usman's real achievements and 2-3 specific relevant projects from the master context.
 
 OUTPUT FORMAT:
 Respond with ONLY a valid, raw JSON object matching this exact schema:
@@ -47,13 +73,13 @@ Respond with ONLY a valid, raw JSON object matching this exact schema:
   "selectedPresetKey": "growth_marketing" | "data_analytics" | "product_management" | "gdpr_operations",
   "selectedSkillKey": "growth_marketing" | "product_management" | "product_and_data_analytics",
   "selectedProjectIds": ["id1", "id2", "id3", ... (length strictly ${topN})],
-  "tailoredSummary": "3-4 line summary string...",
-  "closingLine": "I am eager to be an integral part of ...",
+  "tailoredSummary": "3-4 sentence tailored summary with strategic **bold keywords** and NO em-dashes...",
+  "closingLine": "I am eager to be an integral part of ... as a **${cleanedRole} in Berlin**.",
   "coverLetter": "Full formatted cover letter text with paragraphs..."
 }`;
 
     const userPrompt = `
-TARGET ROLE: ${targetRole || "Data / Product / Marketing Analyst"}
+TARGET ROLE: ${cleanedRole}
 TARGET COMPANY: ${targetCompany || "Target Company"}
 JOB DESCRIPTION:
 ${jobDescription || "Standard Product / Data / Marketing position"}
@@ -66,16 +92,16 @@ ${JSON.stringify(masterContext || {})}
       try {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ 
-          model: modelName || "gemini-2.0-flash",
+          model: modelName || "gemini-3.6-flash",
           generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.2,
+            temperature: 0.25,
           }
         });
 
-        // Fast race timeout (10 seconds max)
+        // Fast race timeout (12 seconds max)
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Gemini API request timed out after 10s")), 10000)
+          setTimeout(() => reject(new Error("Gemini API request timed out after 12s")), 12000)
         );
 
         const generatePromise = model.generateContent([
@@ -91,14 +117,29 @@ ${JSON.stringify(masterContext || {})}
           .trim();
 
         const parsed = JSON.parse(cleaned);
+
+        // Sanitize output to guarantee zero em-dashes
+        if (parsed.tailoredSummary) {
+          parsed.tailoredSummary = parsed.tailoredSummary
+            .replace(/[—–]/g, ", ")
+            .replace(/\s+/g, " ")
+            .trim();
+        }
+        if (parsed.closingLine) {
+          parsed.closingLine = parsed.closingLine
+            .replace(/[—–]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+        }
+
         return NextResponse.json({ success: true, data: parsed, modelUsed: modelName });
       } catch (aiErr: any) {
-        console.warn("Gemini API call warning:", aiErr.message, "Falling back to instant intelligent heuristic.");
+        console.warn("Gemini API call warning:", aiErr.message, "Falling back to rulebook-guided heuristic.");
       }
     }
 
-    // Fallback deterministic heuristic classifier if API call fails or key is invalid
-    const jdLower = (jobDescription + " " + targetRole).toLowerCase();
+    // Rulebook-guided heuristic classifier if API call fails or key is invalid
+    const jdLower = (jobDescription + " " + cleanedRole).toLowerCase();
     let chosenPreset = "growth_marketing";
     let chosenSkill = "growth_marketing";
 
@@ -128,9 +169,18 @@ ${JSON.stringify(masterContext || {})}
     scoredProjects.sort((a: any, b: any) => b.score - a.score);
     const selectedProjectIds = scoredProjects.slice(0, topN).map((p: any) => p.id);
 
-    const fallbackSummary = `Marketing professional with expertise in **SEO, Social Media, and Content**, experienced in delivering growth through data-driven storytelling and strategic positioning. I enjoy working in dynamic, fast-paced environments and can explain complex topics in a simple way with excellent communication skills in English (**8.5 IELTS / C2**), and growing German proficiency (A2). I bring practical skills in SEO/AEO/GEO, and social media content, a strong understanding of editorial calendars, and a strategic mindset for campaign ideas and PR activities.`;
-    const fallbackClosing = `I am eager to be an integral part of ${targetCompany || "the"}'s Marketing team, create and schedule social media content, maintain and update our website, and help simplify the transition towards renewable energy as a **${targetRole || "Marketing Associate Working Student in Berlin"}**.`;
-    const fallbackCoverLetter = `Dear Hiring Team at ${targetCompany || "the company"},\n\nI am writing to express my strong enthusiasm for the ${targetRole || "open position"} role. With my background in data-driven storytelling, SaaS growth marketing, and multi-channel content strategy, I am excited about the opportunity to contribute directly to your team's mission.\n\nThroughout my career at HashMove and past engagements, I have focused on translating strategic insights into commercial impact—from building automated campaigns and designing high-impact Figma illustrations to orchestrating GTM execution and demand generation.\n\nI look forward to the opportunity to discuss how my skill set and proactive mindset can support ${targetCompany || "your organization"}.\n\nSincerely,\nUsman Zakria\nBerlin, Germany\nhttps://usmanzakria.com`;
+    // Rulebook-conforming fallback matching Usman's voice
+    let fallbackSummary = "";
+    if (chosenPreset === "data_analytics") {
+      fallbackSummary = `A data-driven professional with strong analytical skills, experienced in leveraging **data and performance metrics** to inform business strategies, optimize operations, and drive impactful decisions. I thrive in commercially focused teams with hands-on experience in **Excel/Google Sheets, SQL, CRM systems, and Tableau**. Skilled at collecting, analyzing, and maintaining key performance data and automating workflows using tools like **n8n** to ensure real-time accuracy.`;
+    } else if (chosenPreset === "product_management") {
+      fallbackSummary = `Product Analyst with experience in **SaaS ERP ecosystems, user research, and Agile sprint execution**, skilled at translating user needs and operational data into high-impact product features. I bring strong skills in **process mapping, backlog prioritization, and cross-functional coordination** across engineering and commercial teams, backed by an **8.5 IELTS score** and builder mindset.`;
+    } else {
+      fallbackSummary = `Product Marketing professional with expertise in **SEO, Content Strategy, and Growth**, experienced in delivering measurable adoption through data-driven storytelling and clear positioning. I bring practical skills in **marketing automation, paid acquisition, and Figma design**, a strong understanding of editorial workflows, and excellent communication skills in English (**8.5 IELTS / C2**), and growing German proficiency (A2).`;
+    }
+
+    const fallbackClosing = `I am eager to be an integral part of ${targetCompany || "the"}'s team, contribute to core strategic initiatives, and help drive sustainable impact as a **${cleanedRole} in Berlin**.`;
+    const fallbackCoverLetter = `Dear Hiring Team at ${targetCompany || "the company"},\n\nI am writing to express my strong enthusiasm for the ${cleanedRole} role. With my background in data-driven storytelling, SaaS growth marketing, and multi-channel content strategy, I am excited about the opportunity to contribute directly to your team's mission.\n\nThroughout my career at HashMove and past engagements, I have focused on translating strategic insights into commercial impact—from building automated campaigns and designing high-impact Figma illustrations to orchestrating GTM execution and demand generation.\n\nI look forward to the opportunity to discuss how my skill set and proactive mindset can support ${targetCompany || "your organization"}.\n\nSincerely,\nUsman Zakria\nBerlin, Germany\nhttps://usmanzakria.com`;
 
     return NextResponse.json({
       success: true,
@@ -142,7 +192,7 @@ ${JSON.stringify(masterContext || {})}
         closingLine: fallbackClosing,
         coverLetter: fallbackCoverLetter,
       },
-      modelUsed: "instant-heuristic",
+      modelUsed: "rulebook-heuristic",
     });
   } catch (error: any) {
     console.error("AI Tailor error:", error);

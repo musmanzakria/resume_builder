@@ -9,25 +9,26 @@ import {
   FolderGit2, 
   Sparkles, 
   Check, 
-  ExternalLink,
-  Tag,
-  BookOpen,
-  Save,
-  Code2,
-  KeyRound,
-  FileText
+  BookOpen, 
+  Save, 
+  Code2, 
+  KeyRound, 
+  FileText,
+  BookmarkCheck,
+  Building2,
+  Wand2
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 
 export const MasterSettingsView: React.FC = () => {
   const { 
     resume, 
-    masterContext,
-    updateMasterContext,
-    geminiApiKey,
-    setGeminiApiKey,
-    selectedAiModel,
-    setSelectedAiModel,
+    masterContext, 
+    updateMasterContext, 
+    geminiApiKey, 
+    setGeminiApiKey, 
+    selectedAiModel, 
+    setSelectedAiModel, 
     addProject, 
     deleteProject, 
     updateProject, 
@@ -35,7 +36,7 @@ export const MasterSettingsView: React.FC = () => {
     setActiveTab 
   } = useResumeStore();
 
-  const [activeSubTab, setActiveSubTab] = useState<"projects" | "context" | "ai">("projects");
+  const [activeSubTab, setActiveSubTab] = useState<"projects" | "rulebook" | "context" | "ai">("rulebook");
 
   // Project Form States
   const [newTitle, setNewTitle] = useState("");
@@ -50,6 +51,13 @@ export const MasterSettingsView: React.FC = () => {
   );
   const [contextSaved, setContextSaved] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
+
+  // Rulebook Samples State
+  const rulebook = masterContext?.professional_bio?.profile_summary_rulebook || {};
+  const [benchmarkSamples, setBenchmarkSamples] = useState<any[]>(
+    rulebook.few_shot_benchmark_samples || []
+  );
+  const [rulebookSaved, setRulebookSaved] = useState(false);
 
   // API Key State
   const [apiKeyVal, setApiKeyVal] = useState(geminiApiKey || "");
@@ -92,6 +100,23 @@ export const MasterSettingsView: React.FC = () => {
     }
   };
 
+  const handleSaveRulebook = () => {
+    const updated = {
+      ...masterContext,
+      professional_bio: {
+        ...(masterContext.professional_bio || {}),
+        profile_summary_rulebook: {
+          ...(masterContext.professional_bio?.profile_summary_rulebook || {}),
+          few_shot_benchmark_samples: benchmarkSamples,
+        },
+      },
+    };
+    updateMasterContext(updated);
+    setContextJsonStr(JSON.stringify(updated, null, 2));
+    setRulebookSaved(true);
+    setTimeout(() => setRulebookSaved(false), 2000);
+  };
+
   const handleSaveApiKey = () => {
     setGeminiApiKey(apiKeyVal.trim());
     setApiKeySaved(true);
@@ -108,7 +133,7 @@ export const MasterSettingsView: React.FC = () => {
             <span>Master Career Assets & AI Knowledge Base</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Manage your master pool of projects, candidate career context, and AI settings.
+            Manage your master projects pool, Profile Summary Rulebook, career context, and AI models.
           </p>
         </div>
 
@@ -121,10 +146,22 @@ export const MasterSettingsView: React.FC = () => {
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+        <button
+          onClick={() => setActiveSubTab("rulebook")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+            activeSubTab === "rulebook"
+              ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+          }`}
+        >
+          <BookmarkCheck className="w-4 h-4 text-indigo-600" />
+          <span>Profile Summary Rulebook ({benchmarkSamples.length} Samples)</span>
+        </button>
+
         <button
           onClick={() => setActiveSubTab("projects")}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
             activeSubTab === "projects"
               ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
@@ -136,19 +173,19 @@ export const MasterSettingsView: React.FC = () => {
 
         <button
           onClick={() => setActiveSubTab("context")}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
             activeSubTab === "context"
               ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>Master Context (Career Knowledge Base)</span>
+          <span>Master Context (Career Narrative)</span>
         </button>
 
         <button
           onClick={() => setActiveSubTab("ai")}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
             activeSubTab === "ai"
               ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
@@ -159,10 +196,180 @@ export const MasterSettingsView: React.FC = () => {
         </button>
       </div>
 
-      {/* ── TAB 1: PROJECTS POOL ── */}
+      {/* ── TAB 1: PROFILE SUMMARY RULEBOOK & BENCHMARKS ── */}
+      {activeSubTab === "rulebook" && (
+        <div className="space-y-6">
+          {/* Rules Overview Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Wand2 className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-sm text-slate-800">
+                  Profile Summary Master Prompt & ATS Formula
+                </h3>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                Active in Gemini Engine
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="font-bold text-slate-800 block">1. Natural Human Voice</span>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Sounds confident, articulate, and authentic in first-person—never robotic or formulaic.
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="font-bold text-slate-800 block">2. Strict Zero Em-Dashes</span>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Never uses long dashes (— or –) in sentences. Employs clean commas, parentheses, or fluid syntax.
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="font-bold text-slate-800 block">3. Strategic Markdown Bolding (**)</span>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Boldly highlights 3–5 high-impact keywords, tools, and metrics matching the JD (e.g. <strong>**SEO, Social Media, and Content**</strong>, <strong>**8.5 IELTS / C2**</strong>, <strong>**Excel and SQL**</strong>).
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <span className="font-bold text-slate-800 block">4. Cleaned Role & Closing Structure</span>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Strips (m/f/d) noise and cleanly commits: <em>"I am eager to be an integral part of [Company]'s team... as a **[Role] in Berlin**."</em>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Benchmark Few-Shot Samples List */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                  <BookmarkCheck className="w-4 h-4 text-indigo-600" />
+                  Usman's Benchmark Few-Shot Profile Summaries ({benchmarkSamples.length})
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  These real human-written summaries serve as the few-shot learning ground truth for the AI model.
+                </p>
+              </div>
+
+              <button
+                onClick={handleSaveRulebook}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+              >
+                {rulebookSaved ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Rulebook Saved!</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Save Changes</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {benchmarkSamples.map((sample, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-300 transition-colors"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-indigo-600" />
+                      <input
+                        type="text"
+                        value={sample.company}
+                        onChange={(e) => {
+                          const updated = [...benchmarkSamples];
+                          updated[idx].company = e.target.value;
+                          setBenchmarkSamples(updated);
+                        }}
+                        className="font-bold text-xs text-slate-900 bg-white px-2 py-1 rounded border border-slate-300 focus:outline-none focus:border-indigo-500"
+                        placeholder="Company"
+                      />
+                      <span className="text-slate-400">•</span>
+                      <input
+                        type="text"
+                        value={sample.target_role}
+                        onChange={(e) => {
+                          const updated = [...benchmarkSamples];
+                          updated[idx].target_role = e.target.value;
+                          setBenchmarkSamples(updated);
+                        }}
+                        className="font-semibold text-xs text-indigo-700 bg-white px-2 py-1 rounded border border-slate-300 focus:outline-none focus:border-indigo-500 flex-1 min-w-[200px]"
+                        placeholder="Target Role"
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const updated = benchmarkSamples.filter((_, i) => i !== idx);
+                        setBenchmarkSamples(updated);
+                      }}
+                      className="p-1 text-slate-400 hover:text-red-600 self-end sm:self-auto"
+                      title="Remove sample"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <TipTapInput
+                    label="Profile Summary Bio"
+                    value={sample.summary}
+                    onChange={(val) => {
+                      const updated = [...benchmarkSamples];
+                      updated[idx].summary = val;
+                      setBenchmarkSamples(updated);
+                    }}
+                    rows={3}
+                  />
+
+                  <TipTapInput
+                    label="Mandatory Closing Statement"
+                    value={sample.closing_line}
+                    onChange={(val) => {
+                      const updated = [...benchmarkSamples];
+                      updated[idx].closing_line = val;
+                      setBenchmarkSamples(updated);
+                    }}
+                    rows={2}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setBenchmarkSamples([
+                  ...benchmarkSamples,
+                  {
+                    company: "New Company",
+                    target_role: "Target Working Student Role",
+                    summary: "Product Marketing professional with expertise in **growth, analytics, and content**...",
+                    closing_line: "I am eager to be an integral part of the team as a **Working Student in Berlin**.",
+                  },
+                ]);
+              }}
+              className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-indigo-700 border border-dashed border-indigo-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add New Benchmark Sample</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 2: PROJECTS POOL ── */}
       {activeSubTab === "projects" && (
         <div className="space-y-6">
-          {/* Global AI Matching Settings */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
             <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-600" />
@@ -366,7 +573,7 @@ export const MasterSettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* ── TAB 2: MASTER CONTEXT KNOWLEDGE BASE ── */}
+      {/* ── TAB 3: MASTER CONTEXT KNOWLEDGE BASE ── */}
       {activeSubTab === "context" && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -420,7 +627,7 @@ export const MasterSettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* ── TAB 3: API KEY & MODEL SETTINGS ── */}
+      {/* ── TAB 4: API KEY & MODEL SETTINGS ── */}
       {activeSubTab === "ai" && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
           <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
