@@ -29,9 +29,12 @@ export async function POST(req: NextRequest) {
 
     const projectPool = masterResumeData?.projects || [];
 
-    // Extract few-shot samples and rulebook from master context
+    // Extract active few-shot samples and rulebook from master context
     const rulebook = masterContext?.professional_bio?.profile_summary_rulebook;
-    const fewShotSamples = rulebook?.few_shot_benchmark_samples || [];
+    const allSamples = rulebook?.few_shot_benchmark_samples || [];
+    const activeSamples = allSamples.filter((s: any) => s.enabled !== false);
+    const archFramework = rulebook?.architectural_framework || {};
+    const styleConstraints = rulebook?.style_and_ats_constraints || [];
 
     // Clean target role: remove (m/f/d), (m/w/d), m/w/x, dashes
     const cleanedRole = (targetRole || "Working Student")
@@ -49,21 +52,25 @@ CRITICAL CONSTRAINTS (ZERO-HALLUCINATION POLICY):
    Available projects pool: ${JSON.stringify(projectPool.map((p: any) => ({ id: p.id, title: p.title, description: p.description, tags: p.tags })))}
 
 ════════════════════════════════════════════════════════════════════════════════
-PROFILE SUMMARY MASTER RULEBOOK & ATS FORMULA:
+USMAN'S PROFILE SUMMARY MASTER ARCHITECTURE & ATS RULEBOOK:
 ════════════════════════════════════════════════════════════════════════════════
-1. VOICE & TONE: Write in confident, articulate, authentic first-person ("Product Marketing professional with experience in...", "A data-driven professional with strong analytical skills..."). Must sound 100% human, never robotic.
-2. STRICT NO LONG DASHES: NEVER use em-dashes (—) or en-dashes (–) within narrative sentences. Use commas, parentheses, or smooth connective syntax.
-3. STRATEGIC KEYWORD BOLDING: You MUST boldly highlight 3-5 high-impact keywords, core tools, KPIs, and certifications using markdown double asterisks (e.g. **SEO, Social Media, and Content**, **8.5 IELTS / C2**, **Excel and SQL**, **n8n workflow automation**, **CRM systems (Salesforce/Pipedrive)**).
-4. ROLE CLEANLINESS: Strip all hiring noise like (m/f/d) or (m/w/d) from the role name.
-5. SUMMARY ANATOMY (3-4 SENTENCES TOTAL):
-   - Sentence 1: Professional identity hook fusing Usman's core domain (Product, Growth, Analytics, AI) with target employer's field (**SaaS, e-commerce, ERP, AI, Fintech**).
-   - Sentence 2: Key technical toolkit & communication strengths (**Excel/SQL/n8n/Figma**, **8.5 IELTS**, cross-functional stakeholder management).
-   - Sentence 3: Demonstrated commercial/operational impact (growth experiments, workflow automation, complex-to-simple translation).
-6. MANDATORY CLOSING SENTENCE: Formatted as:
-   "I am eager to be an integral part of ${targetCompany || "the company"}'s team, [Value Proposition 1], [Value Proposition 2], and help [Company Mission Impact] as a **${cleanedRole} in Berlin**."
+OBJECTIVE:
+Synthesize an authentic, high-converting, ATS-tailored 3-4 sentence professional summary. Balance disciplined structure with creative leeway to adapt tone and vocabulary to the employer's industry culture.
 
-BENCHMARK EXAMPLES OF USMAN'S REAL PROFILE SUMMARIES:
-${JSON.stringify(fewShotSamples.slice(0, 4), null, 2)}
+4-STAGE DYNAMIC FLOW:
+1. STAGE 1 (Persona Hook): Tailor Usman's professional identity to match the target company's domain (e.g. SaaS, eCommerce, AI/Workflow Automation, Logistics ERP, Startup Strategy).
+2. STAGE 2 (Technical & Language Bridge): Selectively highlight relevant tools from Usman's real toolkit (**Excel/Sheets**, **SQL**, **Python**, **n8n**, **Tableau**, **Figma**, **CRM (Salesforce/Pipedrive)**) and language fluency (**8.5 IELTS score / C2 English**, German A2).
+3. STAGE 3 (Commercial & Execution Impact): Highlight cross-functional value (e.g. automating workflows to save team time, running KPI deep-dives, translating complex tech into clean documentation/sales pitch decks, executing growth experiments).
+4. STAGE 4 (Closing Commitment Anchor): Standalone forward-looking commitment customized to the team:
+   "I am eager to be an integral part of ${targetCompany || "the company"}'s team, [Value 1], [Value 2], and help [Company Mission Impact] as a **${cleanedRole} in Berlin**."
+
+CRITICAL STYLE RULES:
+- STRICT ZERO EM-DASHES: Never use em-dashes (—) or en-dashes (–) within narrative sentences. Use commas, parentheses, or smooth connective syntax.
+- STRATEGIC BOLDING: Bolds 3-5 high-impact keywords, core tools, and metrics matching the JD with double asterisks (**).
+- CLEAN ROLE TITLE: Strip all hiring noise like (m/f/d) or (m/w/d).
+
+ACTIVE BENCHMARK FEW-SHOT SAMPLES (${activeSamples.length} Active Examples from Usman's Library):
+${JSON.stringify(activeSamples.slice(0, 6), null, 2)}
 
 7. FOR COVER LETTER: Draft a compelling, professional German/English standard cover letter referencing Usman's real achievements and 2-3 specific relevant projects from the master context.
 

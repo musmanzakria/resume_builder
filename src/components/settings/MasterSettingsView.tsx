@@ -13,10 +13,16 @@ import {
   Save, 
   Code2, 
   KeyRound, 
-  FileText,
   BookmarkCheck,
   Building2,
-  Wand2
+  Wand2,
+  ToggleLeft,
+  ToggleRight,
+  Sliders,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  Layers
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 
@@ -36,7 +42,7 @@ export const MasterSettingsView: React.FC = () => {
     setActiveTab 
   } = useResumeStore();
 
-  const [activeSubTab, setActiveSubTab] = useState<"projects" | "rulebook" | "context" | "ai">("rulebook");
+  const [activeSubTab, setActiveSubTab] = useState<"rulebook" | "projects" | "context" | "ai">("rulebook");
 
   // Project Form States
   const [newTitle, setNewTitle] = useState("");
@@ -62,6 +68,25 @@ export const MasterSettingsView: React.FC = () => {
   // API Key State
   const [apiKeyVal, setApiKeyVal] = useState(geminiApiKey || "");
   const [apiKeySaved, setApiKeySaved] = useState(false);
+
+  const activeSamplesCount = benchmarkSamples.filter((s) => s.enabled !== false).length;
+
+  const handleToggleSample = (index: number) => {
+    const updated = [...benchmarkSamples];
+    updated[index] = {
+      ...updated[index],
+      enabled: updated[index].enabled === false ? true : false,
+    };
+    setBenchmarkSamples(updated);
+  };
+
+  const handleToggleAllSamples = (enable: boolean) => {
+    const updated = benchmarkSamples.map((s) => ({
+      ...s,
+      enabled: enable,
+    }));
+    setBenchmarkSamples(updated);
+  };
 
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +158,7 @@ export const MasterSettingsView: React.FC = () => {
             <span>Master Career Assets & AI Knowledge Base</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Manage your master projects pool, Profile Summary Rulebook, career context, and AI models.
+            Manage your Profile Summary Rulebook, active few-shot samples, master projects pool, and AI settings.
           </p>
         </div>
 
@@ -156,7 +181,7 @@ export const MasterSettingsView: React.FC = () => {
           }`}
         >
           <BookmarkCheck className="w-4 h-4 text-indigo-600" />
-          <span>Profile Summary Rulebook ({benchmarkSamples.length} Samples)</span>
+          <span>Profile Summary Rulebook ({activeSamplesCount}/{benchmarkSamples.length} Active)</span>
         </button>
 
         <button
@@ -196,154 +221,243 @@ export const MasterSettingsView: React.FC = () => {
         </button>
       </div>
 
-      {/* ── TAB 1: PROFILE SUMMARY RULEBOOK & BENCHMARKS ── */}
+      {/* ── TAB 1: PROFILE SUMMARY RULEBOOK & BENCHMARK SAMPLES ── */}
       {activeSubTab === "rulebook" && (
         <div className="space-y-6">
-          {/* Rules Overview Card */}
+          {/* Architectural Guidelines Card */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Wand2 className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-sm text-slate-800">
-                  Profile Summary Master Prompt & ATS Formula
-                </h3>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-800">
+                    Profile Summary 4-Stage Architecture & ATS Formula
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Defines the dynamic structural cadence and creative leeway used by the AI engine.
+                  </p>
+                </div>
               </div>
-              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                Active in Gemini Engine
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                Live Prompt Ingestion
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="font-bold text-slate-800 block">1. Natural Human Voice</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
+                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">1</span>
+                  <span>Stage 1: The Contextual Persona Hook</span>
+                </div>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Sounds confident, articulate, and authentic in first-person—never robotic or formulaic.
+                  Tailors Usman's professional title to match the employer's core domain (e.g. <em>"Product Marketing professional in SaaS & ecommerce..."</em> or <em>"A data-driven professional with strong analytical skills..."</em>).
                 </p>
               </div>
 
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="font-bold text-slate-800 block">2. Strict Zero Em-Dashes</span>
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
+                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">2</span>
+                  <span>Stage 2: Technical & Language Bridge</span>
+                </div>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Never uses long dashes (— or –) in sentences. Employs clean commas, parentheses, or fluid syntax.
+                  Selectively weaves hard tools requested in the JD (<strong>Excel, SQL, Python, n8n, Figma, CRM</strong>) paired with language credentials (<strong>8.5 IELTS / C2 English</strong>, German A2).
                 </p>
               </div>
 
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="font-bold text-slate-800 block">3. Strategic Markdown Bolding (**)</span>
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
+                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">3</span>
+                  <span>Stage 3: Commercial Impact & Execution Value</span>
+                </div>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Boldly highlights 3–5 high-impact keywords, tools, and metrics matching the JD (e.g. <strong>**SEO, Social Media, and Content**</strong>, <strong>**8.5 IELTS / C2**</strong>, <strong>**Excel and SQL**</strong>).
+                  Highlights proven cross-functional execution (e.g. converting complex tech into sales pitch decks/video guides, automating workflows to save team time, running KPI deep-dives).
                 </p>
               </div>
 
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="font-bold text-slate-800 block">4. Cleaned Role & Closing Structure</span>
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
+                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">4</span>
+                  <span>Stage 4: Closing Commitment Anchor</span>
+                </div>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Strips (m/f/d) noise and cleanly commits: <em>"I am eager to be an integral part of [Company]'s team... as a **[Role] in Berlin**."</em>
+                  Dedicated forward-looking closing statement with cleaned title: <em>"I am eager to be an integral part of [Company]'s team, [Value 1], and help [Impact] as a **[Role] in Berlin**."</em>
+                </p>
+              </div>
+            </div>
+
+            {/* Creative Leeway & Style Rules */}
+            <div className="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl flex items-start gap-2.5 text-xs text-indigo-950">
+              <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold">Creative Leeway & ATS Rules:</span>
+                <p className="text-[11px] text-indigo-800 leading-relaxed">
+                  The AI is given creative leeway to adapt tone and phrasing to each company's unique culture while strictly enforcing: <strong>Zero em-dashes (—/–)</strong>, <strong>Selective **bolding** of 3–5 core keywords</strong>, and <strong>Removal of hiring noise like (m/f/d)</strong>.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Benchmark Few-Shot Samples List */}
+          {/* Benchmark Few-Shot Samples Manager */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
                   <BookmarkCheck className="w-4 h-4 text-indigo-600" />
-                  Usman's Benchmark Few-Shot Profile Summaries ({benchmarkSamples.length})
+                  Benchmark Few-Shot Samples ({benchmarkSamples.length} Total)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  These real human-written summaries serve as the few-shot learning ground truth for the AI model.
+                  Toggle samples ON to include them in the active AI prompt, or turn them OFF to store them in your library without sending them to the AI.
                 </p>
               </div>
 
-              <button
-                onClick={handleSaveRulebook}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-              >
-                {rulebookSaved ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Rulebook Saved!</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save Changes</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => handleToggleAllSamples(true)}
+                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-colors"
+                >
+                  Enable All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleAllSamples(false)}
+                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-colors"
+                >
+                  Disable All
+                </button>
+                <button
+                  onClick={handleSaveRulebook}
+                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                >
+                  {rulebookSaved ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Saved!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save Rulebook</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
+            {/* Active Status Badge */}
+            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+              <span className="text-slate-600 font-medium">
+                Active Few-Shot Prompts Sent to Gemini: <strong className="text-indigo-700 font-bold">{activeSamplesCount} of {benchmarkSamples.length} samples</strong>
+              </span>
+              <span className="text-[11px] font-mono text-slate-500">
+                {activeSamplesCount === 0 ? "⚠️ AI using base rules only" : "✅ Dynamic in-context few-shot learning active"}
+              </span>
+            </div>
+
+            {/* Samples List */}
             <div className="space-y-4">
-              {benchmarkSamples.map((sample, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 hover:border-slate-300 transition-colors"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-indigo-600" />
-                      <input
-                        type="text"
-                        value={sample.company}
-                        onChange={(e) => {
-                          const updated = [...benchmarkSamples];
-                          updated[idx].company = e.target.value;
-                          setBenchmarkSamples(updated);
-                        }}
-                        className="font-bold text-xs text-slate-900 bg-white px-2 py-1 rounded border border-slate-300 focus:outline-none focus:border-indigo-500"
-                        placeholder="Company"
-                      />
-                      <span className="text-slate-400">•</span>
-                      <input
-                        type="text"
-                        value={sample.target_role}
-                        onChange={(e) => {
-                          const updated = [...benchmarkSamples];
-                          updated[idx].target_role = e.target.value;
-                          setBenchmarkSamples(updated);
-                        }}
-                        className="font-semibold text-xs text-indigo-700 bg-white px-2 py-1 rounded border border-slate-300 focus:outline-none focus:border-indigo-500 flex-1 min-w-[200px]"
-                        placeholder="Target Role"
-                      />
+              {benchmarkSamples.map((sample, idx) => {
+                const isEnabled = sample.enabled !== false;
+
+                return (
+                  <div
+                    key={idx}
+                    className={`p-5 rounded-2xl border transition-all space-y-3 ${
+                      isEnabled
+                        ? "bg-white border-slate-200 shadow-xs hover:border-indigo-300"
+                        : "bg-slate-50/70 border-slate-200 opacity-60 hover:opacity-90"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Building2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <input
+                          type="text"
+                          value={sample.company}
+                          onChange={(e) => {
+                            const updated = [...benchmarkSamples];
+                            updated[idx].company = e.target.value;
+                            setBenchmarkSamples(updated);
+                          }}
+                          className="font-bold text-xs text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500"
+                          placeholder="Company"
+                        />
+                        <span className="text-slate-400">•</span>
+                        <input
+                          type="text"
+                          value={sample.target_role}
+                          onChange={(e) => {
+                            const updated = [...benchmarkSamples];
+                            updated[idx].target_role = e.target.value;
+                            setBenchmarkSamples(updated);
+                          }}
+                          className="font-semibold text-xs text-indigo-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 min-w-[220px]"
+                          placeholder="Target Role"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto">
+                        {/* Sample Active Toggle Switch */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSample(idx)}
+                          className={`px-3 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-all border ${
+                            isEnabled
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs"
+                              : "bg-slate-200/60 text-slate-600 border-slate-300"
+                          }`}
+                        >
+                          {isEnabled ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Active for AI</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3.5 h-3.5 text-slate-400" />
+                              <span>Deactivated</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const updated = benchmarkSamples.filter((_, i) => i !== idx);
+                            setBenchmarkSamples(updated);
+                          }}
+                          className="p-1 text-slate-400 hover:text-red-600 rounded-lg transition-colors"
+                          title="Delete Sample"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        const updated = benchmarkSamples.filter((_, i) => i !== idx);
+                    <TipTapInput
+                      label="Profile Summary Bio (Markdown **bold** rendered visually)"
+                      value={sample.summary}
+                      onChange={(val) => {
+                        const updated = [...benchmarkSamples];
+                        updated[idx].summary = val;
                         setBenchmarkSamples(updated);
                       }}
-                      className="p-1 text-slate-400 hover:text-red-600 self-end sm:self-auto"
-                      title="Remove sample"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                      rows={3}
+                    />
+
+                    <TipTapInput
+                      label="Mandatory Closing Statement"
+                      value={sample.closing_line}
+                      onChange={(val) => {
+                        const updated = [...benchmarkSamples];
+                        updated[idx].closing_line = val;
+                        setBenchmarkSamples(updated);
+                      }}
+                      rows={2}
+                    />
                   </div>
-
-                  <TipTapInput
-                    label="Profile Summary Bio"
-                    value={sample.summary}
-                    onChange={(val) => {
-                      const updated = [...benchmarkSamples];
-                      updated[idx].summary = val;
-                      setBenchmarkSamples(updated);
-                    }}
-                    rows={3}
-                  />
-
-                  <TipTapInput
-                    label="Mandatory Closing Statement"
-                    value={sample.closing_line}
-                    onChange={(val) => {
-                      const updated = [...benchmarkSamples];
-                      updated[idx].closing_line = val;
-                      setBenchmarkSamples(updated);
-                    }}
-                    rows={2}
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <button
@@ -351,6 +465,8 @@ export const MasterSettingsView: React.FC = () => {
                 setBenchmarkSamples([
                   ...benchmarkSamples,
                   {
+                    id: "sample-" + Date.now(),
+                    enabled: true,
                     company: "New Company",
                     target_role: "Target Working Student Role",
                     summary: "Product Marketing professional with expertise in **growth, analytics, and content**...",
@@ -358,10 +474,10 @@ export const MasterSettingsView: React.FC = () => {
                   },
                 ]);
               }}
-              className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-indigo-700 border border-dashed border-indigo-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-indigo-700 border border-dashed border-indigo-300 rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>Add New Benchmark Sample</span>
+              <span>Add New Benchmark Sample to Library</span>
             </button>
           </div>
         </div>
