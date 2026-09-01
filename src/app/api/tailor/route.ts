@@ -55,21 +55,24 @@ CRITICAL CONSTRAINTS (ZERO-HALLUCINATION POLICY):
 USMAN'S PROFILE SUMMARY MASTER ARCHITECTURE & ATS RULEBOOK:
 ════════════════════════════════════════════════════════════════════════════════
 OBJECTIVE:
-Synthesize an authentic, high-converting, ATS-tailored 3-4 sentence professional summary. Balance disciplined structure with creative leeway to adapt tone and vocabulary to the employer's industry culture.
+${rulebook?.objective || "Synthesize an authentic, high-converting, ATS-tailored 3-4 sentence professional summary. Balance disciplined structure with creative leeway to adapt tone and vocabulary to the employer's industry culture."}
 
-4-STAGE DYNAMIC FLOW:
-1. STAGE 1 (Persona Hook): Tailor Usman's professional identity to match the target company's domain (e.g. SaaS, eCommerce, AI/Workflow Automation, Logistics ERP, Startup Strategy).
-2. STAGE 2 (Technical & Language Bridge): Selectively highlight relevant tools from Usman's real toolkit (**Excel/Sheets**, **SQL**, **Python**, **n8n**, **Tableau**, **Figma**, **CRM (Salesforce/Pipedrive)**) and language fluency (**8.5 IELTS score / C2 English**, German A2).
-3. STAGE 3 (Commercial & Execution Impact): Highlight cross-functional value (e.g. automating workflows to save team time, running KPI deep-dives, translating complex tech into clean documentation/sales pitch decks, executing growth experiments).
-4. STAGE 4 (Closing Commitment Anchor): Standalone forward-looking commitment customized to the team:
+GOLD STANDARD BENCHMARK PRINCIPLE:
+${rulebook?.gold_standard_clause || "The benchmark samples represent Usman's authentic gold standard—the exact cadence, keyword density, confidence, and visual bolding aesthetics desired. Use the 4-stage framework as an architectural guide, but look to the active samples as the benchmark of excellence. Do not rigidly restrict yourself only to the words in the samples; think out of the box and pull dynamically from Usman's entire background to tailor to novel roles."}
+
+4-STAGE DYNAMIC FLOW & GENERALIZED SKILL SYNTHESIS:
+1. STAGE 1 (Persona Hook): Establish immediate domain authority tailored to the target company's industry (SaaS, eCommerce, AI/Workflow Automation, Logistics ERP, BioTech, Startup Strategy).
+2. STAGE 2 (Generalized Skill & Competency Bridge): Bridge hard software tools (Excel/Sheets, SQL, Python, n8n, Figma, Tableau, CRM), domain methodologies (SEO/AEO/GEO, CRO, GTM, Agile, Process Mapping), and soft communication strengths (8.5 IELTS / C2 English, German A2, cross-functional engineering-to-GTM bridge, explaining complex tech simply). Do NOT restrict yourself to hardcoded lists; invent truthful contextual connections based on the JD.
+3. STAGE 3 (Commercial Impact & Execution Value): Demonstrate proactive execution (e.g. automating manual pipelines to give teams back time, conducting growth experiments, translating technical architecture into sales pitch decks and demos).
+4. STAGE 4 (Closing Commitment Anchor): Clean, forward-looking commitment customized to the team's mission:
    "I am eager to be an integral part of ${targetCompany || "the company"}'s team, [Value 1], [Value 2], and help [Company Mission Impact] as a **${cleanedRole} in Berlin**."
 
-CRITICAL STYLE RULES:
+CRITICAL ATS & STYLE RULES:
 - STRICT ZERO EM-DASHES: Never use em-dashes (—) or en-dashes (–) within narrative sentences. Use commas, parentheses, or smooth connective syntax.
 - STRATEGIC BOLDING: Bolds 3-5 high-impact keywords, core tools, and metrics matching the JD with double asterisks (**).
 - CLEAN ROLE TITLE: Strip all hiring noise like (m/f/d) or (m/w/d).
 
-ACTIVE BENCHMARK FEW-SHOT SAMPLES (${activeSamples.length} Active Examples from Usman's Library):
+ACTIVE BENCHMARK FEW-SHOT SAMPLES (${activeSamples.length} Active Examples from Usman's Gold-Standard Library):
 ${JSON.stringify(activeSamples.slice(0, 6), null, 2)}
 
 7. FOR COVER LETTER: Draft a compelling, professional German/English standard cover letter referencing Usman's real achievements and 2-3 specific relevant projects from the master context.

@@ -18,10 +18,13 @@
     "summary_foundation": "Data-driven product analyst with experience managing the full product lifecycle. Specialized in translating user needs into market-ready solutions, guiding products from initial user research and requirements gathering through to go-to-market strategy, launch, and optimization for lead generation. Adept at bridging technical systems (Python, SQL, R, n8n, APIs) with commercial product strategies (GTM, pricing playbooks, UX/SEO, multi-channel growth).",
     "mandatory_closing_template": "I am eager to be an integral part of {TARGET_COMPANY}'s {TARGET_TEAM} team, {ACTION_1}, {ACTION_2}, and help {MISSION_IMPACT} as a {CLEANED_TARGET_ROLE} in {LOCATION}.",
     "profile_summary_rulebook": {
-      "objective": "Generate high-converting, authentic, ATS-optimized 3-4 sentence professional summaries that seamlessly fuse Usman's authentic track record with the target Job Description (JD), balancing disciplined structure with creative contextual leeway.",
+      "objective": "Generate high-converting, authentic, ATS-optimized 3-4 sentence professional summaries that seamlessly fuse Usman's authentic track record with the target Job Description (JD), balancing disciplined structure with creative leeway and out-of-the-box contextual thinking.",
+      "gold_standard_clause": "The benchmark samples represent Usman's authentic gold standard—the exact cadence, keyword density, confidence, and visual bolding aesthetics desired. Use the 4-stage framework as an architectural guide, but look to the active samples as the benchmark of excellence. Do not rigidly restrict yourself only to the words in the samples; think out of the box and pull dynamically from Usman's entire background to tailor to novel roles.",
       "architectural_framework": {
         "stage_1_persona_hook": {
-          "description": "Synthesize a tailored professional identity matching the employer's core domain (Product, Growth/SEO, Operations, AI/Automation, Strategy).",
+          "title": "Stage 1: The Contextual Persona Hook",
+          "description": "Synthesize a tailored professional identity matching the employer's core industry and team charter (e.g., SaaS, eCommerce, AI/Workflow Automation, Logistics ERP, Startup Strategy, BioTech/MedTech).",
+          "guideline": "Establish immediate credibility by defining Usman as a specialist in the target domain (Product Marketing, Data Analytics, Founders Associate, Product Operations, Communications).",
           "archetypes": [
             "Product Marketing professional with experience in SaaS, ecommerce, and workflow automation...",
             "A data-driven professional with a strong analytical background, experienced in leveraging data to optimize operations...",
@@ -29,34 +32,40 @@
             "Marketing & Communications professional with expertise in design, content, and cross-functional growth..."
           ]
         },
-        "stage_2_technical_bridge": {
-          "description": "Map the candidate's real technical tools and communication credentials directly to the JD requirements.",
-          "key_assets": [
-            "Analytical & Automation: Excel/Google Sheets, SQL, Python, n8n, Tableau, Power BI",
-            "Product & Design: Figma (workflow schemas, infographics, wireframing), Jira, Notion",
-            "Growth & Commercial: SEO/AEO/GEO, CRM systems (Salesforce, Pipedrive), LinkedIn Ads, Apollo, Pitch Decks",
-            "Communication & Languages: 8.5 IELTS (C2 / Top 3% globally), growing German proficiency (A2)"
+        "stage_2_skill_synthesis": {
+          "title": "Stage 2: Generalized Skill & Competency Bridge",
+          "description": "Dynamically bridge hard tools, domain competencies, and interpersonal fluency to the JD without artificial restrictions.",
+          "guideline": "Draw freely across Usman's full spectrum: software tools (Excel/Sheets, SQL, Python, n8n, Figma, Tableau, CRM), domain methodologies (SEO/AEO/GEO, CRO, GTM, Agile/Scrum, Process Mapping), and interpersonal strengths (8.5 IELTS / C2 English, German A2, cross-functional bridge between Engineering and GTM, teaching 250+ students).",
+          "competency_domains": [
+            "Analytical & Automation: Excel LAMBDA/VLOOKUP, SQL, Python, R, n8n workflows, Tableau, Power BI, KPI deep-dives",
+            "Product & UX: Figma (visual workflow schemas, architecture diagrams, infographics), Jira, Notion, sprint coordination",
+            "Growth & Commercial: SEO/AEO/GEO, paid acquisition, CRM systems (Salesforce, Pipedrive), Apollo, LinkedIn campaigns, Pitch Decks",
+            "Soft Skills & Communication: IELTS 8.5 (C2 / Top 3% globally), growing German proficiency (A2), builder mentality, stakeholder coordination, explaining complex tech simply"
           ]
         },
         "stage_3_execution_value": {
-          "description": "Articulate cross-functional execution and concrete commercial impact.",
+          "title": "Stage 3: Commercial Impact & Execution Value",
+          "description": "Articulate cross-functional execution and concrete business impact tailored to the hiring team's pain points.",
+          "guideline": "Demonstrate the ability to take ownership and deliver measurable value: translating ambiguous technical topics into user-friendly sales collateral/demos, automating manual pipelines to give teams back time, running growth experiments, or driving operational stability.",
           "themes": [
             "Translating ambiguous technical topics into clear user-facing documentation, training, and sales collateral",
             "Automating manual operational workflows using n8n and Python to give teams back time",
-            "Running data deep-dives on core KPIs to inform strategic business decisions",
+            "Running data deep-dives on core operational metrics to inform strategic business decisions",
             "Executing growth experiments and multi-channel content strategies"
           ]
         },
         "stage_4_closing_commitment": {
-          "description": "Forward-looking commitment anchored to the specific company team, value proposition, and standardized location.",
+          "title": "Stage 4: Closing Commitment Anchor",
+          "description": "Dedicated forward-looking commitment customized to the specific team's mission with cleaned role & location.",
+          "guideline": "Always cleanly separate the closing sentence. Strip hiring tags like (m/f/d) and format as: 'I am eager to be an integral part of [Company]'s [Team] team, [Value 1], [Value 2], and help [Company Impact] as a **[Cleaned Target Role] in [City/Berlin]**.'",
           "formula": "I am eager to be an integral part of [Company]'s [Team] team, [Value 1], [Value 2], and help [Company Impact] as a **[Cleaned Target Role] in [City/Berlin]**."
         }
       },
       "style_and_ats_constraints": [
-        "CREATIVE LEEWAY: Adapt vocabulary, sentence cadence, and emphasis to match the employer's industry culture while preserving factual truth.",
+        "CREATIVE AUTONOMY: Adapt vocabulary, sentence cadence, and emphasis to match the employer's industry culture while preserving factual ground truth.",
         "STRICT ZERO EM-DASHES: Never use em-dashes (—) or en-dashes (–) within narrative sentences. Use natural commas, parentheses, or smooth connective syntax.",
         "STRATEGIC MARKDOWN BOLDING: Boldly highlight 3–5 high-impact keywords, core tools, and metrics using double asterisks (e.g., **SEO, Social Media, and Content**, **8.5 IELTS / C2**, **Excel and SQL**, **n8n workflow automation**).",
-        "CLEAN ROLE STANDARDIZATION: Strip hiring noise like (m/f/d), (m/w/d), m/w/x, or dangling hyphens from the target role.",
+        "CLEAN ROLE STANDARDIZATION: Strip administrative noise like (m/f/d), (m/w/d), m/w/x, or dangling hyphens from the target role.",
         "HUMAN & AUTHENTIC VOICE: Maintain a confident, articulate, and proactive first-person narrative—never robotic, clichéd, or generic."
       ],
       "few_shot_benchmark_samples": [

@@ -16,13 +16,12 @@ import {
   BookmarkCheck,
   Building2,
   Wand2,
-  ToggleLeft,
-  ToggleRight,
-  Sliders,
   CheckCircle2,
   XCircle,
   HelpCircle,
-  Layers
+  Edit3,
+  Sliders,
+  Flame
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 
@@ -58,10 +57,68 @@ export const MasterSettingsView: React.FC = () => {
   const [contextSaved, setContextSaved] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
 
-  // Rulebook Samples State
-  const rulebook = masterContext?.professional_bio?.profile_summary_rulebook || {};
+  // Rulebook Editable States
+  const initialRulebook = masterContext?.professional_bio?.profile_summary_rulebook || {};
+  const [rulebookObjective, setRulebookObjective] = useState<string>(
+    initialRulebook.objective ||
+      "Generate high-converting, authentic, ATS-optimized 3-4 sentence professional summaries that seamlessly fuse Usman's authentic track record with the target Job Description (JD), balancing disciplined structure with creative leeway and out-of-the-box contextual thinking."
+  );
+  const [goldStandardClause, setGoldStandardClause] = useState<string>(
+    initialRulebook.gold_standard_clause ||
+      "The benchmark samples represent Usman's authentic gold standard—the exact cadence, keyword density, confidence, and visual bolding aesthetics desired. Use the 4-stage framework as an architectural guide, but look to the active samples as the benchmark of excellence. Do not rigidly restrict yourself only to the words in the samples; think out of the box and pull dynamically from Usman's entire background to tailor to novel roles."
+  );
+
+  // Stage 1
+  const [stage1Title, setStage1Title] = useState<string>(
+    initialRulebook.architectural_framework?.stage_1_persona_hook?.title || "Stage 1: The Contextual Persona Hook"
+  );
+  const [stage1Desc, setStage1Desc] = useState<string>(
+    initialRulebook.architectural_framework?.stage_1_persona_hook?.description ||
+      "Synthesize a tailored professional identity matching the employer's core industry and team charter (e.g., SaaS, eCommerce, AI/Workflow Automation, Logistics ERP, Startup Strategy, BioTech/MedTech)."
+  );
+
+  // Stage 2
+  const [stage2Title, setStage2Title] = useState<string>(
+    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.title || "Stage 2: Generalized Skill & Competency Bridge"
+  );
+  const [stage2Desc, setStage2Desc] = useState<string>(
+    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.description ||
+      "Dynamically bridge hard tools, domain methodologies, and interpersonal fluency to the JD without artificial restrictions."
+  );
+  const [stage2Guideline, setStage2Guideline] = useState<string>(
+    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.guideline ||
+      "Draw freely across Usman's full spectrum: software tools (Excel/Sheets, SQL, Python, n8n, Figma, Tableau, CRM), domain methodologies (SEO/AEO/GEO, CRO, GTM, Agile/Scrum, Process Mapping), and interpersonal strengths (8.5 IELTS / C2 English, German A2, cross-functional bridge between Engineering and GTM, teaching 250+ students)."
+  );
+
+  // Stage 3
+  const [stage3Title, setStage3Title] = useState<string>(
+    initialRulebook.architectural_framework?.stage_3_execution_value?.title || "Stage 3: Commercial Impact & Execution Value"
+  );
+  const [stage3Desc, setStage3Desc] = useState<string>(
+    initialRulebook.architectural_framework?.stage_3_execution_value?.description ||
+      "Articulate cross-functional execution and concrete business impact tailored to the hiring team's pain points."
+  );
+
+  // Stage 4
+  const [stage4Formula, setStage4Formula] = useState<string>(
+    initialRulebook.architectural_framework?.stage_4_closing_commitment?.formula ||
+      "I am eager to be an integral part of [Company]'s [Team] team, [Value 1], [Value 2], and help [Company Impact] as a **[Cleaned Target Role] in [City/Berlin]**."
+  );
+
+  // Style & ATS Constraints List
+  const [styleConstraints, setStyleConstraints] = useState<string[]>(
+    initialRulebook.style_and_ats_constraints || [
+      "CREATIVE AUTONOMY: Adapt vocabulary, sentence cadence, and emphasis to match the employer's industry culture while preserving factual ground truth.",
+      "STRICT ZERO EM-DASHES: Never use em-dashes (—) or en-dashes (–) within narrative sentences. Use natural commas, parentheses, or smooth connective syntax.",
+      "STRATEGIC MARKDOWN BOLDING: Boldly highlight 3–5 high-impact keywords, core tools, and metrics using double asterisks (e.g., **SEO, Social Media, and Content**, **8.5 IELTS / C2**, **Excel and SQL**, **n8n workflow automation**).",
+      "CLEAN ROLE STANDARDIZATION: Strip administrative noise like (m/f/d), (m/w/d), m/w/x, or dangling hyphens from the target role.",
+      "HUMAN & AUTHENTIC VOICE: Maintain a confident, articulate, and proactive first-person narrative—never robotic, clichéd, or generic."
+    ]
+  );
+
+  // Benchmark Samples State
   const [benchmarkSamples, setBenchmarkSamples] = useState<any[]>(
-    rulebook.few_shot_benchmark_samples || []
+    initialRulebook.few_shot_benchmark_samples || []
   );
   const [rulebookSaved, setRulebookSaved] = useState(false);
 
@@ -86,6 +143,51 @@ export const MasterSettingsView: React.FC = () => {
       enabled: enable,
     }));
     setBenchmarkSamples(updated);
+  };
+
+  const handleSaveFullRulebook = () => {
+    const updatedRulebook = {
+      objective: rulebookObjective,
+      gold_standard_clause: goldStandardClause,
+      architectural_framework: {
+        stage_1_persona_hook: {
+          title: stage1Title,
+          description: stage1Desc,
+          archetypes: initialRulebook.architectural_framework?.stage_1_persona_hook?.archetypes || []
+        },
+        stage_2_skill_synthesis: {
+          title: stage2Title,
+          description: stage2Desc,
+          guideline: stage2Guideline,
+          competency_domains: initialRulebook.architectural_framework?.stage_2_skill_synthesis?.competency_domains || []
+        },
+        stage_3_execution_value: {
+          title: stage3Title,
+          description: stage3Desc,
+          themes: initialRulebook.architectural_framework?.stage_3_execution_value?.themes || []
+        },
+        stage_4_closing_commitment: {
+          title: "Stage 4: Closing Commitment Anchor",
+          formula: stage4Formula,
+          description: "Dedicated forward-looking commitment customized to the team's mission with cleaned role & location."
+        }
+      },
+      style_and_ats_constraints: styleConstraints,
+      few_shot_benchmark_samples: benchmarkSamples
+    };
+
+    const updatedContext = {
+      ...masterContext,
+      professional_bio: {
+        ...(masterContext.professional_bio || {}),
+        profile_summary_rulebook: updatedRulebook
+      }
+    };
+
+    updateMasterContext(updatedContext);
+    setContextJsonStr(JSON.stringify(updatedContext, null, 2));
+    setRulebookSaved(true);
+    setTimeout(() => setRulebookSaved(false), 2500);
   };
 
   const handleCreateProject = (e: React.FormEvent) => {
@@ -125,23 +227,6 @@ export const MasterSettingsView: React.FC = () => {
     }
   };
 
-  const handleSaveRulebook = () => {
-    const updated = {
-      ...masterContext,
-      professional_bio: {
-        ...(masterContext.professional_bio || {}),
-        profile_summary_rulebook: {
-          ...(masterContext.professional_bio?.profile_summary_rulebook || {}),
-          few_shot_benchmark_samples: benchmarkSamples,
-        },
-      },
-    };
-    updateMasterContext(updated);
-    setContextJsonStr(JSON.stringify(updated, null, 2));
-    setRulebookSaved(true);
-    setTimeout(() => setRulebookSaved(false), 2000);
-  };
-
   const handleSaveApiKey = () => {
     setGeminiApiKey(apiKeyVal.trim());
     setApiKeySaved(true);
@@ -158,7 +243,7 @@ export const MasterSettingsView: React.FC = () => {
             <span>Master Career Assets & AI Knowledge Base</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Manage your Profile Summary Rulebook, active few-shot samples, master projects pool, and AI settings.
+            Configure your Profile Summary Rulebook, customize the 4 architectural stages, manage few-shot samples, and projects.
           </p>
         </div>
 
@@ -181,7 +266,7 @@ export const MasterSettingsView: React.FC = () => {
           }`}
         >
           <BookmarkCheck className="w-4 h-4 text-indigo-600" />
-          <span>Profile Summary Rulebook ({activeSamplesCount}/{benchmarkSamples.length} Active)</span>
+          <span>Profile Summary Rulebook & Prompt Editor ({activeSamplesCount}/{benchmarkSamples.length} Active)</span>
         </button>
 
         <button
@@ -221,84 +306,203 @@ export const MasterSettingsView: React.FC = () => {
         </button>
       </div>
 
-      {/* ── TAB 1: PROFILE SUMMARY RULEBOOK & BENCHMARK SAMPLES ── */}
+      {/* ── TAB 1: EDITABLE PROFILE SUMMARY RULEBOOK & BENCHMARKS ── */}
       {activeSubTab === "rulebook" && (
         <div className="space-y-6">
-          {/* Architectural Guidelines Card */}
+          {/* Main Save Bar */}
+          <div className="bg-white border border-indigo-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-indigo-50/50 via-white to-purple-50/50">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <div>
+                <span className="font-bold text-xs text-slate-800 block">
+                  Interactive Profile Summary Prompt & Rules Configuration
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  Edit prompt instructions, 4 architectural stages, and few-shot samples live.
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveFullRulebook}
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all shrink-0"
+            >
+              {rulebookSaved ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Rulebook & Prompt Saved!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save All Rulebook Settings</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* 1. Core Objective & Gold Standard Benchmark Clause */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Wand2 className="w-5 h-5 text-indigo-600" />
-                <div>
-                  <h3 className="font-bold text-sm text-slate-800">
-                    Profile Summary 4-Stage Architecture & ATS Formula
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Defines the dynamic structural cadence and creative leeway used by the AI engine.
-                  </p>
-                </div>
-              </div>
-              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Live Prompt Ingestion
-              </span>
+            <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm border-b border-slate-100 pb-2">
+              <Flame className="w-4 h-4 text-amber-500" />
+              <span>Core Objective & Gold-Standard Benchmark Clause</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
-                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">1</span>
-                  <span>Stage 1: The Contextual Persona Hook</span>
-                </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Tailors Usman's professional title to match the employer's core domain (e.g. <em>"Product Marketing professional in SaaS & ecommerce..."</em> or <em>"A data-driven professional with strong analytical skills..."</em>).
-                </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Master Summary Objective & Creative Leeway Directive
+                </label>
+                <textarea
+                  value={rulebookObjective}
+                  onChange={(e) => setRulebookObjective(e.target.value)}
+                  rows={2}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed"
+                />
               </div>
 
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
-                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">2</span>
-                  <span>Stage 2: Technical & Language Bridge</span>
-                </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Selectively weaves hard tools requested in the JD (<strong>Excel, SQL, Python, n8n, Figma, CRM</strong>) paired with language credentials (<strong>8.5 IELTS / C2 English</strong>, German A2).
-                </p>
-              </div>
-
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
-                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">3</span>
-                  <span>Stage 3: Commercial Impact & Execution Value</span>
-                </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Highlights proven cross-functional execution (e.g. converting complex tech into sales pitch decks/video guides, automating workflows to save team time, running KPI deep-dives).
-                </p>
-              </div>
-
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
-                  <span className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center text-[10px]">4</span>
-                  <span>Stage 4: Closing Commitment Anchor</span>
-                </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Dedicated forward-looking closing statement with cleaned title: <em>"I am eager to be an integral part of [Company]'s team, [Value 1], and help [Impact] as a **[Role] in Berlin**."</em>
-                </p>
-              </div>
-            </div>
-
-            {/* Creative Leeway & Style Rules */}
-            <div className="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl flex items-start gap-2.5 text-xs text-indigo-950">
-              <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                <span className="font-bold">Creative Leeway & ATS Rules:</span>
-                <p className="text-[11px] text-indigo-800 leading-relaxed">
-                  The AI is given creative leeway to adapt tone and phrasing to each company's unique culture while strictly enforcing: <strong>Zero em-dashes (—/–)</strong>, <strong>Selective **bolding** of 3–5 core keywords</strong>, and <strong>Removal of hiring noise like (m/f/d)</strong>.
-                </p>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Gold-Standard Benchmark Principle (Instructions on how AI should treat samples)
+                </label>
+                <textarea
+                  value={goldStandardClause}
+                  onChange={(e) => setGoldStandardClause(e.target.value)}
+                  rows={3}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed"
+                />
               </div>
             </div>
           </div>
 
-          {/* Benchmark Few-Shot Samples Manager */}
+          {/* 2. Editable 4-Stage Architecture */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm border-b border-slate-100 pb-2">
+              <Wand2 className="w-4 h-4 text-indigo-600" />
+              <span>Editable 4-Stage Architecture Prompt Guidelines</span>
+            </div>
+
+            <div className="space-y-4">
+              {/* Stage 1 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">1</span>
+                    Stage 1: Contextual Persona Hook
+                  </span>
+                </div>
+                <textarea
+                  value={stage1Desc}
+                  onChange={(e) => setStage1Desc(e.target.value)}
+                  rows={2}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Stage 2 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">2</span>
+                    Stage 2: Generalized Skill & Competency Bridge (No rigid lock-in)
+                  </span>
+                </div>
+                <textarea
+                  value={stage2Desc}
+                  onChange={(e) => setStage2Desc(e.target.value)}
+                  rows={2}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                />
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-0.5">
+                    Skill Synthesis Guideline (Hard Tools + Methodologies + Communication & Languages)
+                  </label>
+                  <textarea
+                    value={stage2Guideline}
+                    onChange={(e) => setStage2Guideline(e.target.value)}
+                    rows={3}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Stage 3 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">3</span>
+                    Stage 3: Commercial Impact & Execution Value
+                  </span>
+                </div>
+                <textarea
+                  value={stage3Desc}
+                  onChange={(e) => setStage3Desc(e.target.value)}
+                  rows={2}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Stage 4 */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">4</span>
+                    Stage 4: Closing Commitment Anchor Formula
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={stage4Formula}
+                  onChange={(e) => setStage4Formula(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono focus:outline-none focus:border-indigo-500 font-semibold"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Style & ATS Constraints Editor */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm">
+                <Sliders className="w-4 h-4" />
+                <span>Style & ATS Negative Constraints</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStyleConstraints([...styleConstraints, "NEW_CONSTRAINT: Enter rule description..."])}
+                className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded-lg"
+              >
+                <Plus className="w-3 h-3" />
+                Add Rule
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {styleConstraints.map((rule, rIdx) => (
+                <div key={rIdx} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={rule}
+                    onChange={(e) => {
+                      const updated = [...styleConstraints];
+                      updated[rIdx] = e.target.value;
+                      setStyleConstraints(updated);
+                    }}
+                    className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setStyleConstraints(styleConstraints.filter((_, i) => i !== rIdx))}
+                    className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 4. Benchmark Few-Shot Samples Manager with Toggles */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
@@ -307,7 +511,7 @@ export const MasterSettingsView: React.FC = () => {
                   Benchmark Few-Shot Samples ({benchmarkSamples.length} Total)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Toggle samples ON to include them in the active AI prompt, or turn them OFF to store them in your library without sending them to the AI.
+                  Toggle samples ON to include them in the live AI prompt pool. Deactivated samples stay stored safely in your library.
                 </p>
               </div>
 
@@ -326,29 +530,13 @@ export const MasterSettingsView: React.FC = () => {
                 >
                   Disable All
                 </button>
-                <button
-                  onClick={handleSaveRulebook}
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-                >
-                  {rulebookSaved ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Saved!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3.5 h-3.5" />
-                      <span>Save Rulebook</span>
-                    </>
-                  )}
-                </button>
               </div>
             </div>
 
             {/* Active Status Badge */}
             <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
               <span className="text-slate-600 font-medium">
-                Active Few-Shot Prompts Sent to Gemini: <strong className="text-indigo-700 font-bold">{activeSamplesCount} of {benchmarkSamples.length} samples</strong>
+                Active Few-Shot Reference Prompts: <strong className="text-indigo-700 font-bold">{activeSamplesCount} of {benchmarkSamples.length} samples</strong>
               </span>
               <span className="text-[11px] font-mono text-slate-500">
                 {activeSamplesCount === 0 ? "⚠️ AI using base rules only" : "✅ Dynamic in-context few-shot learning active"}
