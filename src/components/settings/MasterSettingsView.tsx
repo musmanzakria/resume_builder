@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 
+import { initialMasterContext } from "@/lib/initialData";
+
 export const MasterSettingsView: React.FC = () => {
   const { 
     resume, 
@@ -52,62 +54,65 @@ export const MasterSettingsView: React.FC = () => {
 
   // Master Context State
   const [contextJsonStr, setContextJsonStr] = useState(
-    JSON.stringify(masterContext, null, 2)
+    JSON.stringify(masterContext && Object.keys(masterContext).length > 0 ? masterContext : initialMasterContext, null, 2)
   );
   const [contextSaved, setContextSaved] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   // Rulebook Editable States
-  const initialRulebook = masterContext?.professional_bio?.profile_summary_rulebook || {};
+  const fallbackRulebook = initialMasterContext?.professional_bio?.profile_summary_rulebook || {};
+  const currentRulebook = masterContext?.professional_bio?.profile_summary_rulebook;
+  const initialRulebook = (currentRulebook && currentRulebook.few_shot_benchmark_samples?.length) ? currentRulebook : fallbackRulebook;
+
   const [rulebookObjective, setRulebookObjective] = useState<string>(
-    initialRulebook.objective ||
+    initialRulebook.objective || fallbackRulebook.objective ||
       "Generate high-converting, authentic, ATS-optimized 3-4 sentence professional summaries that seamlessly fuse Usman's authentic track record with the target Job Description (JD), balancing disciplined structure with creative leeway and out-of-the-box contextual thinking."
   );
   const [goldStandardClause, setGoldStandardClause] = useState<string>(
-    initialRulebook.gold_standard_clause ||
+    initialRulebook.gold_standard_clause || fallbackRulebook.gold_standard_clause ||
       "The benchmark samples represent Usman's authentic gold standard—the exact cadence, keyword density, confidence, and visual bolding aesthetics desired. Use the 4-stage framework as an architectural guide, but look to the active samples as the benchmark of excellence. Do not rigidly restrict yourself only to the words in the samples; think out of the box and pull dynamically from Usman's entire background to tailor to novel roles."
   );
 
   // Stage 1
   const [stage1Title, setStage1Title] = useState<string>(
-    initialRulebook.architectural_framework?.stage_1_persona_hook?.title || "Stage 1: The Contextual Persona Hook"
+    initialRulebook.architectural_framework?.stage_1_persona_hook?.title || fallbackRulebook.architectural_framework?.stage_1_persona_hook?.title || "Stage 1: The Contextual Persona Hook"
   );
   const [stage1Desc, setStage1Desc] = useState<string>(
-    initialRulebook.architectural_framework?.stage_1_persona_hook?.description ||
+    initialRulebook.architectural_framework?.stage_1_persona_hook?.description || fallbackRulebook.architectural_framework?.stage_1_persona_hook?.description ||
       "Synthesize a tailored professional identity matching the employer's core industry and team charter (e.g., SaaS, eCommerce, AI/Workflow Automation, Logistics ERP, Startup Strategy, BioTech/MedTech)."
   );
 
   // Stage 2
   const [stage2Title, setStage2Title] = useState<string>(
-    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.title || "Stage 2: Generalized Skill & Competency Bridge"
+    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.title || fallbackRulebook.architectural_framework?.stage_2_skill_synthesis?.title || "Stage 2: Generalized Skill & Competency Bridge"
   );
   const [stage2Desc, setStage2Desc] = useState<string>(
-    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.description ||
+    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.description || fallbackRulebook.architectural_framework?.stage_2_skill_synthesis?.description ||
       "Dynamically bridge hard tools, domain methodologies, and interpersonal fluency to the JD without artificial restrictions."
   );
   const [stage2Guideline, setStage2Guideline] = useState<string>(
-    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.guideline ||
+    initialRulebook.architectural_framework?.stage_2_skill_synthesis?.guideline || fallbackRulebook.architectural_framework?.stage_2_skill_synthesis?.guideline ||
       "Draw freely across Usman's full spectrum: software tools (Excel/Sheets, SQL, Python, n8n, Figma, Tableau, CRM), domain methodologies (SEO/AEO/GEO, CRO, GTM, Agile/Scrum, Process Mapping), and interpersonal strengths (8.5 IELTS / C2 English, German A2, cross-functional bridge between Engineering and GTM, teaching 250+ students)."
   );
 
   // Stage 3
   const [stage3Title, setStage3Title] = useState<string>(
-    initialRulebook.architectural_framework?.stage_3_execution_value?.title || "Stage 3: Commercial Impact & Execution Value"
+    initialRulebook.architectural_framework?.stage_3_execution_value?.title || fallbackRulebook.architectural_framework?.stage_3_execution_value?.title || "Stage 3: Commercial Impact & Execution Value"
   );
   const [stage3Desc, setStage3Desc] = useState<string>(
-    initialRulebook.architectural_framework?.stage_3_execution_value?.description ||
+    initialRulebook.architectural_framework?.stage_3_execution_value?.description || fallbackRulebook.architectural_framework?.stage_3_execution_value?.description ||
       "Articulate cross-functional execution and concrete business impact tailored to the hiring team's pain points."
   );
 
   // Stage 4
   const [stage4Formula, setStage4Formula] = useState<string>(
-    initialRulebook.architectural_framework?.stage_4_closing_commitment?.formula ||
+    initialRulebook.architectural_framework?.stage_4_closing_commitment?.formula || fallbackRulebook.architectural_framework?.stage_4_closing_commitment?.formula ||
       "I am eager to be an integral part of [Company]'s [Team] team, [Value 1], [Value 2], and help [Company Impact] as a **[Cleaned Target Role] in [City/Berlin]**."
   );
 
   // Style & ATS Constraints List
   const [styleConstraints, setStyleConstraints] = useState<string[]>(
-    initialRulebook.style_and_ats_constraints || [
+    initialRulebook.style_and_ats_constraints || fallbackRulebook.style_and_ats_constraints || [
       "CREATIVE AUTONOMY: Adapt vocabulary, sentence cadence, and emphasis to match the employer's industry culture while preserving factual ground truth.",
       "STRICT ZERO EM-DASHES: Never use em-dashes (—) or en-dashes (–) within narrative sentences. Use natural commas, parentheses, or smooth connective syntax.",
       "STRATEGIC MARKDOWN BOLDING: Boldly highlight 3–5 high-impact keywords, core tools, and metrics using double asterisks (e.g., **SEO, Social Media, and Content**, **8.5 IELTS / C2**, **Excel and SQL**, **n8n workflow automation**).",
@@ -118,7 +123,9 @@ export const MasterSettingsView: React.FC = () => {
 
   // Benchmark Samples State
   const [benchmarkSamples, setBenchmarkSamples] = useState<any[]>(
-    initialRulebook.few_shot_benchmark_samples || []
+    (initialRulebook.few_shot_benchmark_samples && initialRulebook.few_shot_benchmark_samples.length > 0)
+      ? initialRulebook.few_shot_benchmark_samples
+      : fallbackRulebook.few_shot_benchmark_samples || []
   );
   const [rulebookSaved, setRulebookSaved] = useState(false);
 
@@ -266,7 +273,7 @@ export const MasterSettingsView: React.FC = () => {
           }`}
         >
           <BookmarkCheck className="w-4 h-4 text-indigo-600" />
-          <span>Profile Summary Rulebook & Prompt Editor ({activeSamplesCount}/{benchmarkSamples.length} Active)</span>
+          <span>Profile Summary</span>
         </button>
 
         <button
@@ -278,7 +285,7 @@ export const MasterSettingsView: React.FC = () => {
           }`}
         >
           <FolderGit2 className="w-4 h-4" />
-          <span>Projects Pool ({resume.projects.length})</span>
+          <span>Project Pool</span>
         </button>
 
         <button
@@ -290,7 +297,7 @@ export const MasterSettingsView: React.FC = () => {
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>Master Context (Career Narrative)</span>
+          <span>Master Context</span>
         </button>
 
         <button
@@ -302,7 +309,7 @@ export const MasterSettingsView: React.FC = () => {
           }`}
         >
           <KeyRound className="w-4 h-4" />
-          <span>API Key & Model Settings</span>
+          <span>API</span>
         </button>
       </div>
 
