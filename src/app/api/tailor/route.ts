@@ -75,7 +75,20 @@ CRITICAL ATS & STYLE RULES:
 ACTIVE BENCHMARK FEW-SHOT SAMPLES (${activeSamples.length} Active Examples from Usman's Gold-Standard Library):
 ${JSON.stringify(activeSamples.slice(0, 6), null, 2)}
 
-7. FOR COVER LETTER: Draft a compelling, professional German/English standard cover letter referencing Usman's real achievements and 2-3 specific relevant projects from the master context.
+════════════════════════════════════════════════════════════════════════════════
+COVER LETTER MASTER ARCHITECTURE & ATS RULEBOOK:
+════════════════════════════════════════════════════════════════════════════════
+1. SALUTATION: Always format as "Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}".
+2. INTRO PARAGRAPH: Begin with "I'm Usman, a [tailored persona, e.g. Product Marketing professional / data-driven Master's student at HTW Berlin with B2B SaaS experience in shipping AI projects...]. I was thrilled to find the **${cleanedRole}** position at **${targetCompany || "the company"}**, as it perfectly aligns with my background in [Core Value 1] and my passion for [Core Value 2]..."
+3. THREE CORE BODY PARAGRAPHS (EACH WITH A PUNCHY BOLD HEADING):
+   - You must synthesize exactly 3 paragraphs, each preceded by a bold heading (3-5 words) that maps directly against the 3 key requirement pillars of the Job Description.
+   - Heading Examples from Usman's winning letters: "Internal Enablement and Content Creation", "Cross-Functional Collaboration and Feedback Loops", "Data-Driven and Tech-Savvy Mindset", "Operational Support and Project Coordination", "Strategic Collaboration and Project Management", "Process Optimization and Internal Tools".
+   - Opening sentence addresses employer's pain point ("You need someone who...", "The role requires...", "At HashMove, a B2B...").
+   - Highlight and bold real tools and metrics: **Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**, **362%**, **13%**, **800k+ views**, **8.5 IELTS**.
+   - STRICT ZERO EM-DASHES: Never use em-dashes (— or –). Use natural commas, parentheses, or smooth connective syntax.
+4. PORTFOLIO PROJECTS SELECTION:
+   Choose strictly the top 3 most relevant project IDs from Usman's concise CL projects pool:
+   ${JSON.stringify((masterContext?.cl_projects_pool || []).map((p: any) => ({ id: p.id, title: p.title, description: p.description, tags: p.tags })))}
 
 OUTPUT FORMAT:
 Respond with ONLY a valid, raw JSON object matching this exact schema:
@@ -85,7 +98,21 @@ Respond with ONLY a valid, raw JSON object matching this exact schema:
   "selectedProjectIds": ["id1", "id2", "id3", ... (length strictly ${topN})],
   "tailoredSummary": "3-4 sentence tailored summary with strategic **bold keywords** and NO em-dashes...",
   "closingLine": "I am eager to be an integral part of ... as a **${cleanedRole} in Berlin**.",
-  "coverLetter": "Full formatted cover letter text with paragraphs..."
+  "coverLetter": "Full plain text representation of cover letter...",
+  "structuredCoverLetter": {
+    "salutation": "Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}",
+    "intro": "I'm Usman, a ... thrilled to find the **${cleanedRole}** position at **${targetCompany || "the company"}**...",
+    "bodyParagraphs": [
+      { "heading": "Heading 1 (3-5 words matching JD)", "body": "Paragraph 1 with bolded tools & metrics..." },
+      { "heading": "Heading 2 (3-5 words matching JD)", "body": "Paragraph 2 with bolded tools & metrics..." },
+      { "heading": "Heading 3 (3-5 words matching JD)", "body": "Paragraph 3 with bolded tools & metrics..." }
+    ],
+    "selectedClProjectIds": ["cl-proj-id-1", "cl-proj-id-2", "cl-proj-id-3"],
+    "projectCount": 3,
+    "availabilityText": "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation.",
+    "documentTitle": "CoverLetter_UsmanZakria_${(targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "")}"
+  },
+  "company": "${targetCompany || "Company"}"
 }`;
 
     const userPrompt = `
@@ -142,6 +169,19 @@ ${JSON.stringify(masterContext || {})}
             .trim();
         }
 
+        // Sanitize structuredCoverLetter
+        if (parsed.structuredCoverLetter) {
+          if (parsed.structuredCoverLetter.intro) {
+            parsed.structuredCoverLetter.intro = parsed.structuredCoverLetter.intro.replace(/[—–]/g, ", ");
+          }
+          if (Array.isArray(parsed.structuredCoverLetter.bodyParagraphs)) {
+            parsed.structuredCoverLetter.bodyParagraphs = parsed.structuredCoverLetter.bodyParagraphs.map((p: any) => ({
+              heading: (p.heading || "").replace(/[—–]/g, "").trim(),
+              body: (p.body || "").replace(/[—–]/g, ", ").trim()
+            }));
+          }
+        }
+
         return NextResponse.json({ success: true, data: parsed, modelUsed: modelName });
       } catch (aiErr: any) {
         console.warn("Gemini API call warning:", aiErr.message, "Falling back to rulebook-guided heuristic.");
@@ -190,7 +230,33 @@ ${JSON.stringify(masterContext || {})}
     }
 
     const fallbackClosing = `I am eager to be an integral part of ${targetCompany || "the"}'s team, contribute to core strategic initiatives, and help drive sustainable impact as a **${cleanedRole} in Berlin**.`;
-    const fallbackCoverLetter = `Dear Hiring Team at ${targetCompany || "the company"},\n\nI am writing to express my strong enthusiasm for the ${cleanedRole} role. With my background in data-driven storytelling, SaaS growth marketing, and multi-channel content strategy, I am excited about the opportunity to contribute directly to your team's mission.\n\nThroughout my career at HashMove and past engagements, I have focused on translating strategic insights into commercial impact—from building automated campaigns and designing high-impact Figma illustrations to orchestrating GTM execution and demand generation.\n\nI look forward to the opportunity to discuss how my skill set and proactive mindset can support ${targetCompany || "your organization"}.\n\nSincerely,\nUsman Zakria\nBerlin, Germany\nhttps://usmanzakria.com`;
+    
+    const fallbackCoverLetter = `Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}\n\nI'm Usman, a data-driven Master's student at HTW Berlin with B2B SaaS experience. I was thrilled to find the ${cleanedRole} position at ${targetCompany || "your company"}.\n\nThroughout my career at HashMove, I have focused on translating strategic insights into commercial impact, automating workflows with n8n and building advanced Excel models.\n\nWarm Regards,\nUsman Zakria\nBerlin | +49 170 695 9515 | m.usmanzakria@gmail.com | Portfolio Link | 8.5 IELTS`;
+
+    const compClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
+
+    const fallbackStructuredCL = {
+      salutation: `Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}`,
+      intro: `I'm Usman, a data-driven Master's student at HTW Berlin with B2B SaaS experience in shipping tech modules. I was thrilled to find the **${cleanedRole}** position at **${targetCompany || "the company"}**, as it perfectly aligns with my background in driving product adoption and my passion for empowering teams through data.`,
+      bodyParagraphs: [
+        {
+          heading: "Execution and Cross-Functional Coordination",
+          body: `You need someone who can coordinate across teams and deliver structured results. At HashMove, I collaborated across Product, Engineering, and Go-to-Market teams to ensure seamless feature rollouts, managing feedback loops and prioritizing user requirements.`
+        },
+        {
+          heading: "Process Automation and Analytical Tools",
+          body: `I have a proactive mindset for improving efficiency. I built advanced **Excel** models and automated workflows using **n8n**, reducing manual processing time by **13%**, while maintaining transparent documentation in **Jira** and **Notion**.`
+        },
+        {
+          heading: "Data-Driven Mindset and Communication",
+          body: `I bring strong analytical skills paired with articulate communication backed by an **8.5 IELTS score**. I excel at transforming complex technical concepts into intuitive documentation and actionable insights for business stakeholders.`
+        }
+      ],
+      selectedClProjectIds: ["cl-video-onboarding", "cl-agentic-ai-finance", "cl-figma-agile"],
+      projectCount: 3,
+      availabilityText: "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation.",
+      documentTitle: `CoverLetter_UsmanZakria_${compClean || "Company"}`
+    };
 
     return NextResponse.json({
       success: true,
@@ -201,6 +267,8 @@ ${JSON.stringify(masterContext || {})}
         tailoredSummary: fallbackSummary,
         closingLine: fallbackClosing,
         coverLetter: fallbackCoverLetter,
+        structuredCoverLetter: fallbackStructuredCL,
+        company: targetCompany || "Company"
       },
       modelUsed: "rulebook-heuristic",
     });

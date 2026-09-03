@@ -21,10 +21,12 @@ import {
   HelpCircle,
   Edit3,
   Sliders,
-  Flame
+  Flame,
+  Mail,
+  ExternalLink,
+  FileText
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
-
 import { initialMasterContext } from "@/lib/initialData";
 
 export const MasterSettingsView: React.FC = () => {
@@ -43,7 +45,7 @@ export const MasterSettingsView: React.FC = () => {
     setActiveTab 
   } = useResumeStore();
 
-  const [activeSubTab, setActiveSubTab] = useState<"rulebook" | "projects" | "context" | "ai">("rulebook");
+  const [activeSubTab, setActiveSubTab] = useState<"rulebook" | "cover-letter" | "projects" | "context" | "ai">("rulebook");
 
   // Project Form States
   const [newTitle, setNewTitle] = useState("");
@@ -59,7 +61,7 @@ export const MasterSettingsView: React.FC = () => {
   const [contextSaved, setContextSaved] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
 
-  // Rulebook Editable States
+  // Profile Summary Rulebook Editable States
   const fallbackRulebook = initialMasterContext?.professional_bio?.profile_summary_rulebook || {};
   const currentRulebook = masterContext?.professional_bio?.profile_summary_rulebook;
   const initialRulebook = (currentRulebook && currentRulebook.few_shot_benchmark_samples?.length) ? currentRulebook : fallbackRulebook;
@@ -129,6 +131,41 @@ export const MasterSettingsView: React.FC = () => {
   );
   const [rulebookSaved, setRulebookSaved] = useState(false);
 
+  // Cover Letter Rulebook & Projects States
+  const fallbackClRulebook = initialMasterContext?.cover_letter_rulebook || {};
+  const currentClRulebook = masterContext?.cover_letter_rulebook;
+  const initialClRulebook = currentClRulebook || fallbackClRulebook;
+
+  const [clObjective, setClObjective] = useState<string>(
+    initialClRulebook.objective || "Generate high-converting, ATS-tailored 1-page Cover Letters in Usman's authentic winning voice, perfectly mapped against the target Job Description."
+  );
+  const [clNamingScheme, setClNamingScheme] = useState<string>(
+    initialClRulebook.document_naming_scheme || "CoverLetter_UsmanZakria_[CompanyName].pdf"
+  );
+  const [clIntroFormula, setClIntroFormula] = useState<string>(
+    initialClRulebook.structural_architecture?.introduction_paragraph?.formula ||
+      "I'm Usman, a [Domain Persona] with [Thesis/Specialization]. I was thrilled to find the **[Target Role]** position at **[Target Company]**, as it perfectly aligns with my background in [Core Value 1] and my passion for [Core Value 2]. At [HashMove/Company], I [Key Accomplishment], preparing me well to help your **[Target Team]** [Company Mission]."
+  );
+  const [clBodyDesc, setClBodyDesc] = useState<string>(
+    initialClRulebook.structural_architecture?.three_body_paragraphs?.description ||
+      "3 paragraphs, each preceded by a bold heading mapping directly to the 3 main requirement pillars of the Job Description."
+  );
+  const [clBodyGuideline, setClBodyGuideline] = useState<string>(
+    initialClRulebook.structural_architecture?.three_body_paragraphs?.content_guideline ||
+      "Opening sentence explicitly references the employer's need ('You need someone who can...', 'The role requires...', 'At HashMove, a B2B...'). Weave real metrics (**362%**, **13%**, **800k+ views**, **8.5 IELTS**) and tools (**Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**)."
+  );
+
+  const fallbackClProjects = initialMasterContext?.cl_projects_pool || [];
+  const [clProjects, setClProjects] = useState<any[]>(
+    masterContext?.cl_projects_pool?.length ? masterContext.cl_projects_pool : fallbackClProjects
+  );
+  const [clRulebookSaved, setClRulebookSaved] = useState(false);
+
+  // New CL Project State
+  const [newClTitle, setNewClTitle] = useState("");
+  const [newClDesc, setNewClDesc] = useState("");
+  const [newClUrl, setNewClUrl] = useState("https://usmanzakria.com/");
+
   // API Key State
   const [apiKeyVal, setApiKeyVal] = useState(geminiApiKey || "");
   const [apiKeySaved, setApiKeySaved] = useState(false);
@@ -197,6 +234,67 @@ export const MasterSettingsView: React.FC = () => {
     setTimeout(() => setRulebookSaved(false), 2500);
   };
 
+  const handleSaveClRulebook = () => {
+    const updated = {
+      ...masterContext,
+      cover_letter_rulebook: {
+        ...(masterContext.cover_letter_rulebook || {}),
+        objective: clObjective,
+        document_naming_scheme: clNamingScheme,
+        structural_architecture: {
+          ...(masterContext.cover_letter_rulebook?.structural_architecture || {}),
+          introduction_paragraph: {
+            formula: clIntroFormula,
+            guidelines: "State candidate identity clearly, express targeted enthusiasm, and immediately establish domain credibility."
+          },
+          three_body_paragraphs: {
+            description: clBodyDesc,
+            heading_guideline: "Concise, punchy 3-5 word bold heading matching the JD domain.",
+            content_guideline: clBodyGuideline,
+            formatting_rule: "STRICT ZERO EM-DASHES (— or –). Use natural commas, parentheses, or smooth connective syntax."
+          }
+        }
+      },
+      cl_projects_pool: clProjects
+    };
+    updateMasterContext(updated);
+    setContextJsonStr(JSON.stringify(updated, null, 2));
+    setClRulebookSaved(true);
+    setTimeout(() => setClRulebookSaved(false), 2500);
+  };
+
+  const handleAddClProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClTitle.trim()) return;
+
+    const id = "cl-" + Date.now();
+    const newProj = {
+      id,
+      title: newClTitle.trim(),
+      description: newClDesc.trim() || "Concise project description...",
+      url: newClUrl.trim() || "https://usmanzakria.com/",
+      tags: ["Portfolio", "Project"],
+      enabled: true
+    };
+
+    setClProjects([newProj, ...clProjects]);
+    setNewClTitle("");
+    setNewClDesc("");
+    setNewClUrl("https://usmanzakria.com/");
+  };
+
+  const handleToggleClProject = (id: string) => {
+    setClProjects(
+      clProjects.map((p) =>
+        p.id === id ? { ...p, enabled: p.enabled === false ? true : false } : p
+      )
+    );
+  };
+
+  const handleDeleteClProject = (id: string) => {
+    setClProjects(clProjects.filter((p) => p.id !== id));
+  };
+
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
@@ -250,7 +348,7 @@ export const MasterSettingsView: React.FC = () => {
             <span>Master Career Assets & AI Knowledge Base</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Configure your Profile Summary Rulebook, customize the 4 architectural stages, manage few-shot samples, and projects.
+            Configure your Profile Summary Rulebook, Cover Letter Prompt System, Project Pools, and API Settings.
           </p>
         </div>
 
@@ -274,6 +372,18 @@ export const MasterSettingsView: React.FC = () => {
         >
           <BookmarkCheck className="w-4 h-4 text-indigo-600" />
           <span>Profile Summary</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("cover-letter")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+            activeSubTab === "cover-letter"
+              ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+          }`}
+        >
+          <Mail className="w-4 h-4 text-indigo-600" />
+          <span>Cover Letter</span>
         </button>
 
         <button
@@ -392,12 +502,10 @@ export const MasterSettingsView: React.FC = () => {
             <div className="space-y-4">
               {/* Stage 1 */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">1</span>
-                    Stage 1: Contextual Persona Hook
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">1</span>
+                  Stage 1: Contextual Persona Hook
+                </span>
                 <textarea
                   value={stage1Desc}
                   onChange={(e) => setStage1Desc(e.target.value)}
@@ -408,12 +516,10 @@ export const MasterSettingsView: React.FC = () => {
 
               {/* Stage 2 */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">2</span>
-                    Stage 2: Generalized Skill & Competency Bridge (No rigid lock-in)
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">2</span>
+                  Stage 2: Generalized Skill & Competency Bridge
+                </span>
                 <textarea
                   value={stage2Desc}
                   onChange={(e) => setStage2Desc(e.target.value)}
@@ -422,7 +528,7 @@ export const MasterSettingsView: React.FC = () => {
                 />
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-0.5">
-                    Skill Synthesis Guideline (Hard Tools + Methodologies + Communication & Languages)
+                    Skill Synthesis Guideline (Tools + Methodologies + Soft Skills & Communication)
                   </label>
                   <textarea
                     value={stage2Guideline}
@@ -435,12 +541,10 @@ export const MasterSettingsView: React.FC = () => {
 
               {/* Stage 3 */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">3</span>
-                    Stage 3: Commercial Impact & Execution Value
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">3</span>
+                  Stage 3: Commercial Impact & Execution Value
+                </span>
                 <textarea
                   value={stage3Desc}
                   onChange={(e) => setStage3Desc(e.target.value)}
@@ -451,12 +555,10 @@ export const MasterSettingsView: React.FC = () => {
 
               {/* Stage 4 */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">4</span>
-                    Stage 4: Closing Commitment Anchor Formula
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 flex items-center justify-center text-[10px]">4</span>
+                  Stage 4: Closing Commitment Anchor Formula
+                </span>
                 <input
                   type="text"
                   value={stage4Formula}
@@ -593,7 +695,6 @@ export const MasterSettingsView: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-2 self-end sm:self-auto">
-                        {/* Sample Active Toggle Switch */}
                         <button
                           type="button"
                           onClick={() => handleToggleSample(idx)}
@@ -678,7 +779,261 @@ export const MasterSettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* ── TAB 2: PROJECTS POOL ── */}
+      {/* ── TAB 2: COVER LETTER RULEBOOK & PROJECTS POOL ── */}
+      {activeSubTab === "cover-letter" && (
+        <div className="space-y-6">
+          {/* Main Save Bar */}
+          <div className="bg-white border border-indigo-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-indigo-50/50 via-white to-purple-50/50">
+            <div className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-indigo-600" />
+              <div>
+                <span className="font-bold text-xs text-slate-800 block">
+                  Cover Letter Master Prompt System & CL Projects Pool
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  Manage prompt rules, 3-paragraph JD mapping, portfolio links, and 14 concise projects.
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveClRulebook}
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all shrink-0"
+            >
+              {clRulebookSaved ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Cover Letter Settings Saved!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save Cover Letter Settings</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Prompt Directives Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm border-b border-slate-100 pb-2">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>Cover Letter Master Prompt Directives</span>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Master Cover Letter Objective
+                </label>
+                <textarea
+                  value={clObjective}
+                  onChange={(e) => setClObjective(e.target.value)}
+                  rows={2}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Document Naming Scheme
+                  </label>
+                  <input
+                    type="text"
+                    value={clNamingScheme}
+                    onChange={(e) => setClNamingScheme(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Example: <code>CoverLetter_UsmanZakria_eBay.pdf</code>
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">
+                    Portfolio Header Formula
+                  </label>
+                  <input
+                    type="text"
+                    disabled
+                    value="Portfolio: usmanzakria.com (https://usmanzakria.com/)"
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl text-xs font-mono text-slate-700 focus:outline-none"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Replaces "Non-Confidential Projects & Certifications"
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Introduction Paragraph Formula
+                </label>
+                <textarea
+                  value={clIntroFormula}
+                  onChange={(e) => setClIntroFormula(e.target.value)}
+                  rows={2}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none font-sans"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Three Body Paragraphs Guideline (Mapping against JD Pillars)
+                </label>
+                <textarea
+                  value={clBodyGuideline}
+                  onChange={(e) => setClBodyGuideline(e.target.value)}
+                  rows={3}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none font-sans"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Cover Letter Projects Pool (All 14 Concise Projects) */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                  <FolderGit2 className="w-4 h-4 text-indigo-600" />
+                  Cover Letter Projects Pool ({clProjects.length} Total)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Concise 1-liners with portfolio website links from your "CL Projects" document. The AI dynamically chooses the top 2-4 most relevant projects.
+                </p>
+              </div>
+            </div>
+
+            {/* Add New CL Project Form */}
+            <form onSubmit={handleAddClProject} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <span className="text-xs font-bold text-slate-800 block">Add New Project to CL Pool</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="Project Title (e.g. Agentic AI in Finance)"
+                  value={newClTitle}
+                  onChange={(e) => setNewClTitle(e.target.value)}
+                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Showcase URL (e.g. https://usmanzakria.com/...)"
+                  value={newClUrl}
+                  onChange={(e) => setNewClUrl(e.target.value)}
+                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none"
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="Concise 1-line description for Cover Letter..."
+                value={newClDesc}
+                onChange={(e) => setNewClDesc(e.target.value)}
+                className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none"
+                required
+              />
+              <button
+                type="submit"
+                className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add to CL Pool</span>
+              </button>
+            </form>
+
+            {/* List of CL Projects */}
+            <div className="space-y-3">
+              {clProjects.map((proj, idx) => {
+                const isEnabled = proj.enabled !== false;
+
+                return (
+                  <div
+                    key={proj.id || idx}
+                    className={`p-4 rounded-xl border transition-all space-y-2 ${
+                      isEnabled
+                        ? "bg-white border-slate-200 shadow-xs"
+                        : "bg-slate-50/70 border-slate-200 opacity-60"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                          #{idx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={proj.title}
+                          onChange={(e) => {
+                            const updated = [...clProjects];
+                            updated[idx].title = e.target.value;
+                            setClProjects(updated);
+                          }}
+                          className="font-bold text-xs text-slate-900 bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none flex-1"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleClProject(proj.id)}
+                          className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold border ${
+                            isEnabled
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
+                          }`}
+                        >
+                          {isEnabled ? "Active in Pool" : "Disabled"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteClProject(proj.id)}
+                          className="p-1 text-slate-400 hover:text-red-600 rounded"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={proj.description}
+                      onChange={(e) => {
+                        const updated = [...clProjects];
+                        updated[idx].description = e.target.value;
+                        setClProjects(updated);
+                      }}
+                      className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none"
+                    />
+
+                    <div className="flex items-center gap-2 text-[11px] text-blue-600">
+                      <input
+                        type="text"
+                        value={proj.url}
+                        onChange={(e) => {
+                          const updated = [...clProjects];
+                          updated[idx].url = e.target.value;
+                          setClProjects(updated);
+                        }}
+                        className="flex-1 px-2 py-0.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-700 focus:outline-none"
+                        placeholder="Link URL"
+                      />
+                      {proj.url && (
+                        <a href={proj.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                          <ExternalLink className="w-3.5 h-3.5 inline" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 3: PROJECTS POOL ── */}
       {activeSubTab === "projects" && (
         <div className="space-y-6">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
@@ -884,7 +1239,7 @@ export const MasterSettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* ── TAB 3: MASTER CONTEXT KNOWLEDGE BASE ── */}
+      {/* ── TAB 4: MASTER CONTEXT KNOWLEDGE BASE ── */}
       {activeSubTab === "context" && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -938,7 +1293,7 @@ export const MasterSettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* ── TAB 4: API KEY & MODEL SETTINGS ── */}
+      {/* ── TAB 5: API KEY & MODEL SETTINGS ── */}
       {activeSubTab === "ai" && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
           <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">

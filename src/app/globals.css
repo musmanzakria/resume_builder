@@ -146,6 +146,20 @@ body {
     break-after: auto !important;
   }
 
+  .cover-letter-sheet, #cover-letter-a4-sheet {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+
   .section-block {
     break-inside: avoid !important;
     page-break-inside: avoid !important;

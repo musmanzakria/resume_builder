@@ -6,21 +6,34 @@
 export async function exportResumeToPdf(filename = "Usman_Zakria_Resume.pdf") {
   const originalTitle = document.title;
   try {
-    // Set document title so browser uses clean filename on Save as PDF
     document.title = filename.replace(/\.pdf$/i, "");
-    
-    // Ensure all web fonts are fully loaded before dialog triggers
     if (document.fonts) {
       await document.fonts.ready;
     }
-
-    // Small delay to allow any pending layout reflows to settle
     setTimeout(() => {
       window.print();
       document.title = originalTitle;
     }, 150);
   } catch (error) {
     console.error("Print export error:", error);
+    window.print();
+    document.title = originalTitle;
+  }
+}
+
+export async function exportCoverLetterToPdf(filename = "CoverLetter_UsmanZakria.pdf") {
+  const originalTitle = document.title;
+  try {
+    document.title = filename.replace(/\.pdf$/i, "");
+    if (document.fonts) {
+      await document.fonts.ready;
+    }
+    setTimeout(() => {
+      window.print();
+      document.title = originalTitle;
+    }, 150);
+  } catch (error) {
+    console.error("Cover letter print export error:", error);
     window.print();
     document.title = originalTitle;
   }

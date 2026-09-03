@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { ResumeCanvas } from "@/components/canvas/ResumeCanvas";
+import { CoverLetterCanvas } from "@/components/canvas/CoverLetterCanvas";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { PresetsManager } from "@/components/presets/PresetsManager";
 import { AiTailorPanel } from "@/components/ai/AiTailorPanel";
@@ -70,9 +71,9 @@ export default function Home() {
           {activeTab === "design" && <DesignControls />}
         </section>
 
-        {/* Right Side: Live 1:1 A4 FlowCV Document Preview Canvas */}
+        {/* Right Side: Live 1:1 A4 Document Preview Canvas */}
         <section className="flex-1 h-[50vh] lg:h-[calc(100vh-4rem)] overflow-y-auto bg-slate-200/60 flex items-start justify-center print:bg-white print:overflow-visible print:h-auto print:p-0 print:m-0">
-          <ResumeCanvas />
+          {activeTab === "cover-letter" ? <CoverLetterCanvas /> : <ResumeCanvas />}
         </section>
       </main>
     </div>

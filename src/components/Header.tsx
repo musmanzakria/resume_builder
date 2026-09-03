@@ -19,7 +19,7 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
-import { exportResumeToPdf } from "@/lib/pdfExport";
+import { exportResumeToPdf, exportCoverLetterToPdf } from "@/lib/pdfExport";
 
 export const Header: React.FC = () => {
   const {
@@ -31,6 +31,7 @@ export const Header: React.FC = () => {
     targetCompany,
     targetRole,
     resume,
+    structuredCoverLetter,
   } = useResumeStore();
 
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -44,8 +45,16 @@ export const Header: React.FC = () => {
 
   const handleDownloadPdf = async () => {
     setIsExporting(true);
-    const filename = `${resume.personal.fullName.replace(/\s+/g, "_")}_Resume_${targetCompany || "Master"}.pdf`;
-    await exportResumeToPdf(filename);
+    if (activeTab === "cover-letter") {
+      const companyClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
+      const filename = structuredCoverLetter?.documentTitle 
+        ? (structuredCoverLetter.documentTitle.endsWith(".pdf") ? structuredCoverLetter.documentTitle : `${structuredCoverLetter.documentTitle}.pdf`)
+        : `CoverLetter_UsmanZakria_${companyClean}.pdf`;
+      await exportCoverLetterToPdf(filename);
+    } else {
+      const filename = `${resume.personal.fullName.replace(/\s+/g, "_")}_Resume_${targetCompany || "Master"}.pdf`;
+      await exportResumeToPdf(filename);
+    }
     setIsExporting(false);
   };
 

@@ -11,7 +11,7 @@ import {
   CustomSectionItem,
   ExperiencePreset
 } from "@/types/resume";
-import { initialMasterContext } from "./initialData";
+import { initialMasterContext, StructuredCoverLetter, initialStructuredCoverLetter } from "./initialData";
 
 const defaultInitialResumeData: ResumeData = {
   personal: {
@@ -425,6 +425,11 @@ interface ResumeStoreState {
   updateMasterContext: (context: any) => void;
 
   // AI & Cover Letter
+  structuredCoverLetter: StructuredCoverLetter;
+  setStructuredCoverLetter: (coverLetter: Partial<StructuredCoverLetter>) => void;
+  updateCoverLetterBodyParagraph: (index: number, paragraph: Partial<{ heading: string; body: string }>) => void;
+  toggleClProjectSelection: (projectId: string) => void;
+  setCoverLetterProjectCount: (count: number) => void;
   setTargetInfo: (role: string, company: string, jd: string) => void;
   setCoverLetter: (letter: string) => void;
   setAiLoading: (loading: boolean, message?: string) => void;
@@ -435,6 +440,8 @@ interface ResumeStoreState {
     tailoredSummary?: string;
     closingLine?: string;
     coverLetter?: string;
+    structuredCoverLetter?: Partial<StructuredCoverLetter>;
+    company?: string;
   }) => void;
 
   // Saved Applications
@@ -457,6 +464,7 @@ export const useResumeStore = create<ResumeStoreState>()(
       geminiApiKey: "",
       selectedAiModel: "gemini-3.7-flash",
       activeCoverLetter: "",
+      structuredCoverLetter: initialStructuredCoverLetter,
       targetRole: "",
       targetCompany: "",
       targetJobDescription: "",
@@ -1021,6 +1029,53 @@ export const useResumeStore = create<ResumeStoreState>()(
           masterContext: context,
         })),
 
+      setStructuredCoverLetter: (updates) =>
+        set((state) => ({
+          structuredCoverLetter: {
+            ...state.structuredCoverLetter,
+            ...updates,
+          },
+        })),
+
+      updateCoverLetterBodyParagraph: (index, updates) =>
+        set((state) => {
+          const paragraphs = [...(state.structuredCoverLetter.bodyParagraphs || [])];
+          if (paragraphs[index]) {
+            paragraphs[index] = { ...paragraphs[index], ...updates };
+          }
+          return {
+            structuredCoverLetter: {
+              ...state.structuredCoverLetter,
+              bodyParagraphs: paragraphs,
+            },
+          };
+        }),
+
+      toggleClProjectSelection: (projectId) =>
+        set((state) => {
+          const current = state.structuredCoverLetter.selectedClProjectIds || [];
+          let updated: string[];
+          if (current.includes(projectId)) {
+            updated = current.filter((id) => id !== projectId);
+          } else {
+            updated = [...current, projectId];
+          }
+          return {
+            structuredCoverLetter: {
+              ...state.structuredCoverLetter,
+              selectedClProjectIds: updated,
+            },
+          };
+        }),
+
+      setCoverLetterProjectCount: (count) =>
+        set((state) => ({
+          structuredCoverLetter: {
+            ...state.structuredCoverLetter,
+            projectCount: count,
+          },
+        })),
+
       setTargetInfo: (role, company, jd) =>
         set(() => ({
           targetRole: role,
@@ -1091,9 +1146,21 @@ export const useResumeStore = create<ResumeStoreState>()(
             };
           }
 
+          let updatedStructuredCL = { ...state.structuredCoverLetter };
+          if (result.structuredCoverLetter) {
+            updatedStructuredCL = {
+              ...updatedStructuredCL,
+              ...result.structuredCoverLetter,
+            };
+          }
+          const rawCompName = result.company || state.targetCompany || "Tailored";
+          const compClean = rawCompName.replace(/[^a-zA-Z0-9_-]/g, "");
+          updatedStructuredCL.documentTitle = `CoverLetter_UsmanZakria_${compClean || "Company"}`;
+
           return {
             resume: updatedResume,
             activeCoverLetter: result.coverLetter || state.activeCoverLetter,
+            structuredCoverLetter: updatedStructuredCL,
             isAiLoading: false,
             aiStatusMessage: "AI Tailoring applied successfully!",
           };

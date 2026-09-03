@@ -365,5 +365,162 @@
     "Quora Top Writer (846k+ views)",
     "IELTS Academic Band 8.5 / C2 (Top 3% globally)",
     "Dean's List Honoree, Institute of Business Administration"
+  ],
+  "cover_letter_rulebook": {
+    "objective": "Generate high-converting, ATS-tailored 1-page Cover Letters in Usman's authentic winning voice, perfectly mapped against the target Job Description.",
+    "document_naming_scheme": "CoverLetter_UsmanZakria_[CompanyName].pdf",
+    "structural_architecture": {
+      "salutation": {
+        "formula": "Dear [CompanyName] Team,",
+        "fallback": "Dear Hiring Team,"
+      },
+      "introduction_paragraph": {
+        "formula": "I'm Usman, a [Domain Persona] with [Thesis/Specialization]. I was thrilled to find the **[Target Role]** position at **[Target Company]**, as it perfectly aligns with my background in [Core Value 1] and my passion for [Core Value 2]. At [HashMove/Company], I [Key Accomplishment], preparing me well to help your **[Target Team]** [Company Mission].",
+        "guidelines": "State candidate identity clearly, express targeted enthusiasm, and immediately establish domain credibility."
+      },
+      "three_body_paragraphs": {
+        "description": "3 paragraphs, each preceded by a bold heading mapping directly to the 3 main requirement pillars of the Job Description.",
+        "heading_guideline": "Concise, punchy 3-5 word bold heading matching the JD domain (e.g., 'Internal Enablement and Content Creation', 'Cross-Functional Collaboration and Feedback Loops', 'Data-Driven and Tech-Savvy Mindset', 'Strategic Collaboration and Project Management', 'Operational Support and Project Coordination').",
+        "content_guideline": "Opening sentence explicitly references the employer's need ('You need someone who can...', 'The role requires...', 'At HashMove, a B2B...'). Weave real metrics (**362%**, **13%**, **800k+ views**, **8.5 IELTS**) and tools (**Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**).",
+        "formatting_rule": "STRICT ZERO EM-DASHES (— or –). Use natural commas, parentheses, or smooth connective syntax."
+      },
+      "portfolio_section": {
+        "header": "Portfolio: usmanzakria.com",
+        "header_url": "https://usmanzakria.com/",
+        "project_count_range": [2, 3, 4],
+        "default_project_count": 3,
+        "permanent_certification_bullet": "Certifications: Intermediate SQL, Intermediate Python, Customer Analytics (UPenn)"
+      },
+      "position_preference_and_availability": {
+        "heading": "Position Preference & Availability",
+        "standard_text": "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation.",
+        "closing_sentence": "Thank you for your time and consideration."
+      },
+      "sign_off": {
+        "closing": "Warm Regards,",
+        "name": "Usman Zakria",
+        "contact_bar": "Berlin | +49 170 695 9515 | m.usmanzakria@gmail.com | Portfolio Link | 8.5 IELTS",
+        "portfolio_url": "https://usmanzakria.com/"
+      }
+    },
+    "typography": {
+      "font_family": "'Times New Roman', Times, Merriweather, Georgia, serif",
+      "font_size": "11.5pt",
+      "line_height": "1.45"
+    }
+  },
+  "cl_projects_pool": [
+    {
+      "id": "cl-agentic-ai-finance",
+      "title": "Agentic AI in Finance",
+      "description": "Exploring Agentic AI players and use cases in Finance, creating n8n PoC.",
+      "url": "https://usmanzakria.com/agentic_ai_finance_showcase.html",
+      "tags": ["Agentic AI", "Finance", "n8n", "Workflow Automation", "AI"],
+      "enabled": true
+    },
+    {
+      "id": "cl-ai-logistics",
+      "title": "AI-Powered Logistics",
+      "description": "Architected an AI-powered logistics platform, including Conversational AI.",
+      "url": "https://www.hashmove.com/solutions/ai",
+      "tags": ["AI Platform", "Conversational AI", "Logistics ERP", "SaaS"],
+      "enabled": true
+    },
+    {
+      "id": "cl-songs-shrinking",
+      "title": "Are Songs Shrinking?",
+      "description": "Regression analysis of 3600 songs, how Spotify shortened songs by 17%.",
+      "url": "https://usmanzakria.com/spotify_showcase.html",
+      "tags": ["Data Analysis", "Regression", "Spotify", "Python", "Statistics"],
+      "enabled": true
+    },
+    {
+      "id": "cl-figma-agile",
+      "title": "Figma Article Illustrations",
+      "description": "Simplifying Agile SDLC concepts for diverse audiences.",
+      "url": "https://drive.google.com/file/d/1K-0Giu770y-g7NXkeyFq5JnECW3cbUId/view?usp=drive_link",
+      "tags": ["Figma", "Agile SDLC", "Content Design", "Visuals"],
+      "enabled": true
+    },
+    {
+      "id": "cl-video-onboarding",
+      "title": "Video Onboarding Tutorial",
+      "description": "for the Arab British Chamber of Commerce.",
+      "url": "https://drive.google.com/file/d/1cGCwr_uMH9M9Q9UhLWiNDZ84CcDQqav4/view?usp=drive_link",
+      "tags": ["Video Enablement", "Product Adoption", "SaaS Training"],
+      "enabled": true
+    },
+    {
+      "id": "cl-consumer-insights",
+      "title": "Consumer Insights Research",
+      "description": "studies on TikTok, optimizing Dawlance’s e-commerce strategy.",
+      "url": "https://drive.google.com/file/d/1erTLrO6XSKsLK10Hos-etKS03nUBfZvi/view?usp=drive_link",
+      "tags": ["Consumer Research", "eCommerce", "TikTok", "Analytics"],
+      "enabled": true
+    },
+    {
+      "id": "cl-ai-saliency",
+      "title": "AI Saliency for Marketing",
+      "description": "Explored deep learning and neuroscience-based saliency models.",
+      "url": "https://usmanzakria.com/marketing_analytics_showcase.html",
+      "tags": ["Deep Learning", "Marketing Analytics", "Neuroscience", "AI"],
+      "enabled": true
+    },
+    {
+      "id": "cl-ai-digital-twin",
+      "title": "AI Digital Twin",
+      "description": "Synthesized 11 psychographics into a functional AI clone of myself.",
+      "url": "https://usmanzakria.com/ai_persona_showcase.html",
+      "tags": ["Agentic AI", "Digital Twin", "Prompt Engineering"],
+      "enabled": true
+    },
+    {
+      "id": "cl-signavio-celonis",
+      "title": "Signavio vs Celonis",
+      "description": "competitive analysis of leading BPM solutions.",
+      "url": "https://usmanzakria.com/",
+      "tags": ["Competitive Intelligence", "BPM", "Process Intelligence"],
+      "enabled": true
+    },
+    {
+      "id": "cl-property-price",
+      "title": "Property Price Prediction",
+      "description": "Identify key property value drivers for Airbnb in NYC.",
+      "url": "https://usmanzakria.com/",
+      "tags": ["Predictive Modeling", "Real Estate", "Python", "Data Science"],
+      "enabled": true
+    },
+    {
+      "id": "cl-salon-booking",
+      "title": "Salon Booking Application",
+      "description": "Business case, high-fidelity prototype, and GTM strategy for L’Oreal.",
+      "url": "https://usmanzakria.com/loreal_savoir_showcase.html",
+      "tags": ["Product Design", "Figma", "GTM Strategy", "L'Oreal"],
+      "enabled": true
+    },
+    {
+      "id": "cl-change-management",
+      "title": "Change Management @ Ford",
+      "description": "Analyzed Ford’s change strategy using Kotter’s 8-step change model.",
+      "url": "https://usmanzakria.com/change_management_showcase.html",
+      "tags": ["Change Management", "Strategy", "Organizational Design"],
+      "enabled": true
+    },
+    {
+      "id": "cl-brandstorm",
+      "title": "Brandstorm National Finalist",
+      "description": "Business case, prototype, and GTM strategy for L'Oreal Brandstorm.",
+      "url": "https://usmanzakria.com/loreal_brandstorm_showcase.html",
+      "tags": ["L'Oreal", "Brandstorm", "Innovation", "Product Strategy"],
+      "enabled": true
+    },
+    {
+      "id": "cl-loreal-finance",
+      "title": "L’Oreal Financial Analysis",
+      "description": "Comprehensive ESG and financial analysis, including WACC model.",
+      "url": "https://drive.google.com/file/d/1qFMm8NDClL0NqRSvXktpE87le6_2s8RF/view?usp=drive_link",
+      "tags": ["Financial Analysis", "DCF", "WACC", "Valuation", "ESG"],
+      "enabled": true
+    }
   ]
 }
