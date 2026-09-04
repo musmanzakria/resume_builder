@@ -37,7 +37,7 @@ export const CoverLetterEditor: React.FC = () => {
 
   const fallbackProjects = [
     { id: "cl-video-onboarding", title: "Video Onboarding Tutorial", description: "for the Arab British Chamber of Commerce.", url: "https://drive.google.com/file/d/1cGCwr_uMH9M9Q9UhLWiNDZ84CcDQqav4/view?usp=drive_link" },
-    { id: "cl-agentic-ai-finance", title: "Agentic AI in Finance", description: "Exploring Agentic AI players and use cases in Finance, creating n8n PoC.", url: "https://usmanzakria.com/agentic_ai_finance_showcase.html" },
+    { id: "cl-agentic-ai-finance", title: "Agentic AI in Finance", description: "Exploring Agentic AI players and use cases in Finance.", url: "https://usmanzakria.com/agentic_ai_finance_showcase.html" },
     { id: "cl-figma-agile", title: "Figma Article Illustrations", description: "Simplifying Agile SDLC concepts for diverse audiences.", url: "https://drive.google.com/file/d/1K-0Giu770y-g7NXkeyFq5JnECW3cbUId/view?usp=drive_link" },
     { id: "cl-ai-logistics", title: "AI-Powered Logistics", description: "Architected an AI-powered logistics platform, including Conversational AI.", url: "https://www.hashmove.com/solutions/ai" },
     { id: "cl-songs-shrinking", title: "Are Songs Shrinking?", description: "Regression analysis of 3600 songs, how Spotify shortened songs by 17%.", url: "https://usmanzakria.com/spotify_showcase.html" },
@@ -183,59 +183,183 @@ export const CoverLetterEditor: React.FC = () => {
           </div>
         </div>
 
-        {/* Spacing & Layout Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
-          <div>
-            <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-              Line Spacing
-            </label>
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-              {[
-                { label: "Single (1.18)", val: 1.18 },
-                { label: "1.25", val: 1.25 },
-                { label: "1.35", val: 1.35 },
-                { label: "1.5", val: 1.5 },
-              ].map((opt) => (
-                <button
-                  key={opt.val}
-                  type="button"
-                  onClick={() => setStructuredCoverLetter({ lineSpacing: opt.val })}
-                  className={`flex-1 py-1 rounded-lg text-[10.5px] font-bold transition-all ${
-                    (cl.lineSpacing || 1.18) === opt.val
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-white"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Spacing & Margin Stepper Controls (NO RADIO BUTTONS) */}
+        <div className="pt-2 border-t border-slate-100 space-y-2">
+          <span className="text-[11px] font-bold text-slate-700 block">
+            Layout, Typography & Margin Controls
+          </span>
 
-          <div>
-            <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-              Paragraph Spacing (Gap)
-            </label>
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-              {[
-                { label: "6px", val: 6 },
-                { label: "8px (Default)", val: 8 },
-                { label: "10px", val: 10 },
-                { label: "12px", val: 12 },
-              ].map((opt) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            {/* 1. Line Spacing Stepper */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
+              <label className="text-[11px] font-semibold text-slate-600 block">
+                Line Spacing
+              </label>
+              <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
                 <button
-                  key={opt.val}
                   type="button"
-                  onClick={() => setStructuredCoverLetter({ paragraphSpacing: opt.val })}
-                  className={`flex-1 py-1 rounded-lg text-[10.5px] font-bold transition-all ${
-                    (cl.paragraphSpacing !== undefined ? cl.paragraphSpacing : 8) === opt.val
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-white"
-                  }`}
+                  onClick={() => {
+                    const current = Number(cl.lineSpacing || 1.18);
+                    const updated = Math.max(1.0, parseFloat((current - 0.02).toFixed(2)));
+                    setStructuredCoverLetter({ lineSpacing: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
                 >
-                  {opt.label}
+                  -
                 </button>
-              ))}
+                <input
+                  type="number"
+                  step="0.02"
+                  min="1.0"
+                  max="2.0"
+                  value={Number(cl.lineSpacing || 1.18).toFixed(2)}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val)) setStructuredCoverLetter({ lineSpacing: val });
+                  }}
+                  className="w-12 text-center text-xs font-bold text-indigo-700 font-mono bg-transparent focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = Number(cl.lineSpacing || 1.18);
+                    const updated = Math.min(2.0, parseFloat((current + 0.02).toFixed(2)));
+                    setStructuredCoverLetter({ lineSpacing: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Paragraph Spacing Stepper */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
+              <label className="text-[11px] font-semibold text-slate-600 block">
+                Paragraph Gap (px)
+              </label>
+              <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.paragraphSpacing !== undefined ? cl.paragraphSpacing : 8;
+                    const updated = Math.max(0, current - 1);
+                    setStructuredCoverLetter({ paragraphSpacing: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="30"
+                  value={cl.paragraphSpacing !== undefined ? cl.paragraphSpacing : 8}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setStructuredCoverLetter({ paragraphSpacing: val });
+                  }}
+                  className="w-12 text-center text-xs font-bold text-indigo-700 font-mono bg-transparent focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.paragraphSpacing !== undefined ? cl.paragraphSpacing : 8;
+                    const updated = Math.min(30, current + 1);
+                    setStructuredCoverLetter({ paragraphSpacing: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Bullet Spacing Stepper */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
+              <label className="text-[11px] font-semibold text-slate-600 block">
+                Bullet Gap (px)
+              </label>
+              <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.bulletSpacing !== undefined ? cl.bulletSpacing : 4;
+                    const updated = Math.max(0, current - 1);
+                    setStructuredCoverLetter({ bulletSpacing: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="20"
+                  value={cl.bulletSpacing !== undefined ? cl.bulletSpacing : 4}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setStructuredCoverLetter({ bulletSpacing: val });
+                  }}
+                  className="w-12 text-center text-xs font-bold text-indigo-700 font-mono bg-transparent focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.bulletSpacing !== undefined ? cl.bulletSpacing : 4;
+                    const updated = Math.min(20, current + 1);
+                    setStructuredCoverLetter({ bulletSpacing: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* 4. Left/Right Margin Stepper */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
+              <label className="text-[11px] font-semibold text-slate-600 block">
+                Sides Margin (mm)
+              </label>
+              <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.horizontalMargin !== undefined ? cl.horizontalMargin : 20;
+                    const updated = Math.max(10, current - 1);
+                    setStructuredCoverLetter({ horizontalMargin: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  step="1"
+                  min="10"
+                  max="35"
+                  value={cl.horizontalMargin !== undefined ? cl.horizontalMargin : 20}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setStructuredCoverLetter({ horizontalMargin: val });
+                  }}
+                  className="w-12 text-center text-xs font-bold text-indigo-700 font-mono bg-transparent focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.horizontalMargin !== undefined ? cl.horizontalMargin : 20;
+                    const updated = Math.min(35, current + 1);
+                    setStructuredCoverLetter({ horizontalMargin: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -312,37 +436,71 @@ export const CoverLetterEditor: React.FC = () => {
           <div>
             <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px]">3</span>
-              Portfolio & Project Bullets (Portfolio: usmanzakria.com)
+              Projects & Portfolio Section
             </span>
             <p className="text-[11px] text-slate-500 mt-0.5">
               Select how many concise projects to feature. The certifications line is permanently appended.
             </p>
           </div>
 
-          {/* Project Count Stepper: 2, 3, 4, 5 */}
+          {/* Project Count Stepper: 1 to 6 */}
           <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-xl border border-slate-200 self-start sm:self-auto">
             <span className="text-[11px] font-semibold text-slate-700">Project Count:</span>
             <div className="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-xs">
               <button
                 type="button"
-                onClick={() => setCoverLetterProjectCount(Math.max(2, (cl.projectCount || 3) - 1))}
-                disabled={(cl.projectCount || 3) <= 2}
+                onClick={() => setCoverLetterProjectCount(Math.max(1, (cl.projectCount || 5) - 1))}
+                disabled={(cl.projectCount || 5) <= 1}
                 className="w-6 h-6 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 disabled:opacity-25 font-bold text-sm"
               >
                 -
               </button>
-              <span className="w-7 text-center text-xs font-bold text-indigo-700 font-mono">
-                {cl.projectCount || 3}
-              </span>
+              <input
+                type="number"
+                min="1"
+                max="6"
+                value={cl.projectCount || 5}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  if (!isNaN(val) && val >= 1 && val <= 6) setCoverLetterProjectCount(val);
+                }}
+                className="w-7 text-center text-xs font-bold text-indigo-700 font-mono bg-transparent focus:outline-none"
+              />
               <button
                 type="button"
-                onClick={() => setCoverLetterProjectCount(Math.min(5, (cl.projectCount || 3) + 1))}
-                disabled={(cl.projectCount || 3) >= 5}
+                onClick={() => setCoverLetterProjectCount(Math.min(6, (cl.projectCount || 5) + 1))}
+                disabled={(cl.projectCount || 5) >= 6}
                 className="w-6 h-6 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 disabled:opacity-25 font-bold text-sm"
               >
                 +
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Customizable Section Header Text and Portfolio Link */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50/80 border border-slate-200 rounded-xl text-xs">
+          <div>
+            <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+              Section Header Text
+            </label>
+            <input
+              type="text"
+              value={cl.portfolioHeading || "Projects and Portfolio: usmanzakria.com"}
+              onChange={(e) => setStructuredCoverLetter({ portfolioHeading: e.target.value })}
+              className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+              Portfolio URL
+            </label>
+            <input
+              type="text"
+              value={cl.portfolioUrl || "https://usmanzakria.com/"}
+              onChange={(e) => setStructuredCoverLetter({ portfolioUrl: e.target.value })}
+              className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-blue-600 font-mono focus:outline-none"
+            />
           </div>
         </div>
 

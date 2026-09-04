@@ -71,7 +71,7 @@ export const Header: React.FC = () => {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bold text-slate-900 text-sm tracking-tight">FlowCV Pro</h1>
+            <h1 className="font-bold text-slate-900 text-sm tracking-tight">Appliant</h1>
             <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
               AI Tailor
             </span>

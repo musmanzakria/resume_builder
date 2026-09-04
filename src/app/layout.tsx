@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FlowCV Pro — AI Resume & Cover Letter Tailoring Engine",
-  description: "Granular FlowCV-style resume customization paired with intelligent Gemini AI tailoring for target job descriptions.",
+  title: "Appliant — AI Resume & Cover Letter Tailoring Engine",
+  description: "Granular resume customization paired with intelligent Gemini AI tailoring for target job descriptions.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -14,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <head>
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

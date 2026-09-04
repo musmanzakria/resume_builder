@@ -387,8 +387,8 @@
       "portfolio_section": {
         "header": "Portfolio: usmanzakria.com",
         "header_url": "https://usmanzakria.com/",
-        "project_count_range": [2, 3, 4, 5],
-        "default_project_count": 3,
+        "project_count_range": [2, 3, 4, 5, 6],
+        "default_project_count": 5,
         "permanent_certification_bullet": "Certifications: Intermediate SQL, Intermediate Python, Customer Analytics (UPenn)"
       },
       "position_preference_and_availability": {
@@ -414,9 +414,9 @@
     {
       "id": "cl-agentic-ai-finance",
       "title": "Agentic AI in Finance",
-      "description": "Exploring Agentic AI players and use cases in Finance, creating n8n PoC.",
+      "description": "Exploring Agentic AI players and use cases in Finance.",
       "url": "https://usmanzakria.com/agentic_ai_finance_showcase.html",
-      "tags": ["Agentic AI", "Finance", "n8n", "Workflow Automation", "AI"],
+      "tags": ["Agentic AI", "Finance", "Workflow Automation", "AI"],
       "enabled": true
     },
     {

@@ -1238,6 +1238,20 @@ export const useResumeStore = create<ResumeStoreState>()(
           merged.structuredCoverLetter = {
             ...initialStructuredCoverLetter,
             ...merged.structuredCoverLetter,
+            portfolioHeading:
+              !merged.structuredCoverLetter.portfolioHeading ||
+              merged.structuredCoverLetter.portfolioHeading === "Portfolio: usmanzakria.com"
+                ? "Projects and Portfolio: usmanzakria.com"
+                : merged.structuredCoverLetter.portfolioHeading,
+            projectCount: merged.structuredCoverLetter.projectCount || 5,
+            bulletSpacing:
+              merged.structuredCoverLetter.bulletSpacing !== undefined
+                ? merged.structuredCoverLetter.bulletSpacing
+                : 4,
+            horizontalMargin:
+              merged.structuredCoverLetter.horizontalMargin !== undefined
+                ? merged.structuredCoverLetter.horizontalMargin
+                : 20,
           };
         }
         return merged;

@@ -23,6 +23,8 @@ export interface StructuredCoverLetter {
   documentTitle?: string;
   lineSpacing?: number;
   paragraphSpacing?: number;
+  bulletSpacing?: number;
+  horizontalMargin?: number;
 }
 
 export const initialStructuredCoverLetter: StructuredCoverLetter = {
@@ -43,12 +45,14 @@ export const initialStructuredCoverLetter: StructuredCoverLetter = {
     }
   ],
   selectedClProjectIds: [
-    "cl-video-onboarding",
     "cl-agentic-ai-finance",
-    "cl-figma-agile"
+    "cl-property-price",
+    "cl-figma-agile",
+    "cl-video-onboarding",
+    "cl-ai-digital-twin"
   ],
-  projectCount: 3,
-  portfolioHeading: "Portfolio: usmanzakria.com",
+  projectCount: 5,
+  portfolioHeading: "Projects and Portfolio: usmanzakria.com",
   portfolioUrl: "https://usmanzakria.com/",
   permanentCertifications: "Certifications: Intermediate SQL, Intermediate Python, Customer Analytics (UPenn)",
   availabilityHeading: "Position Preference & Availability",
@@ -59,5 +63,7 @@ export const initialStructuredCoverLetter: StructuredCoverLetter = {
   contactLine: "Berlin | +49 170 695 9515 | m.usmanzakria@gmail.com | Portfolio Link | 8.5 IELTS",
   documentTitle: "CoverLetter_UsmanZakria_eBay",
   lineSpacing: 1.18,
-  paragraphSpacing: 8
+  paragraphSpacing: 8,
+  bulletSpacing: 4,
+  horizontalMargin: 20
 };
