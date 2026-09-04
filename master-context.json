@@ -407,7 +407,8 @@
     "typography": {
       "font_family": "'Times New Roman', Times, serif",
       "font_size": "11.5pt",
-      "line_height": "1.18"
+      "line_height": "1.18",
+      "page_size": "Letter (8.5in x 11in)"
     }
   },
   "cl_projects_pool": [

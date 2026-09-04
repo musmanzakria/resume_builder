@@ -146,11 +146,11 @@ body {
     break-after: auto !important;
   }
 
-  .cover-letter-sheet, #cover-letter-a4-sheet {
-    width: 210mm !important;
-    height: 297mm !important;
-    min-height: 297mm !important;
-    max-height: 297mm !important;
+  .cover-letter-sheet, #cover-letter-letter-sheet, #cover-letter-a4-sheet {
+    width: 8.5in !important;
+    height: 11in !important;
+    min-height: 11in !important;
+    max-height: 11in !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;

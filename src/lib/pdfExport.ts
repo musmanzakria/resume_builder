@@ -28,14 +28,25 @@ export async function exportResumeToPdf(filename = "Usman_Zakria_Resume.pdf") {
 
 export async function exportCoverLetterToPdf(filename = "CoverLetter_UsmanZakria.pdf") {
   const originalTitle = document.title;
+  let dynamicStyle: HTMLStyleElement | null = null;
   try {
     const cleanTitle = filename.replace(/\.pdf$/i, "");
     document.title = cleanTitle;
+
+    // Enforce US Letter portrait page size for Cover Letter print
+    dynamicStyle = document.createElement("style");
+    dynamicStyle.id = "cover-letter-print-page-style";
+    dynamicStyle.innerHTML = "@page { size: letter portrait !important; margin: 0mm !important; }";
+    document.head.appendChild(dynamicStyle);
+
     if (document.fonts) {
       await document.fonts.ready;
     }
     const restoreTitle = () => {
       document.title = originalTitle;
+      if (dynamicStyle && dynamicStyle.parentNode) {
+        dynamicStyle.parentNode.removeChild(dynamicStyle);
+      }
     };
     window.addEventListener("afterprint", restoreTitle, { once: true });
     setTimeout(() => {
@@ -46,5 +57,8 @@ export async function exportCoverLetterToPdf(filename = "CoverLetter_UsmanZakria
     console.error("Cover letter print export error:", error);
     window.print();
     document.title = originalTitle;
+    if (dynamicStyle && dynamicStyle.parentNode) {
+      dynamicStyle.parentNode.removeChild(dynamicStyle);
+    }
   }
 }

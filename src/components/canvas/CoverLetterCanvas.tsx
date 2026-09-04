@@ -45,19 +45,19 @@ export const CoverLetterCanvas: React.FC = () => {
   const bulletGap = cl.bulletSpacing !== undefined ? cl.bulletSpacing : 4;
   const hMargin = cl.horizontalMargin !== undefined ? cl.horizontalMargin : 20;
 
-  const a4SerifStyle: React.CSSProperties = {
+  const letterSerifStyle: React.CSSProperties = {
     fontFamily: '"Times New Roman", Times, Merriweather, Georgia, serif',
     fontSize: "11.5pt",
     lineHeight: lineSpacingVal,
     color: "#000000",
-    paddingTop: "18mm",
-    paddingBottom: "16mm",
+    paddingTop: "16mm",
+    paddingBottom: "14mm",
     paddingLeft: `${hMargin}mm`,
     paddingRight: `${hMargin}mm`,
-    width: "210mm",
-    height: "297mm",
-    minHeight: "297mm",
-    maxHeight: "297mm",
+    width: "8.5in",
+    height: "11in",
+    minHeight: "11in",
+    maxHeight: "11in",
     backgroundColor: "#ffffff",
     boxSizing: "border-box",
     overflow: "hidden",
@@ -69,9 +69,9 @@ export const CoverLetterCanvas: React.FC = () => {
     <div className="w-full flex justify-center py-8 px-4 print:p-0 print:m-0 print:block">
       <div style={containerZoomStyle} className="print:!transform-none">
         <div 
-          id="cover-letter-a4-sheet"
+          id="cover-letter-letter-sheet"
           className="resume-a4-sheet cover-letter-sheet text-black shadow-2xl relative select-text"
-          style={a4SerifStyle}
+          style={letterSerifStyle}
         >
           {/* 1. Salutation */}
           <div style={{ marginBottom: `${paraGap}px` }} className="font-normal">
