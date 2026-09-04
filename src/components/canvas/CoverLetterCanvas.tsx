@@ -8,9 +8,18 @@ export const CoverLetterCanvas: React.FC = () => {
   const { structuredCoverLetter, masterContext, previewZoom } = useResumeStore();
 
   const cl = structuredCoverLetter;
-  const projectsPool = masterContext?.cl_projects_pool || [];
+  // Robust fallback to guarantee projects pool is always loaded
+  const fallbackProjects = [
+    { id: "cl-video-onboarding", title: "Video Onboarding Tutorial", description: "for the Arab British Chamber of Commerce.", url: "https://drive.google.com/file/d/1cGCwr_uMH9M9Q9UhLWiNDZ84CcDQqav4/view?usp=drive_link" },
+    { id: "cl-agentic-ai-finance", title: "Agentic AI in Finance", description: "Exploring Agentic AI players and use cases in Finance, creating n8n PoC.", url: "https://usmanzakria.com/agentic_ai_finance_showcase.html" },
+    { id: "cl-figma-agile", title: "Figma Article Illustrations", description: "Simplifying Agile SDLC concepts for diverse audiences.", url: "https://drive.google.com/file/d/1K-0Giu770y-g7NXkeyFq5JnECW3cbUId/view?usp=drive_link" },
+    { id: "cl-ai-logistics", title: "AI-Powered Logistics", description: "Architected an AI-powered logistics platform, including Conversational AI.", url: "https://www.hashmove.com/solutions/ai" },
+    { id: "cl-songs-shrinking", title: "Are Songs Shrinking?", description: "Regression analysis of 3600 songs, how Spotify shortened songs by 17%.", url: "https://usmanzakria.com/spotify_showcase.html" }
+  ];
 
-  // Determine active projects based on selected IDs and projectCount (2, 3, or 4)
+  const projectsPool = (masterContext?.cl_projects_pool?.length ? masterContext.cl_projects_pool : fallbackProjects) || fallbackProjects;
+
+  // Determine active projects based on selected IDs and projectCount (2, 3, 4, or 5)
   const selectedIds = cl.selectedClProjectIds || [];
   const projectLimit = cl.projectCount || 3;
   
@@ -31,19 +40,25 @@ export const CoverLetterCanvas: React.FC = () => {
     transition: "transform 0.15s ease-out",
   };
 
+  const lineSpacingVal = cl.lineSpacing || 1.18;
+  const paraGap = cl.paragraphSpacing !== undefined ? cl.paragraphSpacing : 8;
+
   const a4SerifStyle: React.CSSProperties = {
-    fontFamily: "'Times New Roman', Times, Merriweather, Georgia, serif",
+    fontFamily: '"Times New Roman", Times, Merriweather, Georgia, serif',
     fontSize: "11.5pt",
-    lineHeight: "1.45",
+    lineHeight: lineSpacingVal,
     color: "#000000",
-    paddingTop: "24mm",
-    paddingBottom: "22mm",
-    paddingLeft: "24mm",
-    paddingRight: "24mm",
+    paddingTop: "20mm",
+    paddingBottom: "18mm",
+    paddingLeft: "22mm",
+    paddingRight: "22mm",
     width: "210mm",
+    height: "297mm",
     minHeight: "297mm",
+    maxHeight: "297mm",
     backgroundColor: "#ffffff",
     boxSizing: "border-box",
+    overflow: "hidden",
   };
 
   return (
@@ -55,30 +70,30 @@ export const CoverLetterCanvas: React.FC = () => {
           style={a4SerifStyle}
         >
           {/* 1. Salutation */}
-          <div className="mb-4 font-normal">
+          <div style={{ marginBottom: `${paraGap}px` }} className="font-normal">
             {cl.salutation || "Dear Hiring Team,"}
           </div>
 
           {/* 2. Introduction Paragraph */}
-          <div className="mb-4 text-justify leading-relaxed">
+          <div style={{ marginBottom: `${paraGap}px` }} className="text-justify">
             <RichTextRenderer content={cl.intro} defaultShowLinkIcon={false} />
           </div>
 
           {/* 3. Three Core Body Paragraphs with Bold Headings */}
           {(cl.bodyParagraphs || []).map((para, idx) => (
-            <div key={idx} className="mb-3.5">
-              <div className="font-bold text-black mb-1">
+            <div key={idx} style={{ marginBottom: `${paraGap}px` }}>
+              <div className="font-bold text-black mb-0.5">
                 {para.heading}
               </div>
-              <div className="text-justify leading-relaxed">
+              <div className="text-justify">
                 <RichTextRenderer content={para.body} defaultShowLinkIcon={false} />
               </div>
             </div>
           ))}
 
           {/* 4. Portfolio & Project Bullets */}
-          <div className="mb-4">
-            <div className="font-bold text-black mb-1.5">
+          <div style={{ marginBottom: `${paraGap}px` }}>
+            <div className="font-bold text-black mb-1">
               Portfolio:{" "}
               <a 
                 href={cl.portfolioUrl || "https://usmanzakria.com/"} 
@@ -90,10 +105,10 @@ export const CoverLetterCanvas: React.FC = () => {
               </a>
             </div>
 
-            <ul className="space-y-1 pl-1">
+            <ul className="space-y-1.5 pl-4 ml-1">
               {displayProjects.map((proj: any) => (
-                <li key={proj.id} className="flex items-start gap-2 text-justify">
-                  <span className="text-black shrink-0 font-bold select-none">•</span>
+                <li key={proj.id} className="flex items-start gap-2.5 text-justify">
+                  <span className="inline-block w-[6px] h-[6px] rounded-full bg-black shrink-0 mt-[6px] select-none" />
                   <div>
                     {proj.url ? (
                       <a 
@@ -113,8 +128,8 @@ export const CoverLetterCanvas: React.FC = () => {
               ))}
 
               {/* Permanent Certification Bullet */}
-              <li className="flex items-start gap-2 text-justify">
-                <span className="text-black shrink-0 font-bold select-none">•</span>
+              <li className="flex items-start gap-2.5 text-justify">
+                <span className="inline-block w-[6px] h-[6px] rounded-full bg-black shrink-0 mt-[6px] select-none" />
                 <div>
                   <span className="text-blue-700 underline font-semibold">Certifications</span>: Intermediate SQL, Intermediate Python, Customer Analytics (UPenn)
                 </div>
@@ -123,24 +138,24 @@ export const CoverLetterCanvas: React.FC = () => {
           </div>
 
           {/* 5. Position Preference & Availability */}
-          <div className="mb-3.5">
-            <div className="font-bold text-black mb-1">
+          <div style={{ marginBottom: `${paraGap}px` }}>
+            <div className="font-bold text-black mb-0.5">
               {cl.availabilityHeading || "Position Preference & Availability"}
             </div>
-            <div className="text-justify leading-relaxed">
+            <div className="text-justify">
               {cl.availabilityText || "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation."}
             </div>
           </div>
 
           {/* 6. Closing Consideration */}
-          <div className="mb-3.5">
+          <div style={{ marginBottom: `${paraGap}px` }}>
             {cl.closingLine || "Thank you for your time and consideration."}
           </div>
 
           {/* 7. Sign-off & Contact Line */}
-          <div className="pt-1">
+          <div className="pt-0.5">
             <div>{cl.signOff || "Warm Regards,"}</div>
-            <div className="font-semibold text-black mt-0.5">{cl.senderName || "Usman Zakria"}</div>
+            <div className="font-bold italic text-black mt-0.5">{cl.senderName || "Usman Zakria"}</div>
             <div className="text-[10pt] text-slate-800 mt-1 italic">
               Berlin | +49 170 695 9515 |{" "}
               <a href="mailto:m.usmanzakria@gmail.com" className="text-blue-700 underline not-italic">

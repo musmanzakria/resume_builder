@@ -8,7 +8,8 @@ interface RichTextRendererProps {
 }
 
 /**
- * Parses markdown-style bold (**text**), italics (*text*), and links ([label](url))
+ * Parses markdown-style links ([label](url)), combined bold+italics (***text***, **_text_**),
+ * bold (**text**), and italics (*text* or _text_)
  * and renders clean, standard inline elements without breaking paragraphs.
  */
 export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
@@ -18,9 +19,21 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
 }) => {
   if (!content) return null;
 
-  // Regex matches [label](url) OR **bold** OR *italic*
-  const tokenRegex = /(\[.*?\]\(.*?\)|\*\*.*?\*\*|\*.*?\*)/g;
-  const rawTokens = content.split(tokenRegex);
+  // Convert any HTML strong/em to markdown first to standardize
+  let normalized = content
+    .replace(/<strong>\s*<em>(.*?)<\/em>\s*<\/strong>/gi, "***$1***")
+    .replace(/<em>\s*<strong>(.*?)<\/strong>\s*<\/em>/gi, "***$1***")
+    .replace(/<b>\s*<i>(.*?)<\/i>\s*<\/b>/gi, "***$1***")
+    .replace(/<i>\s*<b>(.*?)<\/b>\s*<\/i>/gi, "***$1***")
+    .replace(/<strong>(.*?)<\/strong>/gi, "**$1**")
+    .replace(/<b>(.*?)<\/b>/gi, "**$1**")
+    .replace(/<em>(.*?)<\/em>/gi, "*$1*")
+    .replace(/<i>(.*?)<\/i>/gi, "*$1*")
+    .replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, "[$2]($1)");
+
+  // Regex matches [label](url) OR ***bold_italic*** OR **_bold_italic_** OR **bold** OR *italic*
+  const tokenRegex = /(\[.*?\]\(.*?\)|\*\*\*.*?\*\*\*|\*\*_(?:.*?)_\*\*|_\*\*(?:.*?)\*\*_|\*\*.*?\*\*|\*(?!\*).*?\*(?!\*)|_(?!_).*?_(?!_))/g;
+  const rawTokens = normalized.split(tokenRegex);
 
   const renderedNodes: React.ReactNode[] = [];
 
@@ -60,7 +73,21 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
       return;
     }
 
-    // 2. Bold: **text**
+    // 2. Bold AND Italic: ***text***, **_text_**, _**text**_
+    const boldItalicMatch =
+      segment.match(/^\*\*\*(.*?)\*\*\*$/) ||
+      segment.match(/^\*\*_(.*?)_\*\*$/) ||
+      segment.match(/^_\*\*(.*?)\*\*_$/);
+    if (boldItalicMatch) {
+      renderedNodes.push(
+        <strong key={idx} className="font-bold italic text-black">
+          {boldItalicMatch[1]}
+        </strong>
+      );
+      return;
+    }
+
+    // 3. Bold: **text**
     const boldMatch = segment.match(/^\*\*(.*?)\*\*$/);
     if (boldMatch) {
       renderedNodes.push(
@@ -71,8 +98,8 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
       return;
     }
 
-    // 3. Italic: *text*
-    const italicMatch = segment.match(/^\*(.*?)\*$/);
+    // 4. Italic: *text* or _text_
+    const italicMatch = segment.match(/^\*(.*?)\*$/) || segment.match(/^_(.*?)_$/);
     if (italicMatch) {
       renderedNodes.push(
         <em key={idx} className="italic text-slate-900">
@@ -82,7 +109,7 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
       return;
     }
 
-    // 4. Standard text
+    // 5. Standard text
     renderedNodes.push(<span key={idx}>{segment}</span>);
   });
 

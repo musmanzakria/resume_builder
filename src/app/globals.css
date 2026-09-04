@@ -148,7 +148,13 @@ body {
 
   .cover-letter-sheet, #cover-letter-a4-sheet {
     width: 210mm !important;
+    height: 297mm !important;
     min-height: 297mm !important;
+    max-height: 297mm !important;
+    padding-top: 20mm !important;
+    padding-bottom: 18mm !important;
+    padding-left: 22mm !important;
+    padding-right: 22mm !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
@@ -156,6 +162,9 @@ body {
     background: #ffffff !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    overflow: hidden !important;
     display: block !important;
     box-sizing: border-box !important;
   }

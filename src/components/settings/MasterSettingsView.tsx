@@ -148,11 +148,11 @@ export const MasterSettingsView: React.FC = () => {
   );
   const [clBodyDesc, setClBodyDesc] = useState<string>(
     initialClRulebook.structural_architecture?.three_body_paragraphs?.description ||
-      "3 paragraphs, each preceded by a bold heading mapping directly to the 3 main requirement pillars of the Job Description."
+      "3 paragraphs, each preceded by a bold heading mapping directly to the 3 main requirement areas of the Job Description."
   );
   const [clBodyGuideline, setClBodyGuideline] = useState<string>(
     initialClRulebook.structural_architecture?.three_body_paragraphs?.content_guideline ||
-      "Opening sentence explicitly references the employer's need ('You need someone who can...', 'The role requires...', 'At HashMove, a B2B...'). Weave real metrics (**362%**, **13%**, **800k+ views**, **8.5 IELTS**) and tools (**Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**)."
+      "Opening sentence explicitly references the employer's need ('You need someone who can...', 'The role requires...', 'At HashMove, a B2B...'). Weave real metrics (e.g. **362%**, **13%**, **800k+ views**, **8.5 IELTS**) and tools (e.g. **Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**). NOTE: Tools and metrics are illustrative examples only—draw broadly from Usman's full skillset."
   );
 
   const fallbackClProjects = initialMasterContext?.cl_projects_pool || [];
@@ -880,7 +880,7 @@ export const MasterSettingsView: React.FC = () => {
 
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  Three Body Paragraphs Guideline (Mapping against JD Pillars)
+                  Three Body Paragraphs Guideline (Mapping against JD Requirements)
                 </label>
                 <textarea
                   value={clBodyGuideline}

@@ -21,6 +21,8 @@ export interface StructuredCoverLetter {
   senderName: string;
   contactLine: string;
   documentTitle?: string;
+  lineSpacing?: number;
+  paragraphSpacing?: number;
 }
 
 export const initialStructuredCoverLetter: StructuredCoverLetter = {
@@ -55,5 +57,7 @@ export const initialStructuredCoverLetter: StructuredCoverLetter = {
   signOff: "Warm Regards,",
   senderName: "Usman Zakria",
   contactLine: "Berlin | +49 170 695 9515 | m.usmanzakria@gmail.com | Portfolio Link | 8.5 IELTS",
-  documentTitle: "CoverLetter_UsmanZakria_eBay"
+  documentTitle: "CoverLetter_UsmanZakria_eBay",
+  lineSpacing: 1.18,
+  paragraphSpacing: 8
 };

@@ -19,7 +19,13 @@ interface TipTapInputProps {
 function markdownToHtml(md: string): string {
   if (!md) return "";
   let html = md;
+  // Bold + Italic combinations
+  html = html.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
+  html = html.replace(/\*\*_(.*?)_\*\*/g, "<strong><em>$1</em></strong>");
+  html = html.replace(/_\*\*(.*?)\*\*_/g, "<strong><em>$1</em></strong>");
+  // Bold
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  // Italic
   html = html.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, "<em>$1</em>");
   html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
   if (!html.includes("<p>") && !html.includes("<div>")) {
@@ -31,8 +37,15 @@ function markdownToHtml(md: string): string {
 function htmlToMarkdown(html: string): string {
   if (!html) return "";
   let md = html;
+  // Combined bold + italic
+  md = md.replace(/<strong>\s*<em>(.*?)<\/em>\s*<\/strong>/gi, "***$1***");
+  md = md.replace(/<em>\s*<strong>(.*?)<\/strong>\s*<\/em>/gi, "***$1***");
+  md = md.replace(/<b>\s*<i>(.*?)<\/i>\s*<\/b>/gi, "***$1***");
+  md = md.replace(/<i>\s*<b>(.*?)<\/b>\s*<\/i>/gi, "***$1***");
+  // Standalone bold
   md = md.replace(/<strong>(.*?)<\/strong>/gi, "**$1**");
   md = md.replace(/<b>(.*?)<\/b>/gi, "**$1**");
+  // Standalone italic
   md = md.replace(/<em>(.*?)<\/em>/gi, "*$1*");
   md = md.replace(/<i>(.*?)<\/i>/gi, "*$1*");
   md = md.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, "[$2]($1)");

@@ -457,7 +457,7 @@ interface ResumeStoreState {
 }
 
 export const useResumeStore = create<ResumeStoreState>()(
-  persist(
+  persist<ResumeStoreState>(
     (set, get) => ({
       resume: defaultInitialResumeData,
       masterContext: initialMasterContext,
@@ -1224,6 +1224,24 @@ export const useResumeStore = create<ResumeStoreState>()(
     {
       name: "flowcv-resume-storage-v6",
       storage: createJSONStorage(() => localStorage),
+      merge: (persistedState: any, currentState: any) => {
+        const merged = { ...currentState, ...persistedState };
+        // Ensure masterContext has cl_projects_pool
+        if (!merged.masterContext?.cl_projects_pool || merged.masterContext.cl_projects_pool.length === 0) {
+          merged.masterContext = {
+            ...(merged.masterContext || currentState.masterContext),
+            cl_projects_pool: initialMasterContext.cl_projects_pool,
+          };
+        }
+        // Ensure structuredCoverLetter has defaults
+        if (merged.structuredCoverLetter) {
+          merged.structuredCoverLetter = {
+            ...initialStructuredCoverLetter,
+            ...merged.structuredCoverLetter,
+          };
+        }
+        return merged;
+      },
     }
   )
 );

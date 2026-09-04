@@ -38,8 +38,9 @@ export const AiTailorPanel: React.FC = () => {
   const [jd, setJd] = useState(targetJobDescription || "");
   const [company, setCompany] = useState(targetCompany || "");
   const [role, setRole] = useState(targetRole || "");
+  const [additionalContext, setAdditionalContext] = useState("");
   const [apiKeyInput, setApiKeyInput] = useState(geminiApiKey || "");
-  const [modelInput, setModelInput] = useState(selectedAiModel || "gemini-2.0-flash");
+  const [modelInput, setModelInput] = useState(selectedAiModel || "gemini-3.6-flash");
   const [customModel, setCustomModel] = useState("");
   const [apiKeySaved, setApiKeySaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -95,6 +96,9 @@ export const AiTailorPanel: React.FC = () => {
     addLog(`🚀 Starting AI Tailoring Engine for ${company || "Target Company"}...`);
     addLog(`⚡ Initializing model: ${activeModel}`);
     addLog(`📄 Parsing Job Description (${jd.length} chars) & Master Career Knowledge Base...`);
+    if (additionalContext.trim()) {
+      addLog(`📝 Incorporating custom additional context (${additionalContext.trim().length} chars)...`);
+    }
 
     try {
       const logTimer1 = setTimeout(() => {
@@ -117,6 +121,7 @@ export const AiTailorPanel: React.FC = () => {
           jobDescription: jd,
           targetCompany: company,
           targetRole: role,
+          additionalContext: additionalContext.trim(),
           apiKey: apiKeyInput.trim(),
           modelName: activeModel,
           masterResumeData: resume,
@@ -152,6 +157,8 @@ export const AiTailorPanel: React.FC = () => {
         tailoredSummary: tailoredData.tailoredSummary || tailoredData.tailored_summary,
         closingLine: tailoredData.closingLine || tailoredData.closing_line,
         coverLetter: tailoredData.coverLetter || tailoredData.cover_letter,
+        structuredCoverLetter: tailoredData.structuredCoverLetter,
+        company: company || tailoredData.company,
       });
 
       addLog(`✅ Complete! Live Resume Canvas and Cover Letter updated successfully.`);
@@ -316,8 +323,24 @@ export const AiTailorPanel: React.FC = () => {
         <textarea
           value={jd}
           onChange={(e) => setJd(e.target.value)}
-          rows={8}
+          rows={7}
           placeholder="Paste the full job posting requirements, responsibilities, and about company here..."
+          className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 leading-relaxed font-sans"
+        />
+      </div>
+
+      {/* Optional Additional Context / Special Instructions */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2 shadow-xs">
+        <div className="flex items-center justify-between">
+          <label className="text-xs text-slate-700 font-semibold block">
+            Additional Context or Custom Instructions <span className="text-[11px] font-normal text-slate-400">(Optional)</span>
+          </label>
+        </div>
+        <textarea
+          value={additionalContext}
+          onChange={(e) => setAdditionalContext(e.target.value)}
+          rows={3}
+          placeholder="e.g. Focus heavily on my SEO and Python analytics experience, or mention that I spoke with the hiring manager on LinkedIn..."
           className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 leading-relaxed font-sans"
         />
       </div>

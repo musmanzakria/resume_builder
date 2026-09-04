@@ -379,15 +379,15 @@
         "guidelines": "State candidate identity clearly, express targeted enthusiasm, and immediately establish domain credibility."
       },
       "three_body_paragraphs": {
-        "description": "3 paragraphs, each preceded by a bold heading mapping directly to the 3 main requirement pillars of the Job Description.",
+        "description": "3 paragraphs, each preceded by a bold heading mapping directly to the 3 main requirement areas of the Job Description.",
         "heading_guideline": "Concise, punchy 3-5 word bold heading matching the JD domain (e.g., 'Internal Enablement and Content Creation', 'Cross-Functional Collaboration and Feedback Loops', 'Data-Driven and Tech-Savvy Mindset', 'Strategic Collaboration and Project Management', 'Operational Support and Project Coordination').",
-        "content_guideline": "Opening sentence explicitly references the employer's need ('You need someone who can...', 'The role requires...', 'At HashMove, a B2B...'). Weave real metrics (**362%**, **13%**, **800k+ views**, **8.5 IELTS**) and tools (**Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**).",
+        "content_guideline": "Opening sentence explicitly references the employer's need ('You need someone who can...', 'The role requires...', 'At HashMove, a B2B...'). Weave real metrics (e.g. **362%**, **13%**, **800k+ views**, **8.5 IELTS**) and tools (e.g. **Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**). NOTE: These tools and metrics are illustrative examples only, not exhaustive. Actively pull relevant skills and tools from Usman's Master Context.",
         "formatting_rule": "STRICT ZERO EM-DASHES (— or –). Use natural commas, parentheses, or smooth connective syntax."
       },
       "portfolio_section": {
         "header": "Portfolio: usmanzakria.com",
         "header_url": "https://usmanzakria.com/",
-        "project_count_range": [2, 3, 4],
+        "project_count_range": [2, 3, 4, 5],
         "default_project_count": 3,
         "permanent_certification_bullet": "Certifications: Intermediate SQL, Intermediate Python, Customer Analytics (UPenn)"
       },
@@ -399,14 +399,15 @@
       "sign_off": {
         "closing": "Warm Regards,",
         "name": "Usman Zakria",
+        "name_style": "bold_italic",
         "contact_bar": "Berlin | +49 170 695 9515 | m.usmanzakria@gmail.com | Portfolio Link | 8.5 IELTS",
         "portfolio_url": "https://usmanzakria.com/"
       }
     },
     "typography": {
-      "font_family": "'Times New Roman', Times, Merriweather, Georgia, serif",
+      "font_family": "'Times New Roman', Times, serif",
       "font_size": "11.5pt",
-      "line_height": "1.45"
+      "line_height": "1.18"
     }
   },
   "cl_projects_pool": [

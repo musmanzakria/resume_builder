@@ -6,14 +6,19 @@
 export async function exportResumeToPdf(filename = "Usman_Zakria_Resume.pdf") {
   const originalTitle = document.title;
   try {
-    document.title = filename.replace(/\.pdf$/i, "");
+    const cleanTitle = filename.replace(/\.pdf$/i, "");
+    document.title = cleanTitle;
     if (document.fonts) {
       await document.fonts.ready;
     }
+    const restoreTitle = () => {
+      document.title = originalTitle;
+    };
+    window.addEventListener("afterprint", restoreTitle, { once: true });
     setTimeout(() => {
       window.print();
-      document.title = originalTitle;
-    }, 150);
+      setTimeout(restoreTitle, 4000);
+    }, 100);
   } catch (error) {
     console.error("Print export error:", error);
     window.print();
@@ -24,14 +29,19 @@ export async function exportResumeToPdf(filename = "Usman_Zakria_Resume.pdf") {
 export async function exportCoverLetterToPdf(filename = "CoverLetter_UsmanZakria.pdf") {
   const originalTitle = document.title;
   try {
-    document.title = filename.replace(/\.pdf$/i, "");
+    const cleanTitle = filename.replace(/\.pdf$/i, "");
+    document.title = cleanTitle;
     if (document.fonts) {
       await document.fonts.ready;
     }
+    const restoreTitle = () => {
+      document.title = originalTitle;
+    };
+    window.addEventListener("afterprint", restoreTitle, { once: true });
     setTimeout(() => {
       window.print();
-      document.title = originalTitle;
-    }, 150);
+      setTimeout(restoreTitle, 4000);
+    }, 100);
   } catch (error) {
     console.error("Cover letter print export error:", error);
     window.print();

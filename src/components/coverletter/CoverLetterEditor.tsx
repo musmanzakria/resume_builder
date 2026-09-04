@@ -34,19 +34,45 @@ export const CoverLetterEditor: React.FC = () => {
   } = useResumeStore();
 
   const cl = structuredCoverLetter;
-  const projectsPool = masterContext?.cl_projects_pool || [];
+
+  const fallbackProjects = [
+    { id: "cl-video-onboarding", title: "Video Onboarding Tutorial", description: "for the Arab British Chamber of Commerce.", url: "https://drive.google.com/file/d/1cGCwr_uMH9M9Q9UhLWiNDZ84CcDQqav4/view?usp=drive_link" },
+    { id: "cl-agentic-ai-finance", title: "Agentic AI in Finance", description: "Exploring Agentic AI players and use cases in Finance, creating n8n PoC.", url: "https://usmanzakria.com/agentic_ai_finance_showcase.html" },
+    { id: "cl-figma-agile", title: "Figma Article Illustrations", description: "Simplifying Agile SDLC concepts for diverse audiences.", url: "https://drive.google.com/file/d/1K-0Giu770y-g7NXkeyFq5JnECW3cbUId/view?usp=drive_link" },
+    { id: "cl-ai-logistics", title: "AI-Powered Logistics", description: "Architected an AI-powered logistics platform, including Conversational AI.", url: "https://www.hashmove.com/solutions/ai" },
+    { id: "cl-songs-shrinking", title: "Are Songs Shrinking?", description: "Regression analysis of 3600 songs, how Spotify shortened songs by 17%.", url: "https://usmanzakria.com/spotify_showcase.html" },
+    { id: "cl-consumer-insights", title: "Consumer Insights Research", description: "studies on TikTok, optimizing Dawlance’s e-commerce strategy.", url: "https://drive.google.com/file/d/1erTLrO6XSKsLK10Hos-etKS03nUBfZvi/view?usp=drive_link" },
+    { id: "cl-ai-saliency", title: "AI Saliency for Marketing", description: "Explored deep learning and neuroscience-based saliency models.", url: "https://usmanzakria.com/marketing_analytics_showcase.html" },
+    { id: "cl-ai-digital-twin", title: "AI Digital Twin", description: "Synthesized 11 psychographics into a functional AI clone of myself.", url: "https://usmanzakria.com/ai_persona_showcase.html" },
+    { id: "cl-signavio-celonis", title: "Signavio vs Celonis", description: "competitive analysis of leading BPM solutions.", url: "https://usmanzakria.com/" },
+    { id: "cl-property-price", title: "Property Price Prediction", description: "Identify key property value drivers for Airbnb in NYC.", url: "https://usmanzakria.com/" },
+    { id: "cl-salon-booking", title: "Salon Booking Application", description: "Business case, high-fidelity prototype, and GTM strategy for L’Oreal.", url: "https://usmanzakria.com/loreal_savoir_showcase.html" },
+    { id: "cl-change-management", title: "Change Management @ Ford", description: "Analyzed Ford’s change strategy using Kotter’s 8-step change model.", url: "https://usmanzakria.com/change_management_showcase.html" },
+    { id: "cl-brandstorm", title: "Brandstorm National Finalist", description: "Business case, prototype, and GTM strategy for L'Oreal Brandstorm.", url: "https://usmanzakria.com/loreal_brandstorm_showcase.html" },
+    { id: "cl-loreal-finance", title: "L’Oreal Financial Analysis", description: "Comprehensive ESG and financial analysis, including WACC model.", url: "https://drive.google.com/file/d/1qFMm8NDClL0NqRSvXktpE87le6_2s8RF/view?usp=drive_link" }
+  ];
+
+  const projectsPool = (masterContext?.cl_projects_pool?.length ? masterContext.cl_projects_pool : fallbackProjects) || fallbackProjects;
 
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [activeSection, setActiveSection] = useState<"content" | "projects" | "meta">("content");
 
-  // Format filename as requested: CoverLetter_UsmanZakria_[CompanyName].pdf
+  // Synchronize filename reactively
   const companyClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
   const defaultFilename = cl.documentTitle 
-    ? `${cl.documentTitle}.pdf` 
-    : `CoverLetter_UsmanZakria_${companyClean}.pdf`;
+    ? (cl.documentTitle.endsWith(".pdf") ? cl.documentTitle : `${cl.documentTitle}.pdf`)
+    : `CoverLetter_UsmanZakria_${companyClean || "Company"}.pdf`;
 
   const [docFilename, setDocFilename] = useState(defaultFilename);
+
+  // Sync if targetCompany changes
+  React.useEffect(() => {
+    if (targetCompany) {
+      const clean = targetCompany.replace(/[^a-zA-Z0-9_-]/g, "");
+      const generatedName = `CoverLetter_UsmanZakria_${clean || "Company"}.pdf`;
+      setDocFilename(generatedName);
+    }
+  }, [targetCompany]);
 
   const handleDownloadPdf = async () => {
     setIsExporting(true);
@@ -58,7 +84,7 @@ export const CoverLetterEditor: React.FC = () => {
   const handleCopyFullText = () => {
     // Generate clean plain text representation
     const paras = (cl.bodyParagraphs || [])
-      .map((p) => `${p.heading}\n${p.body.replace(/\*\*/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1")}`)
+      .map((p) => `${p.heading}\n${p.body.replace(/\*\*\*/g, "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1")}`)
       .join("\n\n");
 
     const activeProjects = (cl.selectedClProjectIds || [])
@@ -70,7 +96,7 @@ export const CoverLetterEditor: React.FC = () => {
       .map((p: any) => `● ${p.title}: ${p.description}`)
       .join("\n");
 
-    const fullText = `${cl.salutation}\n\n${cl.intro.replace(/\*\*/g, "")}\n\n${paras}\n\nPortfolio: https://usmanzakria.com/\n${projectBullets}\n● Certifications: Intermediate SQL, Intermediate Python, Customer Analytics (UPenn)\n\n${cl.availabilityHeading}\n${cl.availabilityText}\n\n${cl.closingLine}\n\n${cl.signOff}\n${cl.senderName}\n${cl.contactLine}`;
+    const fullText = `${cl.salutation}\n\n${cl.intro.replace(/\*\*\*/g, "").replace(/\*\*/g, "").replace(/\*/g, "")}\n\n${paras}\n\nPortfolio: https://usmanzakria.com/\n${projectBullets}\n● Certifications: Intermediate SQL, Intermediate Python, Customer Analytics (UPenn)\n\n${cl.availabilityHeading}\n${cl.availabilityText}\n\n${cl.closingLine}\n\n${cl.signOff}\n${cl.senderName}\n${cl.contactLine}`;
 
     navigator.clipboard.writeText(fullText);
     setCopied(true);
@@ -95,9 +121,6 @@ export const CoverLetterEditor: React.FC = () => {
           <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm">
             <Mail className="w-4 h-4 text-indigo-600" />
             <span>Cover Letter Editor</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700">
-              11.5pt Serif Live
-            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -159,6 +182,63 @@ export const CoverLetterEditor: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* Spacing & Layout Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-xs">
+          <div>
+            <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+              Line Spacing
+            </label>
+            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+              {[
+                { label: "Single (1.18)", val: 1.18 },
+                { label: "1.25", val: 1.25 },
+                { label: "1.35", val: 1.35 },
+                { label: "1.5", val: 1.5 },
+              ].map((opt) => (
+                <button
+                  key={opt.val}
+                  type="button"
+                  onClick={() => setStructuredCoverLetter({ lineSpacing: opt.val })}
+                  className={`flex-1 py-1 rounded-lg text-[10.5px] font-bold transition-all ${
+                    (cl.lineSpacing || 1.18) === opt.val
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+              Paragraph Spacing (Gap)
+            </label>
+            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+              {[
+                { label: "6px", val: 6 },
+                { label: "8px (Default)", val: 8 },
+                { label: "10px", val: 10 },
+                { label: "12px", val: 12 },
+              ].map((opt) => (
+                <button
+                  key={opt.val}
+                  type="button"
+                  onClick={() => setStructuredCoverLetter({ paragraphSpacing: opt.val })}
+                  className={`flex-1 py-1 rounded-lg text-[10.5px] font-bold transition-all ${
+                    (cl.paragraphSpacing !== undefined ? cl.paragraphSpacing : 8) === opt.val
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 1. Salutation & Introduction */}
@@ -203,8 +283,8 @@ export const CoverLetterEditor: React.FC = () => {
           {(cl.bodyParagraphs || []).map((para, idx) => (
             <div key={idx} className="p-4 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
-                  Pillar #{idx + 1}
+                <span className="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                  Area #{idx + 1}
                 </span>
                 <input
                   type="text"
@@ -239,22 +319,30 @@ export const CoverLetterEditor: React.FC = () => {
             </p>
           </div>
 
-          {/* Project Count Toggle: 2, 3, or 4 */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
-            <span className="text-[10px] font-semibold text-slate-500 px-1.5">Show:</span>
-            {[2, 3, 4].map((count) => (
+          {/* Project Count Stepper: 2, 3, 4, 5 */}
+          <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-xl border border-slate-200 self-start sm:self-auto">
+            <span className="text-[11px] font-semibold text-slate-700">Project Count:</span>
+            <div className="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-xs">
               <button
-                key={count}
-                onClick={() => setCoverLetterProjectCount(count)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                  (cl.projectCount || 3) === count
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white"
-                }`}
+                type="button"
+                onClick={() => setCoverLetterProjectCount(Math.max(2, (cl.projectCount || 3) - 1))}
+                disabled={(cl.projectCount || 3) <= 2}
+                className="w-6 h-6 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 disabled:opacity-25 font-bold text-sm"
               >
-                {count} Projects
+                -
               </button>
-            ))}
+              <span className="w-7 text-center text-xs font-bold text-indigo-700 font-mono">
+                {cl.projectCount || 3}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCoverLetterProjectCount(Math.min(5, (cl.projectCount || 3) + 1))}
+                disabled={(cl.projectCount || 3) >= 5}
+                className="w-6 h-6 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 disabled:opacity-25 font-bold text-sm"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
 

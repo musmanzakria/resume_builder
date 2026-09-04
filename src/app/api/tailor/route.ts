@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
       targetRole,
       targetCompany,
       jobDescription,
+      additionalContext,
       masterResumeData,
       masterContext,
       topN = 5,
@@ -62,7 +63,7 @@ ${rulebook?.gold_standard_clause || "The benchmark samples represent Usman's aut
 
 4-STAGE DYNAMIC FLOW & GENERALIZED SKILL SYNTHESIS:
 1. STAGE 1 (Persona Hook): Establish immediate domain authority tailored to the target company's industry (SaaS, eCommerce, AI/Workflow Automation, Logistics ERP, BioTech, Startup Strategy).
-2. STAGE 2 (Generalized Skill & Competency Bridge): Bridge hard software tools (Excel/Sheets, SQL, Python, n8n, Figma, Tableau, CRM), domain methodologies (SEO/AEO/GEO, CRO, GTM, Agile, Process Mapping), and soft communication strengths (8.5 IELTS / C2 English, German A2, cross-functional engineering-to-GTM bridge, explaining complex tech simply). Do NOT restrict yourself to hardcoded lists; invent truthful contextual connections based on the JD.
+2. STAGE 2 (Generalized Skill & Competency Bridge): Bridge hard software tools, domain methodologies, and interpersonal communication strengths. NOTE: Tools mentioned in rulebooks are illustrative examples, NOT an exhaustive list. Usman has diverse skills across Python, SQL, Excel, n8n, AI, Figma, CRM, BI, and more. Draw freely and authentically from Usman's complete Master Context based on the JD.
 3. STAGE 3 (Commercial Impact & Execution Value): Demonstrate proactive execution (e.g. automating manual pipelines to give teams back time, conducting growth experiments, translating technical architecture into sales pitch decks and demos).
 4. STAGE 4 (Closing Commitment Anchor): Clean, forward-looking commitment customized to the team's mission:
    "I am eager to be an integral part of ${targetCompany || "the company"}'s team, [Value 1], [Value 2], and help [Company Mission Impact] as a **${cleanedRole} in Berlin**."
@@ -81,10 +82,10 @@ COVER LETTER MASTER ARCHITECTURE & ATS RULEBOOK:
 1. SALUTATION: Always format as "Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}".
 2. INTRO PARAGRAPH: Begin with "I'm Usman, a [tailored persona, e.g. Product Marketing professional / data-driven Master's student at HTW Berlin with B2B SaaS experience in shipping AI projects...]. I was thrilled to find the **${cleanedRole}** position at **${targetCompany || "the company"}**, as it perfectly aligns with my background in [Core Value 1] and my passion for [Core Value 2]..."
 3. THREE CORE BODY PARAGRAPHS (EACH WITH A PUNCHY BOLD HEADING):
-   - You must synthesize exactly 3 paragraphs, each preceded by a bold heading (3-5 words) that maps directly against the 3 key requirement pillars of the Job Description.
+   - Synthesize exactly 3 paragraphs, each preceded by a bold heading (3-5 words) that maps directly against the 3 key requirement areas of the Job Description.
    - Heading Examples from Usman's winning letters: "Internal Enablement and Content Creation", "Cross-Functional Collaboration and Feedback Loops", "Data-Driven and Tech-Savvy Mindset", "Operational Support and Project Coordination", "Strategic Collaboration and Project Management", "Process Optimization and Internal Tools".
    - Opening sentence addresses employer's pain point ("You need someone who...", "The role requires...", "At HashMove, a B2B...").
-   - Highlight and bold real tools and metrics: **Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**, **362%**, **13%**, **800k+ views**, **8.5 IELTS**.
+   - Highlight and bold real tools and metrics. IMPORTANT: Any tools (**Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**, etc.) or metrics (**362%**, **13%**, **800k+ views**, **8.5 IELTS**) mentioned in guidelines are NON-RESTRICTIVE ILLUSTRATIVE EXAMPLES ONLY. Usman is proficient across diverse tools, languages, and methodologies. Draw freely and accurately from Usman's Master Context to best match what the specific employer needs.
    - STRICT ZERO EM-DASHES: Never use em-dashes (— or –). Use natural commas, parentheses, or smooth connective syntax.
 4. PORTFOLIO PROJECTS SELECTION:
    Choose strictly the top 3 most relevant project IDs from Usman's concise CL projects pool:
@@ -120,6 +121,8 @@ TARGET ROLE: ${cleanedRole}
 TARGET COMPANY: ${targetCompany || "Target Company"}
 JOB DESCRIPTION:
 ${jobDescription || "Standard Product / Data / Marketing position"}
+
+${additionalContext ? `USER'S ADDITIONAL CONTEXT & CUSTOM INSTRUCTIONS:\n${additionalContext}\n` : ""}
 
 CANDIDATE MASTER CONTEXT:
 ${JSON.stringify(masterContext || {})}
