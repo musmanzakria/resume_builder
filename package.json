@@ -11,6 +11,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@hello-pangea/dnd": "^17.0.0",
+    "@supabase/supabase-js": "^2.116.0",
     "@tiptap/extension-link": "^2.8.0",
     "@tiptap/pm": "^2.8.0",
     "@tiptap/react": "^2.8.0",

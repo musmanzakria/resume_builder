@@ -12,14 +12,51 @@ import { CoverLetterEditor } from "@/components/coverletter/CoverLetterEditor";
 import { ApplicationHistory } from "@/components/history/ApplicationHistory";
 import { MasterSettingsView } from "@/components/settings/MasterSettingsView";
 import { useResumeStore } from "@/lib/store";
+import { pullStateFromCloud, debouncedCloudPush } from "@/lib/cloudSync";
 
 export default function Home() {
-  const { activeTab } = useResumeStore();
+  const { 
+    activeTab, 
+    resume, 
+    structuredCoverLetter, 
+    savedApplications, 
+    masterContext, 
+    loadFromCloudData, 
+    setCloudSyncStatus 
+  } = useResumeStore();
   const [mounted, setMounted] = useState(false);
 
+  // Pull latest cloud state on initial mount
   useEffect(() => {
     setMounted(true);
+    async function initCloudSync() {
+      try {
+        const cloudData = await pullStateFromCloud();
+        if (cloudData && (cloudData.resume || cloudData.structuredCoverLetter || cloudData.savedApplications)) {
+          loadFromCloudData(cloudData);
+        }
+      } catch (e) {
+        console.warn("Initial cloud pull notice:", e);
+      }
+    }
+    initCloudSync();
   }, []);
+
+  // Debounced auto-save to cloud on any resume/cover letter/history changes
+  useEffect(() => {
+    if (!mounted) return;
+    setCloudSyncStatus("saving");
+    debouncedCloudPush({
+      resume,
+      structuredCoverLetter,
+      savedApplications,
+      masterContext,
+    });
+    const timer = setTimeout(() => {
+      setCloudSyncStatus("synced");
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [resume, structuredCoverLetter, savedApplications, masterContext, mounted]);
 
   if (!mounted) {
     return (

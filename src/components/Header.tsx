@@ -18,6 +18,8 @@ import {
   CheckCircle,
   Download,
   Loader2,
+  Cloud,
+  Check,
 } from "lucide-react";
 import { exportResumeToPdf, exportCoverLetterToPdf } from "@/lib/pdfExport";
 
@@ -32,6 +34,7 @@ export const Header: React.FC = () => {
     targetRole,
     resume,
     structuredCoverLetter,
+    cloudSyncStatus,
   } = useResumeStore();
 
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -74,6 +77,26 @@ export const Header: React.FC = () => {
             <h1 className="font-bold text-slate-900 text-sm tracking-tight">Appliant</h1>
             <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
               AI Tailor
+            </span>
+            <span
+              className={`hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${
+                cloudSyncStatus === "saving"
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              }`}
+              title={cloudSyncStatus === "saving" ? "Syncing changes to Supabase..." : "Synced with Supabase Cloud"}
+            >
+              {cloudSyncStatus === "saving" ? (
+                <>
+                  <Cloud className="w-3 h-3 animate-pulse text-amber-500" />
+                  <span>Syncing...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3 h-3 text-emerald-600" />
+                  <span>Cloud Synced</span>
+                </>
+              )}
             </span>
           </div>
           <p className="text-[11px] text-slate-500 hidden sm:block">

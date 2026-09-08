@@ -356,8 +356,11 @@ interface ResumeStoreState {
   previewZoom: number;
   isAiLoading: boolean;
   aiStatusMessage: string;
+  cloudSyncStatus: "synced" | "saving" | "offline" | "error";
 
   // Actions
+  setCloudSyncStatus: (status: "synced" | "saving" | "offline" | "error") => void;
+  loadFromCloudData: (cloudData: { resume?: any; structuredCoverLetter?: any; savedApplications?: any[] }) => void;
   setGeminiApiKey: (key: string) => void;
   setSelectedAiModel: (model: string) => void;
   updatePersonalInfo: (data: Partial<ResumeData["personal"]>) => void;
@@ -478,6 +481,19 @@ export const useResumeStore = create<ResumeStoreState>()(
       previewZoom: 1.0,
       isAiLoading: false,
       aiStatusMessage: "",
+      cloudSyncStatus: "synced",
+
+      setCloudSyncStatus: (status) => set({ cloudSyncStatus: status }),
+      loadFromCloudData: (cloudData) =>
+        set((state) => ({
+          resume: cloudData.resume ? cloudData.resume : state.resume,
+          structuredCoverLetter: cloudData.structuredCoverLetter
+            ? cloudData.structuredCoverLetter
+            : state.structuredCoverLetter,
+          savedApplications: cloudData.savedApplications
+            ? cloudData.savedApplications
+            : state.savedApplications,
+        })),
 
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
       setSelectedAiModel: (model) => set({ selectedAiModel: model }),
