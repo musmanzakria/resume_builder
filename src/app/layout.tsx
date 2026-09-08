@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Appliant — AI Tailoring",
   description: "Granular resume customization paired with intelligent Gemini AI tailoring for target job descriptions.",
+  robots: {
+    index: false,
+    follow: false,
+  },
   icons: {
     icon: "/icon.svg",
     apple: "/icon.svg",
