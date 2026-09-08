@@ -79,6 +79,7 @@ export interface CustomSectionItem {
 export interface ResumeSettings {
   aiProjectCount: number;
   previewMode: "paginated" | "continuous";
+  page1ProjectCount?: number;
   typography: {
     fontFamily: string;
     headerFontSize: number; // in px / pt

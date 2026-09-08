@@ -26,6 +26,7 @@ export const CoverLetterEditor: React.FC = () => {
     setStructuredCoverLetter,
     updateCoverLetterBodyParagraph,
     toggleClProjectSelection,
+    moveClProject,
     setCoverLetterProjectCount,
     masterContext,
     targetCompany,
@@ -90,7 +91,7 @@ export const CoverLetterEditor: React.FC = () => {
     const activeProjects = (cl.selectedClProjectIds || [])
       .map((id) => projectsPool.find((p: any) => p.id === id))
       .filter(Boolean)
-      .slice(0, cl.projectCount || 3);
+      .slice(0, cl.projectCount || 4);
 
     const projectBullets = activeProjects
       .map((p: any) => `● ${p.title}: ${p.description}`)
@@ -183,16 +184,34 @@ export const CoverLetterEditor: React.FC = () => {
           </div>
         </div>
 
-        {/* Spacing & Margin Stepper Controls (NO RADIO BUTTONS) */}
-        <div className="pt-2 border-t border-slate-100 space-y-2">
+        {/* Spacing, Margins & Typography Controls */}
+        <div className="pt-2 border-t border-slate-100 space-y-3">
           <span className="text-[11px] font-bold text-slate-700 block">
             Layout, Typography & Margin Controls
           </span>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          {/* Font Family Dropdown */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-600 block">
+              Font Family
+            </label>
+            <select
+              value={cl.fontFamily || "Times New Roman"}
+              onChange={(e) => setStructuredCoverLetter({ fontFamily: e.target.value })}
+              className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="Times New Roman">Times New Roman (Classic Editorial Serif)</option>
+              <option value="Merriweather">Merriweather (Classic Academic Serif)</option>
+              <option value="Inter">Inter (Clean Modern Sans-Serif)</option>
+              <option value="Outfit">Outfit (Modern Geometric)</option>
+              <option value="Roboto">Roboto (Clean Neutral Sans)</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
             {/* 1. Line Spacing Stepper */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
-              <label className="text-[11px] font-semibold text-slate-600 block">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between h-[72px]">
+              <label className="text-[11px] font-semibold text-slate-600 block leading-tight truncate">
                 Line Spacing
               </label>
               <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
@@ -234,9 +253,9 @@ export const CoverLetterEditor: React.FC = () => {
             </div>
 
             {/* 2. Paragraph Spacing Stepper */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
-              <label className="text-[11px] font-semibold text-slate-600 block">
-                Paragraph Gap (px)
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between h-[72px]">
+              <label className="text-[11px] font-semibold text-slate-600 block leading-tight truncate">
+                Paragraph Gap
               </label>
               <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
                 <button
@@ -277,9 +296,9 @@ export const CoverLetterEditor: React.FC = () => {
             </div>
 
             {/* 3. Bullet Spacing Stepper */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
-              <label className="text-[11px] font-semibold text-slate-600 block">
-                Bullet Gap (px)
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between h-[72px]">
+              <label className="text-[11px] font-semibold text-slate-600 block leading-tight truncate">
+                Bullet Gap
               </label>
               <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
                 <button
@@ -319,10 +338,10 @@ export const CoverLetterEditor: React.FC = () => {
               </div>
             </div>
 
-            {/* 4. Left/Right Margin Stepper */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
-              <label className="text-[11px] font-semibold text-slate-600 block">
-                Sides Margin (mm)
+            {/* 4. Side Margin Stepper */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between h-[72px]">
+              <label className="text-[11px] font-semibold text-slate-600 block leading-tight truncate">
+                Side Margin
               </label>
               <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
                 <button
@@ -354,6 +373,92 @@ export const CoverLetterEditor: React.FC = () => {
                     const current = cl.horizontalMargin !== undefined ? cl.horizontalMargin : 20;
                     const updated = Math.min(35, current + 1);
                     setStructuredCoverLetter({ horizontalMargin: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* 5. Top Margin Stepper */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between h-[72px]">
+              <label className="text-[11px] font-semibold text-slate-600 block leading-tight truncate">
+                Top Margin
+              </label>
+              <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.topMargin !== undefined ? cl.topMargin : 16;
+                    const updated = Math.max(8, current - 1);
+                    setStructuredCoverLetter({ topMargin: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  step="1"
+                  min="8"
+                  max="35"
+                  value={cl.topMargin !== undefined ? cl.topMargin : 16}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setStructuredCoverLetter({ topMargin: val });
+                  }}
+                  className="w-12 text-center text-xs font-bold text-indigo-700 font-mono bg-transparent focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.topMargin !== undefined ? cl.topMargin : 16;
+                    const updated = Math.min(35, current + 1);
+                    setStructuredCoverLetter({ topMargin: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* 6. Bottom Margin Stepper */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between h-[72px]">
+              <label className="text-[11px] font-semibold text-slate-600 block leading-tight truncate">
+                Bottom Margin
+              </label>
+              <div className="flex items-center justify-between bg-white border border-slate-300 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.bottomMargin !== undefined ? cl.bottomMargin : 14;
+                    const updated = Math.max(8, current - 1);
+                    setStructuredCoverLetter({ bottomMargin: updated });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  step="1"
+                  min="8"
+                  max="35"
+                  value={cl.bottomMargin !== undefined ? cl.bottomMargin : 14}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setStructuredCoverLetter({ bottomMargin: val });
+                  }}
+                  className="w-12 text-center text-xs font-bold text-indigo-700 font-mono bg-transparent focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cl.bottomMargin !== undefined ? cl.bottomMargin : 14;
+                    const updated = Math.min(35, current + 1);
+                    setStructuredCoverLetter({ bottomMargin: updated });
                   }}
                   className="w-7 h-7 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 font-bold text-sm"
                 >
@@ -449,8 +554,8 @@ export const CoverLetterEditor: React.FC = () => {
             <div className="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-xs">
               <button
                 type="button"
-                onClick={() => setCoverLetterProjectCount(Math.max(1, (cl.projectCount || 5) - 1))}
-                disabled={(cl.projectCount || 5) <= 1}
+                onClick={() => setCoverLetterProjectCount(Math.max(1, (cl.projectCount || 4) - 1))}
+                disabled={(cl.projectCount || 4) <= 1}
                 className="w-6 h-6 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 disabled:opacity-25 font-bold text-sm"
               >
                 -
@@ -459,7 +564,7 @@ export const CoverLetterEditor: React.FC = () => {
                 type="number"
                 min="1"
                 max="6"
-                value={cl.projectCount || 5}
+                value={cl.projectCount || 4}
                 onChange={(e) => {
                   const val = parseInt(e.target.value, 10);
                   if (!isNaN(val) && val >= 1 && val <= 6) setCoverLetterProjectCount(val);
@@ -468,8 +573,8 @@ export const CoverLetterEditor: React.FC = () => {
               />
               <button
                 type="button"
-                onClick={() => setCoverLetterProjectCount(Math.min(6, (cl.projectCount || 5) + 1))}
-                disabled={(cl.projectCount || 5) >= 6}
+                onClick={() => setCoverLetterProjectCount(Math.min(6, (cl.projectCount || 4) + 1))}
+                disabled={(cl.projectCount || 4) >= 6}
                 className="w-6 h-6 flex items-center justify-center rounded text-slate-700 hover:text-indigo-600 hover:bg-slate-100 disabled:opacity-25 font-bold text-sm"
               >
                 +
@@ -507,18 +612,20 @@ export const CoverLetterEditor: React.FC = () => {
         {/* Selected Project List & Pool Selection */}
         <div className="space-y-2">
           <label className="text-[11px] font-semibold text-slate-700 block">
-            Choose Projects from Pool (Top {cl.projectCount || 3} will appear on Cover Letter):
+            Choose Projects from Pool (Top {cl.projectCount || 4} will appear on Cover Letter):
           </label>
 
           <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1 border border-slate-200 rounded-xl p-2 bg-slate-50/50">
             {projectsPool.map((proj: any) => {
-              const isSelected = (cl.selectedClProjectIds || []).includes(proj.id);
+              const selectedList = cl.selectedClProjectIds || [];
+              const selectedIdx = selectedList.indexOf(proj.id);
+              const isSelected = selectedIdx !== -1;
 
               return (
                 <div
                   key={proj.id}
                   onClick={() => toggleClProjectSelection(proj.id)}
-                  className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-start gap-2.5 transition-all ${
+                  className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center gap-2.5 transition-all ${
                     isSelected
                       ? "bg-indigo-50/80 border-indigo-200 text-indigo-950 font-medium"
                       : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
@@ -528,8 +635,13 @@ export const CoverLetterEditor: React.FC = () => {
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => {}} // handled by parent div onClick
-                    className="mt-0.5 rounded text-indigo-600 focus:ring-0 cursor-pointer"
+                    className="rounded text-indigo-600 focus:ring-0 cursor-pointer"
                   />
+                  {isSelected && (
+                    <span className="text-[10px] font-mono text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded font-bold border border-indigo-300">
+                      #{selectedIdx + 1}
+                    </span>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-slate-900">{proj.title}</span>
@@ -547,6 +659,26 @@ export const CoverLetterEditor: React.FC = () => {
                     </div>
                     <p className="text-[11px] text-slate-500 truncate mt-0.5">{proj.description}</p>
                   </div>
+                  {isSelected && (
+                    <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => moveClProject(proj.id, "up")}
+                        disabled={selectedIdx === 0}
+                        className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400"
+                        title="Move Up in Cover Letter"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => moveClProject(proj.id, "down")}
+                        disabled={selectedIdx === selectedList.length - 1}
+                        className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400"
+                        title="Move Down in Cover Letter"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -567,14 +699,11 @@ export const CoverLetterEditor: React.FC = () => {
         </span>
 
         <div>
-          <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-            Availability Statement
-          </label>
-          <textarea
-            value={cl.availabilityText}
-            onChange={(e) => setStructuredCoverLetter({ availabilityText: e.target.value })}
+          <TipTapInput
+            label="Availability Statement (Select text to apply Bold or Italics)"
+            value={cl.availabilityText || ""}
+            onChange={(val) => setStructuredCoverLetter({ availabilityText: val })}
             rows={2}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 leading-relaxed"
           />
         </div>
 

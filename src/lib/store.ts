@@ -312,6 +312,7 @@ const defaultInitialResumeData: ResumeData = {
   settings: {
     aiProjectCount: 5,
     previewMode: "paginated",
+    page1ProjectCount: 1,
     typography: {
       fontFamily: "Merriweather",
       headerFontSize: 14,
@@ -364,6 +365,7 @@ interface ResumeStoreState {
 
   // HashMove Presets
   setHashMovePreset: (presetKey: string) => void;
+  updateHashMoveInfo: (updates: Partial<{ company: string; business_type: string; title: string; period: string }>) => void;
   addHashMovePreset: (key: string, preset: ExperiencePreset) => void;
   deleteHashMovePreset: (key: string) => void;
   updateHashMoveBullets: (presetKey: string, bullets: string[]) => void;
@@ -388,6 +390,7 @@ interface ResumeStoreState {
   addProject: (project: ProjectItem) => void;
   deleteProject: (id: string) => void;
   reorderProjects: (startIndex: number, endIndex: number) => void;
+  moveProject: (id: string, direction: "up" | "down") => void;
   applyTopNProjects: (n: number) => void;
 
   // Skills
@@ -429,6 +432,7 @@ interface ResumeStoreState {
   setStructuredCoverLetter: (coverLetter: Partial<StructuredCoverLetter>) => void;
   updateCoverLetterBodyParagraph: (index: number, paragraph: Partial<{ heading: string; body: string }>) => void;
   toggleClProjectSelection: (projectId: string) => void;
+  moveClProject: (id: string, direction: "up" | "down") => void;
   setCoverLetterProjectCount: (count: number) => void;
   setTargetInfo: (role: string, company: string, jd: string) => void;
   setCoverLetter: (letter: string) => void;
@@ -462,7 +466,7 @@ export const useResumeStore = create<ResumeStoreState>()(
       resume: defaultInitialResumeData,
       masterContext: initialMasterContext,
       geminiApiKey: "",
-      selectedAiModel: "gemini-3.7-flash",
+      selectedAiModel: "gemini-3.8-flash",
       activeCoverLetter: "",
       structuredCoverLetter: initialStructuredCoverLetter,
       targetRole: "",
@@ -506,6 +510,20 @@ export const useResumeStore = create<ResumeStoreState>()(
               hashmove: {
                 ...state.resume.experience_presets.hashmove,
                 activePreset: presetKey,
+              },
+            },
+          },
+        })),
+
+      updateHashMoveInfo: (updates) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            experience_presets: {
+              ...state.resume.experience_presets,
+              hashmove: {
+                ...state.resume.experience_presets.hashmove,
+                ...updates,
               },
             },
           },
@@ -740,6 +758,23 @@ export const useResumeStore = create<ResumeStoreState>()(
           const result = Array.from(state.resume.projects);
           const [removed] = result.splice(startIndex, 1);
           result.splice(endIndex, 0, removed);
+          return {
+            resume: {
+              ...state.resume,
+              projects: result,
+            },
+          };
+        }),
+
+      moveProject: (id, direction) =>
+        set((state) => {
+          const index = state.resume.projects.findIndex((p) => p.id === id);
+          if (index === -1) return state;
+          const targetIndex = direction === "up" ? index - 1 : index + 1;
+          if (targetIndex < 0 || targetIndex >= state.resume.projects.length) return state;
+          const result = Array.from(state.resume.projects);
+          const [removed] = result.splice(index, 1);
+          result.splice(targetIndex, 0, removed);
           return {
             resume: {
               ...state.resume,
@@ -1068,6 +1103,24 @@ export const useResumeStore = create<ResumeStoreState>()(
           };
         }),
 
+      moveClProject: (id, direction) =>
+        set((state) => {
+          const list = state.structuredCoverLetter.selectedClProjectIds || [];
+          const index = list.indexOf(id);
+          if (index === -1) return state;
+          const targetIndex = direction === "up" ? index - 1 : index + 1;
+          if (targetIndex < 0 || targetIndex >= list.length) return state;
+          const newList = [...list];
+          const [removed] = newList.splice(index, 1);
+          newList.splice(targetIndex, 0, removed);
+          return {
+            structuredCoverLetter: {
+              ...state.structuredCoverLetter,
+              selectedClProjectIds: newList,
+            },
+          };
+        }),
+
       setCoverLetterProjectCount: (count) =>
         set((state) => ({
           structuredCoverLetter: {
@@ -1140,17 +1193,33 @@ export const useResumeStore = create<ResumeStoreState>()(
           }
 
           if (result.tailoredSummary) {
+            let summaryContent = result.tailoredSummary.trim();
+            let closingLine = (result.closingLine || updatedResume.summary.closingLine || "").trim();
+
+            // Prevent duplicate closing line:
+            // Check if summaryContent already contains closingLine or "I am eager to be an integral part"
+            const eagerPhrase = "i am eager to be an integral part";
+            if (closingLine && summaryContent.toLowerCase().includes(closingLine.toLowerCase())) {
+              summaryContent = summaryContent.replace(new RegExp(closingLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), "").trim();
+            } else if (summaryContent.toLowerCase().includes(eagerPhrase)) {
+              if (closingLine.toLowerCase().includes(eagerPhrase)) {
+                closingLine = "";
+              }
+            }
+
             updatedResume.summary = {
-              content: result.tailoredSummary,
-              closingLine: result.closingLine || updatedResume.summary.closingLine,
+              content: summaryContent,
+              closingLine: closingLine,
             };
           }
 
           let updatedStructuredCL = { ...state.structuredCoverLetter };
           if (result.structuredCoverLetter) {
+            const preservedCount = state.structuredCoverLetter.projectCount || 4;
             updatedStructuredCL = {
               ...updatedStructuredCL,
               ...result.structuredCoverLetter,
+              projectCount: preservedCount,
             };
           }
           const rawCompName = result.company || state.targetCompany || "Tailored";
@@ -1243,7 +1312,7 @@ export const useResumeStore = create<ResumeStoreState>()(
               merged.structuredCoverLetter.portfolioHeading === "Portfolio: usmanzakria.com"
                 ? "Projects and Portfolio: usmanzakria.com"
                 : merged.structuredCoverLetter.portfolioHeading,
-            projectCount: merged.structuredCoverLetter.projectCount || 5,
+            projectCount: merged.structuredCoverLetter.projectCount || 4,
             bulletSpacing:
               merged.structuredCoverLetter.bulletSpacing !== undefined
                 ? merged.structuredCoverLetter.bulletSpacing
@@ -1252,7 +1321,22 @@ export const useResumeStore = create<ResumeStoreState>()(
               merged.structuredCoverLetter.horizontalMargin !== undefined
                 ? merged.structuredCoverLetter.horizontalMargin
                 : 20,
+            topMargin:
+              merged.structuredCoverLetter.topMargin !== undefined
+                ? merged.structuredCoverLetter.topMargin
+                : 16,
+            bottomMargin:
+              merged.structuredCoverLetter.bottomMargin !== undefined
+                ? merged.structuredCoverLetter.bottomMargin
+                : 14,
+            fontFamily:
+              merged.structuredCoverLetter.fontFamily || "Times New Roman",
           };
+        }
+        if (merged.resume?.settings) {
+          if (merged.resume.settings.page1ProjectCount === undefined) {
+            merged.resume.settings.page1ProjectCount = 1;
+          }
         }
         return merged;
       },

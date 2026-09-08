@@ -74,9 +74,6 @@ export const PresetsManager: React.FC = () => {
             <span>New Preset</span>
           </button>
         </div>
-        <p className="text-xs text-slate-500 leading-relaxed">
-          Switch between your specialized experience presets (Data Analytics, Growth/Marketing, Product, GDPR/Security) or let AI auto-select the best fit based on the Job Description.
-        </p>
       </div>
 
       {/* Preset Selector Grid (Light Mode) */}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Appliant — AI Resume & Cover Letter Tailoring Engine",
+  title: "Appliant — AI Tailoring",
   description: "Granular resume customization paired with intelligent Gemini AI tailoring for target job descriptions.",
   icons: {
     icon: "/icon.svg",

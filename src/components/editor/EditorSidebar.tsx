@@ -32,6 +32,11 @@ export const EditorSidebar: React.FC = () => {
     toggleEducationVisibility,
     addEducation,
     deleteEducation,
+    setHashMovePreset,
+    updateHashMoveInfo,
+    updateHashMoveBullets,
+    addHashMoveBullet,
+    removeHashMoveBullet,
     updateOtherExperience,
     toggleOtherExperienceVisibility,
     addOtherExperience,
@@ -40,6 +45,7 @@ export const EditorSidebar: React.FC = () => {
     toggleProjectVisibility,
     addProject,
     deleteProject,
+    moveProject,
     toggleSkillCategoryVisibility,
     updateSkillCategory,
     updateAwards,
@@ -335,7 +341,7 @@ export const EditorSidebar: React.FC = () => {
         )}
       </div>
 
-      {/* 4. Professional Experience (Other Experiences) */}
+      {/* 4. Professional Experience (HashMove & Other Experiences) */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
         <button
           onClick={() => toggleAccordion("experiences")}
@@ -343,7 +349,7 @@ export const EditorSidebar: React.FC = () => {
         >
           <div className="flex items-center gap-2 font-semibold text-sm text-slate-800">
             <Briefcase className="w-4 h-4 text-indigo-600" />
-            <span>Other Experiences ({resume.other_experiences.length})</span>
+            <span>Experience ({1 + resume.other_experiences.length})</span>
           </div>
           {expandedSection === "experiences" ? (
             <ChevronUp className="w-4 h-4 text-slate-500" />
@@ -353,77 +359,208 @@ export const EditorSidebar: React.FC = () => {
         </button>
 
         {expandedSection === "experiences" && (
-          <div className="p-4 pt-0 space-y-3 border-t border-slate-100 mt-1">
-            {resume.other_experiences.map((exp) => (
-              <div key={exp.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <input
-                    type="text"
-                    value={exp.role}
-                    onChange={(e) => updateOtherExperience(exp.id, { role: e.target.value })}
-                    className="bg-transparent font-semibold text-xs text-slate-900 focus:outline-none focus:border-b border-indigo-500 w-1/2"
-                  />
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => toggleOtherExperienceVisibility(exp.id)}
-                      className={`p-1 rounded ${exp.visible ? "text-indigo-600" : "text-slate-400"}`}
-                      title={exp.visible ? "Visible on resume" : "Hidden"}
-                    >
-                      {exp.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                    </button>
-                    <button
-                      onClick={() => deleteOtherExperience(exp.id)}
-                      className="p-1 text-slate-400 hover:text-red-600"
-                      title="Delete experience entry"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+          <div className="p-4 pt-0 space-y-4 border-t border-slate-100 mt-1">
+            {/* HashMove (Primary Role) */}
+            {resume.experience_presets?.hashmove && (() => {
+              const hm = resume.experience_presets.hashmove;
+              const activeKey = hm.activePreset;
+              const activePreset = hm.presets?.[activeKey] || (hm.presets ? Object.values(hm.presets)[0] : null);
+
+              return (
+                <div className="p-3.5 bg-gradient-to-br from-indigo-50/50 via-white to-slate-50 border-2 border-indigo-200/80 rounded-xl space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-indigo-100/80 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.5 bg-indigo-600 text-white font-bold text-[9px] rounded uppercase tracking-wider">
+                        Primary
+                      </span>
+                      <span className="font-bold text-xs text-indigo-950">HashMove</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-medium text-slate-500">Preset:</span>
+                      <select
+                        value={activeKey}
+                        onChange={(e) => setHashMovePreset(e.target.value)}
+                        className="text-xs bg-white border border-indigo-200 rounded-md px-2 py-1 font-semibold text-indigo-700 focus:outline-none focus:border-indigo-500 shadow-2xs"
+                      >
+                        {Object.entries(hm.presets || {}).map(([key, p]) => (
+                          <option key={key} value={key}>
+                            {p.title || p.label || key}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <input
-                    type="text"
-                    value={exp.company}
-                    onChange={(e) => updateOtherExperience(exp.id, { company: e.target.value })}
-                    className="px-2 py-1 bg-white border border-slate-300 rounded text-slate-800"
-                    placeholder="Company"
-                  />
-                  <input
-                    type="text"
-                    value={exp.period}
-                    onChange={(e) => updateOtherExperience(exp.id, { period: e.target.value })}
-                    className="px-2 py-1 bg-white border border-slate-300 rounded text-slate-800"
-                    placeholder="Period"
-                  />
-                </div>
-
-                <div className="space-y-2 pt-1">
-                  <label className="text-[11px] text-slate-600 font-medium">Bullet Points</label>
-                  {exp.bullets.map((b, bIdx) => (
-                    <div key={bIdx} className="space-y-1">
-                      <TipTapInput
-                        value={b}
-                        onChange={(newVal) => {
-                          const newB = [...exp.bullets];
-                          newB[bIdx] = newVal;
-                          updateOtherExperience(exp.id, { bullets: newB });
-                        }}
-                        rows={2}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-600 block mb-0.5">Role / Title</label>
+                      <input
+                        type="text"
+                        value={hm.title || ""}
+                        onChange={(e) => updateHashMoveInfo({ title: e.target.value })}
+                        className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-slate-900 font-medium"
+                        placeholder="Product Marketing Analyst"
                       />
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-600 block mb-0.5">Company</label>
+                      <input
+                        type="text"
+                        value={hm.company || ""}
+                        onChange={(e) => updateHashMoveInfo({ company: e.target.value })}
+                        className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-slate-900 font-medium"
+                        placeholder="HashMove"
+                      />
+                    </div>
+                  </div>
 
-            <button
-              onClick={handleAddExperience}
-              className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Other Experience Entry
-            </button>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-600 block mb-0.5">Period</label>
+                      <input
+                        type="text"
+                        value={hm.period || ""}
+                        onChange={(e) => updateHashMoveInfo({ period: e.target.value })}
+                        className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-slate-800"
+                        placeholder="10/2023 – 04/2025"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-600 block mb-0.5">Industry / Subtitle</label>
+                      <input
+                        type="text"
+                        value={hm.business_type || ""}
+                        onChange={(e) => updateHashMoveInfo({ business_type: e.target.value })}
+                        className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-slate-800"
+                        placeholder="B2B SaaS Logistics ERP"
+                      />
+                    </div>
+                  </div>
+
+                  {activePreset && (
+                    <div className="space-y-2 pt-1 border-t border-indigo-100/60">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          Preset Bullets ({activePreset.bullets?.length || 0})
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => addHashMoveBullet(activeKey, "Accelerated key initiatives driving business growth and efficiency.")}
+                          className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                        >
+                          <Plus className="w-3 h-3" /> Add Bullet
+                        </button>
+                      </div>
+
+                      {activePreset.bullets?.map((bullet, bIdx) => (
+                        <div key={bIdx} className="space-y-1 bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                          <div className="flex items-center justify-between pb-1">
+                            <span className="text-[10px] font-mono font-medium text-slate-600">Bullet #{bIdx + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeHashMoveBullet(activeKey, bIdx)}
+                              className="text-slate-400 hover:text-red-600 p-0.5"
+                              title="Remove bullet"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <TipTapInput
+                            value={bullet}
+                            onChange={(newVal) => {
+                              const newB = [...activePreset.bullets];
+                              newB[bIdx] = newVal;
+                              updateHashMoveBullets(activeKey, newB);
+                            }}
+                            rows={2}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Other Experiences */}
+            <div className="pt-1 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700">
+                  Other Experiences ({resume.other_experiences.length})
+                </span>
+              </div>
+
+              {resume.other_experiences.map((exp) => (
+                <div key={exp.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <input
+                      type="text"
+                      value={exp.role}
+                      onChange={(e) => updateOtherExperience(exp.id, { role: e.target.value })}
+                      className="bg-transparent font-semibold text-xs text-slate-900 focus:outline-none focus:border-b border-indigo-500 w-1/2"
+                    />
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => toggleOtherExperienceVisibility(exp.id)}
+                        className={`p-1 rounded ${exp.visible ? "text-indigo-600" : "text-slate-400"}`}
+                        title={exp.visible ? "Visible on resume" : "Hidden"}
+                      >
+                        {exp.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={() => deleteOtherExperience(exp.id)}
+                        className="p-1 text-slate-400 hover:text-red-600"
+                        title="Delete experience entry"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <input
+                      type="text"
+                      value={exp.company}
+                      onChange={(e) => updateOtherExperience(exp.id, { company: e.target.value })}
+                      className="px-2 py-1 bg-white border border-slate-300 rounded text-slate-800"
+                      placeholder="Company"
+                    />
+                    <input
+                      type="text"
+                      value={exp.period}
+                      onChange={(e) => updateOtherExperience(exp.id, { period: e.target.value })}
+                      className="px-2 py-1 bg-white border border-slate-300 rounded text-slate-800"
+                      placeholder="Period"
+                    />
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <label className="text-[11px] text-slate-600 font-medium">Bullet Points</label>
+                    {exp.bullets.map((b, bIdx) => (
+                      <div key={bIdx} className="space-y-1">
+                        <TipTapInput
+                          value={b}
+                          onChange={(newVal) => {
+                            const newB = [...exp.bullets];
+                            newB[bIdx] = newVal;
+                            updateOtherExperience(exp.id, { bullets: newB });
+                          }}
+                          rows={2}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={handleAddExperience}
+                className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Other Experience Entry
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -466,6 +603,24 @@ export const EditorSidebar: React.FC = () => {
                   <span className="text-[10px] font-mono text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded font-bold border border-indigo-200">
                     #{idx + 1}
                   </span>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => moveProject(proj.id, "up")}
+                      disabled={idx === 0}
+                      className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400"
+                      title="Move Up"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => moveProject(proj.id, "down")}
+                      disabled={idx === resume.projects.length - 1}
+                      className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400"
+                      title="Move Down"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={proj.title}

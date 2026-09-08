@@ -19,9 +19,9 @@ export const CoverLetterCanvas: React.FC = () => {
 
   const projectsPool = (masterContext?.cl_projects_pool?.length ? masterContext.cl_projects_pool : fallbackProjects) || fallbackProjects;
 
-  // Determine active projects based on selected IDs and projectCount (default 5)
+  // Determine active projects based on selected IDs and projectCount (default 4)
   const selectedIds = cl.selectedClProjectIds || [];
-  const projectLimit = cl.projectCount || 5;
+  const projectLimit = cl.projectCount || 4;
   
   // Find project objects in order
   const activeProjects = selectedIds
@@ -44,14 +44,26 @@ export const CoverLetterCanvas: React.FC = () => {
   const paraGap = cl.paragraphSpacing !== undefined ? cl.paragraphSpacing : 8;
   const bulletGap = cl.bulletSpacing !== undefined ? cl.bulletSpacing : 4;
   const hMargin = cl.horizontalMargin !== undefined ? cl.horizontalMargin : 20;
+  const topMargin = cl.topMargin !== undefined ? cl.topMargin : 16;
+  const bottomMargin = cl.bottomMargin !== undefined ? cl.bottomMargin : 14;
+
+  const fontFamilies: Record<string, string> = {
+    "Times New Roman": '"Times New Roman", Times, Georgia, serif',
+    "Merriweather": 'Merriweather, Georgia, serif',
+    "Inter": 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    "Outfit": 'Outfit, -apple-system, BlinkMacSystemFont, sans-serif',
+    "Roboto": 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
+  };
+
+  const selectedFontFamily = fontFamilies[cl.fontFamily || "Times New Roman"] || fontFamilies["Times New Roman"];
 
   const letterSerifStyle: React.CSSProperties = {
-    fontFamily: '"Times New Roman", Times, Merriweather, Georgia, serif',
+    fontFamily: selectedFontFamily,
     fontSize: "11.5pt",
     lineHeight: lineSpacingVal,
     color: "#000000",
-    paddingTop: "16mm",
-    paddingBottom: "14mm",
+    paddingTop: `${topMargin}mm`,
+    paddingBottom: `${bottomMargin}mm`,
     paddingLeft: `${hMargin}mm`,
     paddingRight: `${hMargin}mm`,
     width: "8.5in",
@@ -154,7 +166,12 @@ export const CoverLetterCanvas: React.FC = () => {
               {cl.availabilityHeading || "Position Preference & Availability"}
             </div>
             <div className="text-justify">
-              {cl.availabilityText || "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation."}
+              <RichTextRenderer
+                content={
+                  cl.availabilityText ||
+                  "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation."
+                }
+              />
             </div>
           </div>
 

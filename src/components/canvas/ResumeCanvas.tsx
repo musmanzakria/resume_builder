@@ -41,8 +41,54 @@ export const ResumeCanvas: React.FC = () => {
   const sectionGap = `${settings?.spacing?.sectionGap || 12}px`;
   const itemGap = `${settings?.spacing?.itemGap || 6}px`;
 
+  const page1ProjCount = settings?.page1ProjectCount !== undefined ? settings.page1ProjectCount : 1;
+  const activeProjects = projects.filter((proj) => proj.visible);
+
+  const renderProjectsSection = (projs: typeof projects, isContinued = false) => {
+    if (projs.length === 0) return null;
+    return (
+      <div key={isContinued ? "projects-continued" : "projects"} className="section-block" style={{ marginBottom: sectionGap }}>
+        {!isContinued && (
+          <div className="border-b border-black pb-0.5 mb-1.5">
+            <h2
+              className="font-bold text-black tracking-wide"
+              style={{ fontSize: `${settings?.typography?.sectionHeadingSize || 12.5}pt` }}
+            >
+              Projects
+            </h2>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {projs.map((proj) => (
+            <div key={proj.id} className="item-block">
+              <div className="flex items-center gap-1 font-bold text-black leading-snug">
+                <a
+                  href={proj.url || personal.portfolioUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-indigo-600 inline-flex items-center gap-1 text-black font-bold"
+                >
+                  <span>
+                    <RichTextRenderer content={proj.title} defaultShowLinkIcon={false} />
+                  </span>
+                  {(proj.showIcon ?? true) && (
+                    <ExternalLink className="w-2.5 h-2.5 text-slate-600 inline ml-0.5" />
+                  )}
+                </a>
+              </div>
+              <p className="text-slate-900 leading-snug mt-0.5">
+                <RichTextRenderer content={proj.description} />
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   // Render individual sections dynamically
-  const renderSection = (sectionKey: string) => {
+  const renderSection = (sectionKey: string, pageNum: 1 | 2 = 1) => {
     switch (sectionKey) {
       case "header":
         return (
@@ -95,12 +141,18 @@ export const ResumeCanvas: React.FC = () => {
 
       case "summary":
         if (!summary.content) return null;
+        const normContent = summary.content.toLowerCase();
+        const normClosing = (summary.closingLine || "").toLowerCase().trim();
+        const alreadyHasClosing = normClosing && normContent.includes(normClosing);
+        const alreadyHasEager = normContent.includes("i am eager to be an integral part") && normClosing.includes("i am eager to be an integral part");
+        const shouldRenderClosing = summary.closingLine && !alreadyHasClosing && !alreadyHasEager;
+
         return (
           <div key="summary" className="section-block" style={{ marginBottom: sectionGap }}>
             <p className="text-slate-900 leading-relaxed text-justify">
               <RichTextRenderer content={summary.content} />
             </p>
-            {summary.closingLine && (
+            {shouldRenderClosing && (
               <p className="text-black font-medium mt-1 leading-relaxed text-justify">
                 <RichTextRenderer content={summary.closingLine} />
               </p>
@@ -209,45 +261,19 @@ export const ResumeCanvas: React.FC = () => {
         );
 
       case "projects":
-        const activeProjects = projects.filter((proj) => proj.visible);
         if (activeProjects.length === 0) return null;
-        return (
-          <div key="projects" className="section-block" style={{ marginBottom: sectionGap }}>
-            <div className="border-b border-black pb-0.5 mb-1.5">
-              <h2
-                className="font-bold text-black tracking-wide"
-                style={{ fontSize: `${settings?.typography?.sectionHeadingSize || 12.5}pt` }}
-              >
-                Projects
-              </h2>
-            </div>
-
-            <div className="space-y-2">
-              {activeProjects.map((proj) => (
-                <div key={proj.id} className="item-block">
-                  <div className="flex items-center gap-1 font-bold text-black leading-snug">
-                    <a
-                      href={proj.url || personal.portfolioUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="hover:text-indigo-600 inline-flex items-center gap-1 text-black font-bold"
-                    >
-                      <span>
-                        <RichTextRenderer content={proj.title} defaultShowLinkIcon={false} />
-                      </span>
-                      {(proj.showIcon ?? true) && (
-                        <ExternalLink className="w-2.5 h-2.5 text-slate-600 inline ml-0.5" />
-                      )}
-                    </a>
-                  </div>
-                  <p className="text-slate-900 leading-snug mt-0.5">
-                    <RichTextRenderer content={proj.description} />
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        if (pageNum === 1) {
+          if (page1ProjCount <= 0) return null;
+          return renderProjectsSection(activeProjects.slice(0, page1ProjCount), false);
+        } else {
+          if (page1ProjCount <= 0) {
+            return renderProjectsSection(activeProjects, false);
+          }
+          if (activeProjects.length > page1ProjCount) {
+            return renderProjectsSection(activeProjects.slice(page1ProjCount), true);
+          }
+          return null;
+        }
 
       case "skills":
         const activeSkills = Object.values(skills_categories).filter((skill) => skill.visible);
@@ -384,7 +410,8 @@ export const ResumeCanvas: React.FC = () => {
           className="resume-a4-sheet resume-page-sheet text-slate-900 shadow-xl transition-all relative print:shadow-none"
           style={{ ...typographyStyle, ...marginStyle }}
         >
-          {page1Sections.map((secKey) => renderSection(secKey))}
+          {page1Sections.map((secKey) => renderSection(secKey, 1))}
+          {!page1Sections.includes("projects") && page1ProjCount > 0 && renderSection("projects", 1)}
         </div>
       </div>
 
@@ -400,7 +427,7 @@ export const ResumeCanvas: React.FC = () => {
           className="resume-a4-sheet resume-page-sheet text-slate-900 shadow-xl transition-all relative print:shadow-none"
           style={{ ...typographyStyle, ...marginStyle }}
         >
-          {page2Sections.map((secKey) => renderSection(secKey))}
+          {page2Sections.map((secKey) => renderSection(secKey, 2))}
         </div>
       </div>
     </div>

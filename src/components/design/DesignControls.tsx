@@ -134,7 +134,7 @@ export const DesignControls: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-3">
           <NumberStepper
-            label="Top Margin (Header Spacing)"
+            label="Top Margin"
             value={spacing?.pageMarginTop || spacing?.pageMarginY || 24}
             onChange={(val) => updateSpacing({ pageMarginTop: val, pageMarginY: val })}
             min={10}
@@ -145,7 +145,7 @@ export const DesignControls: React.FC = () => {
           />
 
           <NumberStepper
-            label="Bottom Margin (Page End Spacing)"
+            label="Bottom Margin"
             value={spacing?.pageMarginBottom || spacing?.pageMarginY || 24}
             onChange={(val) => updateSpacing({ pageMarginBottom: val })}
             min={10}
@@ -156,7 +156,7 @@ export const DesignControls: React.FC = () => {
           />
 
           <NumberStepper
-            label="Horizontal Margin (Left & Right)"
+            label="Side Margin"
             value={spacing?.pageMarginX || 36}
             onChange={(val) => updateSpacing({ pageMarginX: val })}
             min={16}
@@ -167,7 +167,18 @@ export const DesignControls: React.FC = () => {
           />
 
           <NumberStepper
-            label="Gap Between Major Sections"
+            label="Projects on Page 1"
+            value={settings?.page1ProjectCount !== undefined ? settings.page1ProjectCount : 1}
+            onChange={(val) => updateSettings({ page1ProjectCount: val })}
+            min={0}
+            max={Math.max(1, (resume.projects || []).filter((p) => p.visible).length)}
+            step={1}
+            unit=" proj"
+            presets={[0, 1, 2, 3]}
+          />
+
+          <NumberStepper
+            label="Section Gap"
             value={spacing?.sectionGap || 12}
             onChange={(val) => updateSpacing({ sectionGap: val })}
             min={4}
@@ -178,7 +189,7 @@ export const DesignControls: React.FC = () => {
           />
 
           <NumberStepper
-            label="Gap Between Items & Bullets"
+            label="Item Gap"
             value={spacing?.itemGap || 6}
             onChange={(val) => updateSpacing({ itemGap: val })}
             min={2}

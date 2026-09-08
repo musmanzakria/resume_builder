@@ -170,7 +170,13 @@
       "Predictive Modeling & Statistical Inference (Regression, Decision Trees, Saliency)",
       "Live Tracking API Integrations & Telematics Migration",
       "AI Engineering (Agentic AI, LLM Prompt Chains, Psychographic Persona Cloning)"
-    ]
+    ],
+    "technical_tools_and_software": {
+      "product_management": ["n8n", "Figma", "Trello", "Confluence", "Notion", "Slack", "Advanced PowerPoint", "Jira"],
+      "product_marketing": ["Clay", "Apollo", "Google Analytics (GA4)", "HubSpot", "Canva", "Webflow", "Pipedrive", "ElevenLabs", "LinkedIn Ads", "Mailjet"],
+      "business_analytics": ["Python", "SQL", "Tableau", "Power BI", "Mixpanel", "SPSS", "Advanced Excel (ETL, VLOOKUP, Pivot Tables, LAMBDA)"],
+      "ai_and_automation": ["Large Action Models (LAM)", "Agentic AI Workflows (n8n)", "Text-to-BI", "Intelligent Document Processing (IDP/OCR)", "Prompt Engineering", "Conversational AI"]
+    }
   },
   "experience_deep_dive": [
     {
@@ -179,12 +185,23 @@
       "role": "Product Marketing Analyst",
       "duration": "10/2023 – 04/2025",
       "location": "Dubai / Remote / International",
+      "scope": "Directly reported to C-level executives; collaborated across cross-functional departments (sales, design, customer success, IT, security) and cross-regional teams across the UK, US, Ukraine, and Saudi Arabia.",
       "narrative": "Spearheaded product-led growth, data modeling, feature discovery, and GTM execution across core ERP modules.",
       "key_achievements": [
         {
           "domain": "Product Management",
-          "title": "Yard Management Vertical",
-          "details": "Directed end-to-end product development for a new yard management vertical (user interviews, feature research, process flow diagrams, interactive wireframing), cutting yard manhours by 33% during enterprise pilot through intelligent task assignment automation."
+          "title": "Yard Management Vertical (End-to-End Product Design)",
+          "details": "Directed end-to-end product development for a new yard management vertical from scratch (competitor mapping, user research, process flow diagrams, interactive wireframing in Figma), cutting yard manhours by 33% during enterprise pilot through intelligent task assignment automation, and validating solutions directly with major global enterprise stakeholders."
+        },
+        {
+          "domain": "Intelligent Logistics & AI",
+          "title": "Conversational AI & Large Action Model (LAM) Assistant",
+          "details": "Designed a Large Action Model (LAM) assistant for HashMove's logistics ERP, enabling natural language shipment tracking and interactive navigation (e.g., 'Where is my shipment from Jeddah to Shanghai?'). Built specialized domain-expert agents to simplify access to complex customs and international trade regulations."
+        },
+        {
+          "domain": "AI Engineering & Automation",
+          "title": "Text-to-BI Analytics & Agentic IDP with OCR",
+          "details": "Created an intuitive Text-to-BI interface converting natural language queries into dynamic business intelligence visualizations. Designed an automated agentic architecture pairing Optical Character Recognition (OCR) with Intelligent Document Processing (IDP) workflows to ingest and parse PDF freight documentation directly into ERP databases."
         },
         {
           "domain": "Agentic AI & Commercials",
@@ -207,14 +224,29 @@
           "details": "Engineered and managed a comprehensive multi-channel content library (sales pitch decks, technical whitepapers, blogs, and video walk-throughs), driving a 362% increase in feature adoption for key institutional partners including the Arab British Chamber of Commerce."
         },
         {
-          "domain": "Analytics & Automation",
+          "domain": "Green Logistics & Decarbonization",
+          "title": "Emissions Tracking, Offsetting & Backhaul Routing",
+          "details": "Built an enterprise interface to monitor shipment carbon footprints and offset emissions via a curated portfolio of sustainability projects aligned with UN SDGs. Integrated intelligent matching algorithms for optimal ocean and ground routing, including backhaul optimization, actively reducing carbon output and quantifying emissions saved."
+        },
+        {
+          "domain": "Enterprise BI & Executive Command Centers",
+          "title": "Multi-Tiered Logistics Suite & CXO Simulation Dashboards",
+          "details": "Designed over 100 specialized dashboards covering Group Logistics (drill-down views from parent enterprise to subsidiaries), Operations, Management, Sales, and Finance. Developed CXO command centers featuring real-time data modeling with interactive simulation tools (sliders/knobs using underlying regression models) to project dynamic business outcomes, savings, and missed opportunities."
+        },
+        {
+          "domain": "Analytics & Commercial Modeling",
           "title": "Sales Forecasting & Proposal Automation",
           "details": "Built advanced Excel forecasting models, Python data processing scripts, and Power BI commercial dashboards for dynamic proposal automation and value proposition pricing, reducing commercials processing time by 13%."
         },
         {
-          "domain": "API Integrations & Sustainability",
+          "domain": "API Integrations & Telematics",
           "title": "Live Tracking & Carbon APIs",
           "details": "Evaluated 13 vendor tracking APIs, architecting the migration of 1,500+ annual shipments to real-time live telematics tracking and automated carbon emissions calculation; increasing user adoption by 132%."
+        },
+        {
+          "domain": "Executive Pitch Decks & Sales Assets",
+          "title": "High-Stakes Investor & Commercial Pitch Decks",
+          "details": "Led end-to-end design, positioning, and refinement of high-value investor and commercial pitch decks for C-level executives at HashMove, translating complex technical architectures into compelling commercial narratives."
         },
         {
           "domain": "Compliance & Security",
@@ -252,7 +284,7 @@
       "duration": "04/2022 – 06/2023",
       "narrative": "Mentored undergraduate students in quantitative decision-making, statistical modeling, and programming.",
       "key_achievements": [
-        "Mentored and guided 250+ students in business analytics, statistical modeling, and decision trees using Advanced Excel, SQL, and R (ggplot2, dplyr, caret, lm) in Google Colab."
+        "Mentored and guided 250+ students in advanced Excel modeling (ETL, formulas, pivot tables, LAMBDA) and statistical decision-making, guiding them hands-on through business analytics and machine learning projects using Python, SQL, and R in Google Colab."
       ]
     },
     {
@@ -268,6 +300,14 @@
     }
   ],
   "projects_master_pool": [
+    {
+      "id": "proj-yard-management",
+      "title": "Yard Management Platform (End-to-End Product Design)",
+      "category": "Product Management & UX",
+      "short_description": "Led complete product lifecycle from competitor mapping to high-fidelity Figma prototypes and enterprise pilot.",
+      "deep_context": "Led the entire product lifecycle from scratch for a new SaaS vertical (feature research, competitor mapping, user journeys, interactive wireframing in Figma). Collaborated directly with engineering and QA in Agile sprints, cutting yard operational manhours by 33% during enterprise pilot through automated task assignment and validating solutions with global enterprise stakeholders.",
+      "tags": ["Product Design", "Figma", "SaaS ERP", "Agile", "User Research", "Wireframing"]
+    },
     {
       "id": "proj-sdlc-illustrations",
       "title": "Agile SDLC Article Illustrations",
@@ -381,7 +421,10 @@
       "three_body_paragraphs": {
         "description": "3 paragraphs, each preceded by a bold heading mapping directly to the 3 main requirement areas of the Job Description.",
         "heading_guideline": "Concise, punchy 3-5 word bold heading matching the JD domain (e.g., 'Internal Enablement and Content Creation', 'Cross-Functional Collaboration and Feedback Loops', 'Data-Driven and Tech-Savvy Mindset', 'Strategic Collaboration and Project Management', 'Operational Support and Project Coordination').",
-        "content_guideline": "Opening sentence explicitly references the employer's need ('You need someone who can...', 'The role requires...', 'At HashMove, a B2B...'). Weave real metrics (e.g. **362%**, **13%**, **800k+ views**, **8.5 IELTS**) and tools (e.g. **Excel**, **SQL**, **n8n**, **Figma**, **Jira**, **Notion**, **Tableau**, **Power BI**). NOTE: These tools and metrics are illustrative examples only, not exhaustive. Actively pull relevant skills and tools from Usman's Master Context.",
+        "content_guideline": "Synthesize 3 robust, impactful paragraphs (3-4 sentences each) that give real substance, depth, and punch. Avoid producing overly brief or generic snippets. Use the 1-2 blow or 1-2-3 blow formula: Sentence 1 directly addresses the employer's specific need/pain-point from the JD. Sentence 2 delivers the primary proof point from Usman's enterprise work (e.g. HashMove GTM/analytics/LAM assistant) with concrete tools and a bolded metric phrase. Sentence 3 (and 4) delivers a secondary proof point (reinforcing with a second relevant project, thesis study, teaching 250+ students in advanced Excel & ML, or n8n workflow automations) demonstrating versatile execution.",
+        "emboldening_rule": "EMBOLDEN COMPLETE KPI PHRASES AND KEYWORDS: Do NOT bold just isolated numbers. Bold the entire KPI phrase along with surrounding context (e.g., **362% increase in feature adoption**, **24% increase in average deal size**, **213% boost in enterprise conversion rate**, **33% reduction in operational manhours**, **13% reduction in commercials processing time**), as well as core tools and proficiencies (e.g. **Python and SQL**, **advanced Excel models (LAMBDA, VLOOKUP)**, **Figma interactive prototypes**, **n8n workflow automations**, **8.5 IELTS score**).",
+        "anti_rigidity_principle": "NON-RESTRICTIVE REFERENCE: The templates and formulas are intended as inspiration for rhythm, confidence, and punchiness. Do NOT follow them as rigid gospel. Exercise creative leeway to adapt tone, phrasing, and vocabulary to the target company's culture.",
+        "company_alignment": "Deeply analyze the target company's business model, industry, and core values from the JD to ensure the value proposition speaks directly to what they build and care about.",
         "formatting_rule": "STRICT ZERO EM-DASHES (— or –). Use natural commas, parentheses, or smooth connective syntax."
       },
       "portfolio_section": {
