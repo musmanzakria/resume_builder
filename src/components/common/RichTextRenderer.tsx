@@ -7,6 +7,26 @@ interface RichTextRendererProps {
   defaultShowLinkIcon?: boolean;
 }
 
+function decodeHtmlEntities(str: string): string {
+  if (!str) return "";
+  let decoded = str;
+  let prev = "";
+  let iterations = 0;
+  while (decoded !== prev && iterations < 3) {
+    prev = decoded;
+    decoded = decoded
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&nbsp;/g, " ");
+    iterations++;
+  }
+  return decoded;
+}
+
 /**
  * Parses markdown-style links ([label](url)), combined bold+italics (***text***, **_text_**),
  * bold (**text**), and italics (*text* or _text_)
@@ -19,8 +39,10 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
 }) => {
   if (!content) return null;
 
+  const cleanContent = decodeHtmlEntities(content);
+
   // Convert any HTML strong/em to markdown first to standardize
-  let normalized = content
+  let normalized = cleanContent
     .replace(/<strong>\s*<em>(.*?)<\/em>\s*<\/strong>/gi, "***$1***")
     .replace(/<em>\s*<strong>(.*?)<\/strong>\s*<\/em>/gi, "***$1***")
     .replace(/<b>\s*<i>(.*?)<\/i>\s*<\/b>/gi, "***$1***")

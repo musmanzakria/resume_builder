@@ -16,9 +16,29 @@ interface TipTapInputProps {
   rows?: number;
 }
 
+function decodeHtmlEntities(str: string): string {
+  if (!str) return "";
+  let decoded = str;
+  let prev = "";
+  let iterations = 0;
+  while (decoded !== prev && iterations < 3) {
+    prev = decoded;
+    decoded = decoded
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&nbsp;/g, " ");
+    iterations++;
+  }
+  return decoded;
+}
+
 function markdownToHtml(md: string): string {
   if (!md) return "";
-  let html = md;
+  let html = decodeHtmlEntities(md);
   // Bold + Italic combinations
   html = html.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
   html = html.replace(/\*\*_(.*?)_\*\*/g, "<strong><em>$1</em></strong>");
@@ -54,7 +74,7 @@ function htmlToMarkdown(html: string): string {
   md = md.replace(/<\/p>/gi, "");
   md = md.replace(/<br\s*[\/]?>/gi, "\n");
   md = md.replace(/<[^>]+>/g, "");
-  return md.trim();
+  return decodeHtmlEntities(md).trim();
 }
 
 export const TipTapInput: React.FC<TipTapInputProps> = ({

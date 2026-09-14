@@ -216,7 +216,18 @@
       "description": "Conducted detailed financial analysis of L'Oreal estimating WACC, Valuation, and Strategic Assessment.",
       "url": "https://usmanzakria.com",
       "visible": false,
-      "defaultOrder": 10
+      "defaultOrder": 10,
+      "enabledForAi": true
+    },
+    {
+      "id": "proj-spotify-songs",
+      "title": "Are Songs Shrinking? (Spotify Regression)",
+      "description": "Regression analysis of 3,600 songs, how Spotify shortened songs by 17% using Python and statistical modeling.",
+      "url": "https://usmanzakria.com/spotify_showcase.html",
+      "visible": false,
+      "defaultOrder": 11,
+      "tags": ["Data Analysis", "Regression", "Spotify", "Python", "Statistics"],
+      "enabledForAi": true
     }
   ],
   "skills_categories": {
@@ -232,13 +243,6 @@
       "name": "Product Marketing",
       "content": "Digital Marketing, CRM, SEO & Analytics, Content Writing, Go-to-Market, Social Media Campaigns, B2B Market Research, Consumer Insights, A/B Testing, UI/UX Design, User Journey Mapping, Cross-functional Collaboration",
       "visible": true,
-      "isVariable": true
-    },
-    "product_and_data_analytics": {
-      "id": "skill-pda",
-      "name": "Product & Data Analytics",
-      "content": "SQL, Python, R, n8n, Tableau, Power BI, Advanced Excel, Project Documentation, Machine Learning, SPSS, User Research, Agile & Scrum, Requirements Gathering, Process Mapping, SaaS, Product Strategy",
-      "visible": false,
       "isVariable": true
     },
     "data_analytics": {

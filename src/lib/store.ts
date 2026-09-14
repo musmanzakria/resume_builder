@@ -253,6 +253,18 @@ const defaultInitialResumeData: ResumeData = {
       visible: false,
       defaultOrder: 10,
       tags: ["Financial Modeling", "Valuation", "DCF"],
+      enabledForAi: true,
+    },
+    {
+      id: "proj-spotify-songs",
+      title: "Are Songs Shrinking? (Spotify Regression)",
+      description: "Regression analysis of **3,600 songs** analyzing how Spotify shortened songs by **17%** using Python and statistical modeling.",
+      url: "https://usmanzakria.com/spotify_showcase.html",
+      showIcon: true,
+      visible: false,
+      defaultOrder: 11,
+      tags: ["Data Analysis", "Regression", "Spotify", "Python", "Statistics"],
+      enabledForAi: true,
     },
   ],
   skills_categories: {
@@ -268,13 +280,6 @@ const defaultInitialResumeData: ResumeData = {
       name: "Product Marketing",
       content: "Digital Marketing, CRM, SEO & Analytics, Content Writing, Go-to-Market, Social Media Campaigns, B2B Market Research, Consumer Insights, A/B Testing, UI/UX Design, User Journey Mapping, Cross-functional Collaboration",
       visible: true,
-      isVariable: true,
-    },
-    product_and_data_analytics: {
-      id: "skill-pda",
-      name: "Product & Data Analytics",
-      content: "[SQL](https://usmanzakria.com#icon), [Python](https://usmanzakria.com#icon), R, n8n, Tableau, Power BI, Advanced Excel, Project Documentation, Machine Learning, SPSS, User Research, Agile & Scrum, Requirements Gathering, Process Mapping, SaaS, Product Strategy",
-      visible: false,
       isVariable: true,
     },
     data_analytics: {
@@ -395,6 +400,7 @@ interface ResumeStoreState {
   reorderProjects: (startIndex: number, endIndex: number) => void;
   moveProject: (id: string, direction: "up" | "down") => void;
   applyTopNProjects: (n: number) => void;
+  toggleProjectAiInclusion: (id: string) => void;
 
   // Skills
   toggleSkillCategoryVisibility: (key: string) => void;
@@ -451,6 +457,12 @@ interface ResumeStoreState {
     company?: string;
   }) => void;
 
+  // Screening Questions & Answers
+  screeningQuestions: string;
+  setScreeningQuestions: (questions: string) => void;
+  screeningAnswers: { question: string; answer: string }[];
+  setScreeningAnswers: (answers: { question: string; answer: string }[]) => void;
+
   // Saved Applications
   saveCurrentApplication: (name?: string) => string;
   loadApplication: (id: string) => void;
@@ -475,6 +487,10 @@ export const useResumeStore = create<ResumeStoreState>()(
       targetRole: "",
       targetCompany: "",
       targetJobDescription: "",
+      screeningQuestions: "",
+      setScreeningQuestions: (questions) => set({ screeningQuestions: questions }),
+      screeningAnswers: [],
+      setScreeningAnswers: (answers) => set({ screeningAnswers: answers }),
       savedApplications: [],
       activeTab: "editor",
       activeSection: "summary",
@@ -485,15 +501,23 @@ export const useResumeStore = create<ResumeStoreState>()(
 
       setCloudSyncStatus: (status) => set({ cloudSyncStatus: status }),
       loadFromCloudData: (cloudData) =>
-        set((state) => ({
-          resume: cloudData.resume ? cloudData.resume : state.resume,
-          structuredCoverLetter: cloudData.structuredCoverLetter
-            ? cloudData.structuredCoverLetter
-            : state.structuredCoverLetter,
-          savedApplications: cloudData.savedApplications
-            ? cloudData.savedApplications
-            : state.savedApplications,
-        })),
+        set((state) => {
+          let loadedResume = cloudData.resume ? { ...cloudData.resume } : state.resume;
+          if (loadedResume && loadedResume.skills_categories) {
+            const sanitizedCats = { ...loadedResume.skills_categories };
+            delete sanitizedCats.product_and_data_analytics;
+            loadedResume = { ...loadedResume, skills_categories: sanitizedCats };
+          }
+          return {
+            resume: loadedResume,
+            structuredCoverLetter: cloudData.structuredCoverLetter
+              ? cloudData.structuredCoverLetter
+              : state.structuredCoverLetter,
+            savedApplications: cloudData.savedApplications
+              ? cloudData.savedApplications
+              : state.savedApplications,
+          };
+        }),
 
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
       setSelectedAiModel: (model) => set({ selectedAiModel: model }),
@@ -816,6 +840,22 @@ export const useResumeStore = create<ResumeStoreState>()(
             },
           };
         }),
+
+      toggleProjectAiInclusion: (id) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            projects: state.resume.projects.map((proj) =>
+              proj.id === id
+                ? {
+                    ...proj,
+                    enabledForAi: proj.enabledForAi === false ? true : false,
+                    enabled: proj.enabledForAi === false ? true : false,
+                  }
+                : proj
+            ),
+          },
+        })),
 
       toggleSkillCategoryVisibility: (key) =>
         set((state) => {
@@ -1191,13 +1231,37 @@ export const useResumeStore = create<ResumeStoreState>()(
           }
 
           if (result.selectedProjectIds && result.selectedProjectIds.length > 0) {
-            const idSet = new Set(result.selectedProjectIds);
-            const selectedProjects = result.selectedProjectIds
-              .map((id) => updatedResume.projects.find((p) => p.id === id))
-              .filter(Boolean) as ProjectItem[];
+            const selectedProjects: ProjectItem[] = [];
+            const chosenIdSet = new Set<string>();
+
+            for (const rawId of result.selectedProjectIds) {
+              if (!rawId) continue;
+              // 1. Direct ID match
+              let match = updatedResume.projects.find((p) => p.id === rawId);
+
+              // 2. Cross-match: if ID is "cl-spotify-regression" or title
+              if (!match) {
+                const cleanId = String(rawId).toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
+                match = updatedResume.projects.find((p) => {
+                  const titleLower = (p.title || "").toLowerCase();
+                  const pIdLower = (p.id || "").toLowerCase();
+                  return (
+                    pIdLower === String(rawId).toLowerCase() ||
+                    titleLower === String(rawId).toLowerCase() ||
+                    (cleanId.length > 3 && (titleLower.includes(cleanId) || cleanId.includes(titleLower))) ||
+                    (cleanId.includes("spotify") && (titleLower.includes("spotify") || pIdLower.includes("spotify")))
+                  );
+                });
+              }
+
+              if (match && !chosenIdSet.has(match.id)) {
+                selectedProjects.push(match);
+                chosenIdSet.add(match.id);
+              }
+            }
 
             const remainingProjects = updatedResume.projects.filter(
-              (p) => !idSet.has(p.id)
+              (p) => !chosenIdSet.has(p.id)
             );
 
             const reordered = [
@@ -1264,6 +1328,12 @@ export const useResumeStore = create<ResumeStoreState>()(
           updatedAt: new Date().toISOString(),
           resumeData: JSON.parse(JSON.stringify(state.resume)),
           coverLetter: state.activeCoverLetter,
+          structuredCoverLetter: state.structuredCoverLetter
+            ? JSON.parse(JSON.stringify(state.structuredCoverLetter))
+            : undefined,
+          screeningAnswers: state.screeningAnswers
+            ? JSON.parse(JSON.stringify(state.screeningAnswers))
+            : undefined,
           selectedPresetKey: state.resume.experience_presets.hashmove.activePreset,
           selectedSkillKey:
             Object.keys(state.resume.skills_categories).find(
@@ -1286,6 +1356,12 @@ export const useResumeStore = create<ResumeStoreState>()(
         set(() => ({
           resume: JSON.parse(JSON.stringify(app.resumeData)),
           activeCoverLetter: app.coverLetter,
+          structuredCoverLetter: app.structuredCoverLetter
+            ? JSON.parse(JSON.stringify(app.structuredCoverLetter))
+            : state.structuredCoverLetter,
+          screeningAnswers: app.screeningAnswers
+            ? JSON.parse(JSON.stringify(app.screeningAnswers))
+            : [],
           targetCompany: app.company,
           targetRole: app.role,
           targetJobDescription: app.jobDescription,

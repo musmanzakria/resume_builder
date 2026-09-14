@@ -101,25 +101,30 @@ export const ResumeCanvas: React.FC = () => {
             </h1>
 
             {/* Clean Single-Row Contact Bar */}
-            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-slate-800 text-[9.5pt] mt-1 font-normal">
+            <div 
+              className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-slate-800 text-[9.5pt] mt-1 font-normal"
+              style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", columnGap: "12px", rowGap: "4px" }}
+            >
               <a
                 href={`mailto:${personal.email}`}
                 className="inline-flex items-center gap-1 hover:text-indigo-600 transition-colors"
+                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
               >
-                <Mail className="w-3 h-3 text-slate-700 shrink-0" />
+                <Mail className="w-3 h-3 text-slate-700 shrink-0" style={{ width: "12px", height: "12px", flexShrink: 0 }} />
                 <span>{personal.email}</span>
               </a>
 
               <a
                 href={`tel:${personal.phone.replace(/\s+/g, "")}`}
                 className="inline-flex items-center gap-1 hover:text-indigo-600 transition-colors"
+                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
               >
-                <Phone className="w-3 h-3 text-slate-700 shrink-0" />
+                <Phone className="w-3 h-3 text-slate-700 shrink-0" style={{ width: "12px", height: "12px", flexShrink: 0 }} />
                 <span>{personal.phone}</span>
               </a>
 
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-slate-700 shrink-0" />
+              <span className="inline-flex items-center gap-1" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <MapPin className="w-3 h-3 text-slate-700 shrink-0" style={{ width: "12px", height: "12px", flexShrink: 0 }} />
                 <span>{personal.location}</span>
               </span>
 
@@ -128,11 +133,12 @@ export const ResumeCanvas: React.FC = () => {
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-black font-semibold hover:text-indigo-600 underline underline-offset-2 transition-colors"
+                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
               >
-                <Globe className="w-3 h-3 text-slate-700 shrink-0" />
+                <Globe className="w-3 h-3 text-slate-700 shrink-0" style={{ width: "12px", height: "12px", flexShrink: 0 }} />
                 <span>{personal.portfolioLabel || "Portfolio Link"}</span>
                 {(personal.showPortfolioIcon ?? true) && (
-                  <ExternalLink className="w-2.5 h-2.5 ml-0.5 shrink-0" />
+                  <ExternalLink className="w-2.5 h-2.5 ml-0.5 shrink-0" style={{ width: "10px", height: "10px", flexShrink: 0 }} />
                 )}
               </a>
             </div>
@@ -177,11 +183,17 @@ export const ResumeCanvas: React.FC = () => {
             <div className="space-y-2">
               {activeEdu.map((edu) => (
                 <div key={edu.id} className="item-block" style={{ marginBottom: itemGap }}>
-                  <div className="flex justify-between items-baseline w-full">
+                  <div 
+                    className="flex justify-between items-baseline w-full"
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", width: "100%" }}
+                  >
                     <span className="font-bold text-black">
                       <RichTextRenderer content={edu.degree} />
                     </span>
-                    <span className="text-slate-800 font-normal text-[9.5pt] shrink-0 ml-2">
+                    <span 
+                      className="text-slate-800 font-normal text-[9.5pt] shrink-0 ml-2"
+                      style={{ marginLeft: "auto", flexShrink: 0 }}
+                    >
                       {edu.period}
                     </span>
                   </div>
@@ -217,13 +229,21 @@ export const ResumeCanvas: React.FC = () => {
 
             {/* HashMove Active Preset */}
             <div className="item-block" style={{ marginBottom: itemGap }}>
-              <div className="flex justify-between items-baseline w-full">
+              <div 
+                className="flex justify-between items-baseline w-full"
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", width: "100%" }}
+              >
                 <div>
                   <span className="font-bold text-black">{activeHashMove.title}</span>
                   <span className="text-slate-900">, {activeHashMove.company}</span>
                   <span className="text-slate-700 italic text-[9pt]"> ({activeHashMove.business_type})</span>
                 </div>
-                <span className="text-slate-800 text-[9.5pt] shrink-0 ml-2">{activeHashMove.period}</span>
+                <span 
+                  className="text-slate-800 text-[9.5pt] shrink-0 ml-2"
+                  style={{ marginLeft: "auto", flexShrink: 0 }}
+                >
+                  {activeHashMove.period}
+                </span>
               </div>
 
               <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-900 leading-snug">
@@ -240,12 +260,20 @@ export const ResumeCanvas: React.FC = () => {
               .filter((exp) => exp.visible)
               .map((exp) => (
                 <div key={exp.id} className="item-block" style={{ marginTop: itemGap }}>
-                  <div className="flex justify-between items-baseline w-full">
+                  <div 
+                    className="flex justify-between items-baseline w-full"
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", width: "100%" }}
+                  >
                     <div>
                       <span className="font-bold text-black">{exp.role}</span>
                       <span className="text-slate-900">, {exp.company}</span>
                     </div>
-                    <span className="text-slate-800 text-[9.5pt] shrink-0 ml-2">{exp.period}</span>
+                    <span 
+                      className="text-slate-800 text-[9.5pt] shrink-0 ml-2"
+                      style={{ marginLeft: "auto", flexShrink: 0 }}
+                    >
+                      {exp.period}
+                    </span>
                   </div>
 
                   <ul className="list-disc pl-5 mt-0.5 space-y-1 text-slate-900 leading-snug">

@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
       apiKey: userApiKey,
       modelName = "gemini-3.8-flash",
       screeningQuestions,
+      mode = "all", // "all" | "resume_only"
     } = body;
 
     const apiKey =
@@ -23,13 +24,17 @@ export async function POST(req: NextRequest) {
       process.env.GOOGLE_API_KEY ||
       "";
 
+    const isResumeOnly = mode === "resume_only";
+
     // Build the prompt context
     const availableHashMovePresets = masterResumeData?.experience_presets?.hashmove?.presets || {};
     const availableVariableSkills = Object.entries(masterResumeData?.skills_categories || {})
       .filter(([_, cat]: [string, any]) => cat.isVariable)
       .map(([k, cat]: [string, any]) => ({ key: k, name: cat.name, content: cat.content }));
 
-    const projectPool = masterResumeData?.projects || [];
+    const rawProjects = masterResumeData?.projects || [];
+    // Only consider projects that have NOT been disabled for AI consideration
+    const projectPool = rawProjects.filter((p: any) => p.enabledForAi !== false && p.enabled !== false);
 
     // Extract active few-shot samples and rulebook from master context
     const rulebook = masterContext?.professional_bio?.profile_summary_rulebook;
@@ -63,8 +68,13 @@ Your objective is to tailor Usman's existing resume presets and generate an edit
 CRITICAL CONSTRAINTS (ZERO-HALLUCINATION POLICY):
 1. FOR EXPERIENCES & PRESETS: You must NOT write or invent new bullets. You must STRICTLY CHOOSE the single best-fit preset key for HashMove from: ${JSON.stringify(Object.keys(availableHashMovePresets))}.
 2. FOR SKILLS: You must STRICTLY CHOOSE the single best matching variable skill category key from: ${JSON.stringify(availableVariableSkills.map(s => s.key))}.
-3. FOR PROJECTS: You must RANK all available projects from the provided pool and return an array of strictly the TOP ${topN} project IDs that are most relevant to the Target Role and Job Description.
-   Available projects pool: ${JSON.stringify(projectPool.map((p: any) => ({ id: p.id, title: p.title, description: p.description, tags: p.tags })))}
+3. FOR RESUME PROJECTS: You must evaluate all ${projectPool.length} active projects in the candidate pool below and rank strictly the TOP ${topN} project IDs that are most relevant to the target role and JD.
+   CRITICAL FOR RESUME PROJECTS:
+   - Select strictly using the exact project "id" from the Available projects pool below (which all start with "proj-"). Do NOT use "cl-" IDs for the resume!
+   - Newly added entries in this candidate pool (e.g. Spotify Regression, financial modeling, workflow automations) are actively competing candidates.
+   - If the job description requires data analysis, statistical modeling, regression, Python, SQL, or metrics modeling, give high priority to projects that demonstrate those exact competencies (like the Spotify regression analysis). Every project in this candidate pool is an active candidate.
+   Available projects pool (${projectPool.length} projects):
+   ${JSON.stringify(projectPool.map((p: any) => ({ id: p.id, title: p.title, description: p.description, tags: p.tags || [], deep_context: p.deep_context || "" })))}
 
 ════════════════════════════════════════════════════════════════════════════════
 USMAN'S PROFILE SUMMARY MASTER ARCHITECTURE & ATS RULEBOOK:
@@ -91,6 +101,7 @@ CRITICAL ATS & STYLE RULES:
 ACTIVE BENCHMARK FEW-SHOT SAMPLES (${activeSamples.length} Active Examples from Usman's Gold-Standard Library):
 ${JSON.stringify(activeSamples.slice(0, 6), null, 2)}
 
+${!isResumeOnly ? `
 ════════════════════════════════════════════════════════════════════════════════
 COVER LETTER MASTER ARCHITECTURE & ATS RULEBOOK:
 ════════════════════════════════════════════════════════════════════════════════
@@ -128,14 +139,17 @@ COVER LETTER MASTER ARCHITECTURE & ATS RULEBOOK:
 
 7. PORTFOLIO PROJECTS SELECTION:
    Choose strictly the top 4 most relevant project IDs from Usman's concise CL projects pool:
-   ${JSON.stringify((masterContext?.cl_projects_pool || []).map((p: any) => ({ id: p.id, title: p.title, description: p.description, tags: p.tags })))}
+   ${JSON.stringify(((masterContext?.cl_projects_pool || []).filter((p: any) => p.enabledForAi !== false && p.enabled !== false)).map((p: any) => ({ id: p.id, title: p.title, description: p.description, tags: p.tags })))}
+` : `
+MODE: RESUME ONLY. You must focus exclusively on selecting the best HashMove preset, variable skill key, top-${topN} candidate projects from pool, and tailored 3-sentence summary & closing line. Omit cover letter generation.
+`}
 ${screeningInstruction}
 
 OUTPUT FORMAT:
 Respond with ONLY a valid, raw JSON object matching this exact schema:
-{
+${!isResumeOnly ? `{
   "selectedPresetKey": "growth_marketing" | "data_analytics" | "product_management" | "gdpr_operations",
-  "selectedSkillKey": "growth_marketing" | "product_management" | "product_and_data_analytics",
+  "selectedSkillKey": ${availableVariableSkills.length > 0 ? availableVariableSkills.map((s) => `"${s.key}"`).join(" | ") : '"product_marketing" | "product_management"'},
   "selectedProjectIds": ["id1", "id2", "id3", ... (length strictly ${topN})],
   "tailoredSummary": "Cohesive 3-sentence tailored summary with strategic **bold keywords** and NO em-dashes (do NOT include Stage 4 closing commitment here)...",
   "closingLine": "I am eager to be an integral part of ... as a **${cleanedRole} in Berlin**.",
@@ -157,7 +171,17 @@ Respond with ONLY a valid, raw JSON object matching this exact schema:
     { "question": "Question text", "answer": "Tailored answer grounded in master context with bolded metrics" }
   ],
   "company": "${targetCompany || "Company"}"
-}`;
+}` : `{
+  "selectedPresetKey": "growth_marketing" | "data_analytics" | "product_management" | "gdpr_operations",
+  "selectedSkillKey": ${availableVariableSkills.length > 0 ? availableVariableSkills.map((s) => `"${s.key}"`).join(" | ") : '"product_marketing" | "product_management"'},
+  "selectedProjectIds": ["id1", "id2", "id3", ... (length strictly ${topN})],
+  "tailoredSummary": "Cohesive 3-sentence tailored summary with strategic **bold keywords** and NO em-dashes (do NOT include Stage 4 closing commitment here)...",
+  "closingLine": "I am eager to be an integral part of ... as a **${cleanedRole} in Berlin**.",
+  "screeningAnswers": [
+    { "question": "Question text", "answer": "Tailored answer grounded in master context with bolded metrics" }
+  ],
+  "company": "${targetCompany || "Company"}"
+}`}`;
 
     const userPrompt = `
 TARGET ROLE: ${cleanedRole}
@@ -172,6 +196,82 @@ ${screeningQuestions ? `APPLICATION SCREENING QUESTIONS TO ANSWER:\n${screeningQ
 CANDIDATE MASTER CONTEXT:
 ${JSON.stringify(masterContext || {})}
 `;
+
+    // Hoist JD keywords and dynamic scoring for both AI validation and fallback
+    const jdLower = (jobDescription + " " + cleanedRole).toLowerCase();
+    const isFinanceRole =
+      jdLower.includes("finance") ||
+      jdLower.includes("financial") ||
+      jdLower.includes("accounting") ||
+      jdLower.includes("controlling") ||
+      jdLower.includes("audit") ||
+      jdLower.includes("payroll") ||
+      jdLower.includes("treasury") ||
+      jdLower.includes("accounts payable") ||
+      jdLower.includes("accounts receivable");
+
+    const stopWords = new Set([
+      "and", "the", "for", "with", "this", "that", "from", "you", "our", "your",
+      "are", "have", "has", "will", "can", "role", "team", "work", "join", "about",
+      "working", "student", "berlin", "germany"
+    ]);
+    const jdKeywords = (jobDescription + " " + cleanedRole)
+      .toLowerCase()
+      .split(/[^a-z0-9+#_.-]+/i)
+      .filter((w) => w.length > 2 && !stopWords.has(w));
+
+    // Dynamically score all candidate projects in projectPool
+    const scoredProjects = projectPool.map((proj: any) => {
+      let score = 0;
+      const projText = (
+        (proj.title || "") + " " +
+        (proj.description || "") + " " +
+        (proj.tags || []).join(" ") + " " +
+        (proj.deep_context || "")
+      ).toLowerCase();
+
+      for (const kw of jdKeywords) {
+        if (projText.includes(kw)) {
+          score += kw.length > 5 ? 3 : 1.5;
+        }
+      }
+
+      if (isFinanceRole) {
+        if (projText.includes("finance") || projText.includes("valuation") || projText.includes("wacc") || projText.includes("l'oreal")) score += 10;
+        if (projText.includes("regression") || projText.includes("price prediction") || projText.includes("n8n")) score += 6;
+      }
+      if (jdLower.includes("spotify") && projText.includes("spotify")) score += 20;
+      if ((jdLower.includes("regression") || jdLower.includes("statistics") || jdLower.includes("data")) && (projText.includes("regression") || projText.includes("statistics") || projText.includes("spotify"))) score += 8;
+      if (jdLower.includes("ai") && projText.includes("ai")) score += 4;
+      if (jdLower.includes("sql") && projText.includes("sql")) score += 4;
+      if (jdLower.includes("python") && projText.includes("python")) score += 4;
+      if (jdLower.includes("marketing") && projText.includes("marketing")) score += 4;
+      if (jdLower.includes("figma") && projText.includes("figma")) score += 4;
+
+      return { id: proj.id, score };
+    });
+    scoredProjects.sort((a: any, b: any) => b.score - a.score);
+
+    // Dynamically score all eligible Cover Letter projects
+    const eligibleClPool = (masterContext?.cl_projects_pool || []).filter(
+      (p: any) => p.enabledForAi !== false && p.enabled !== false
+    );
+    const scoredCl = eligibleClPool.map((proj: any) => {
+      let score = 0;
+      const projText = (
+        (proj.title || "") + " " +
+        (proj.description || "") + " " +
+        (proj.tags || []).join(" ")
+      ).toLowerCase();
+      for (const kw of jdKeywords) {
+        if (projText.includes(kw)) score += kw.length > 5 ? 3 : 1.5;
+      }
+      if (isFinanceRole && (projText.includes("finance") || projText.includes("wacc") || projText.includes("l'oreal"))) score += 10;
+      if (jdLower.includes("spotify") && projText.includes("spotify")) score += 20;
+      if (jdLower.includes("regression") && projText.includes("regression")) score += 8;
+      return { id: proj.id, score };
+    });
+    scoredCl.sort((a: any, b: any) => b.score - a.score);
 
     if (apiKey) {
       const primaryModel = modelName || "gemini-3.8-flash";
@@ -258,7 +358,84 @@ ${JSON.stringify(masterContext || {})}
               body: (p.body || "").replace(/[—–]/g, ", ").trim()
             }));
           }
+
+          // Sanitize structuredCoverLetter.selectedClProjectIds
+          const validClIds = new Set(eligibleClPool.map((p: any) => p.id));
+          const resolvedClIds: string[] = [];
+          if (Array.isArray(parsedData.structuredCoverLetter.selectedClProjectIds)) {
+            for (const rawId of parsedData.structuredCoverLetter.selectedClProjectIds) {
+              if (!rawId || typeof rawId !== "string") continue;
+              if (validClIds.has(rawId)) {
+                if (!resolvedClIds.includes(rawId)) resolvedClIds.push(rawId);
+                continue;
+              }
+              const cleanRaw = rawId.toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
+              const matched = eligibleClPool.find((p: any) => {
+                const pTitle = (p.title || "").toLowerCase();
+                const pId = (p.id || "").toLowerCase();
+                return (
+                  pId === rawId.toLowerCase() ||
+                  pTitle === rawId.toLowerCase() ||
+                  (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
+                  (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
+                );
+              });
+              if (matched && !resolvedClIds.includes(matched.id)) {
+                resolvedClIds.push(matched.id);
+              }
+            }
+          }
+          if (resolvedClIds.length < 4) {
+            for (const sp of scoredCl) {
+              if (!resolvedClIds.includes(sp.id)) {
+                resolvedClIds.push(sp.id);
+                if (resolvedClIds.length >= 4) break;
+              }
+            }
+          }
+          parsedData.structuredCoverLetter.selectedClProjectIds = resolvedClIds.slice(0, 4);
         }
+
+        // Sanitize and resolve selectedProjectIds against the active projectPool
+        const validPoolIds = new Set(projectPool.map((p: any) => p.id));
+        const resolvedProjectIds: string[] = [];
+
+        if (Array.isArray(parsedData.selectedProjectIds)) {
+          for (const rawId of parsedData.selectedProjectIds) {
+            if (!rawId || typeof rawId !== "string") continue;
+            // 1. Direct match with an enabled project
+            if (validPoolIds.has(rawId)) {
+              if (!resolvedProjectIds.includes(rawId)) resolvedProjectIds.push(rawId);
+              continue;
+            }
+            // 2. Cross-match: if model returned a CL ID, title, or slug
+            const cleanRaw = rawId.toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
+            const matched = projectPool.find((p: any) => {
+              const pTitle = (p.title || "").toLowerCase();
+              const pId = (p.id || "").toLowerCase();
+              return (
+                pId === rawId.toLowerCase() ||
+                pTitle === rawId.toLowerCase() ||
+                (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
+                (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
+              );
+            });
+            if (matched && !resolvedProjectIds.includes(matched.id)) {
+              resolvedProjectIds.push(matched.id);
+            }
+          }
+        }
+
+        // 3. If fewer than topN projects resolved, backfill from top scored candidates
+        if (resolvedProjectIds.length < topN) {
+          for (const sp of scoredProjects) {
+            if (!resolvedProjectIds.includes(sp.id)) {
+              resolvedProjectIds.push(sp.id);
+              if (resolvedProjectIds.length >= topN) break;
+            }
+          }
+        }
+        parsedData.selectedProjectIds = resolvedProjectIds.slice(0, topN);
 
         return NextResponse.json({
           success: true,
@@ -275,43 +452,23 @@ ${JSON.stringify(masterContext || {})}
     }
 
     // Rulebook-guided heuristic classifier if API call fails or key is invalid
-    const jdLower = (jobDescription + " " + cleanedRole).toLowerCase();
-    const isFinanceRole = jdLower.includes("finance") || jdLower.includes("financial") || jdLower.includes("accounting") || jdLower.includes("controlling") || jdLower.includes("audit") || jdLower.includes("payroll") || jdLower.includes("treasury") || jdLower.includes("accounts payable") || jdLower.includes("accounts receivable");
-
     let chosenPreset = "growth_marketing";
-    let chosenSkill = "growth_marketing";
+    let chosenSkill = "product_marketing";
 
     if (isFinanceRole) {
       chosenPreset = "data_analytics";
-      chosenSkill = "product_and_data_analytics";
+      chosenSkill = "product_marketing";
     } else if (jdLower.includes("data") || jdLower.includes("sql") || jdLower.includes("bi") || jdLower.includes("analyst") || jdLower.includes("analytics")) {
       chosenPreset = "data_analytics";
-      chosenSkill = "product_and_data_analytics";
-    } else if (jdLower.includes("product manager") || jdLower.includes("pm") || jdLower.includes("roadmap") || jdLower.includes("scrum")) {
+      chosenSkill = "product_marketing";
+    } else if (jdLower.includes("product manager") || jdLower.includes("pm") || jdLower.includes("roadmap") || jdLower.includes("scrum") || jdLower.includes("user stories") || jdLower.includes("backlog")) {
       chosenPreset = "product_management";
       chosenSkill = "product_management";
     } else if (jdLower.includes("gdpr") || jdLower.includes("compliance") || jdLower.includes("security") || jdLower.includes("operations")) {
       chosenPreset = "gdpr_operations";
-      chosenSkill = "product_and_data_analytics";
+      chosenSkill = "product_marketing";
     }
 
-    // Rank resume projects by keyword match
-    const scoredProjects = projectPool.map((proj: any) => {
-      let score = 0;
-      const text = (proj.title + " " + proj.description + " " + (proj.tags || []).join(" ")).toLowerCase();
-      if (isFinanceRole) {
-        if (text.includes("finance") || text.includes("financial") || text.includes("wacc") || text.includes("valuation") || text.includes("l'oreal") || text.includes("loreal")) score += 10;
-        if (text.includes("beam ai") || text.includes("n8n") || text.includes("price prediction") || text.includes("regression")) score += 8;
-      }
-      if (jdLower.includes("ai") && text.includes("ai")) score += 3;
-      if (jdLower.includes("data") && (text.includes("data") || text.includes("regression") || text.includes("sql"))) score += 3;
-      if (jdLower.includes("marketing") && text.includes("marketing")) score += 3;
-      if (jdLower.includes("product") && text.includes("product")) score += 2;
-      if (jdLower.includes("figma") && text.includes("figma")) score += 2;
-      return { id: proj.id, score };
-    });
-
-    scoredProjects.sort((a: any, b: any) => b.score - a.score);
     const selectedProjectIds = scoredProjects.slice(0, topN).map((p: any) => p.id);
 
     // Rulebook-conforming fallback matching Usman's voice
@@ -329,9 +486,12 @@ ${JSON.stringify(masterContext || {})}
     const fallbackClosing = `I am eager to be an integral part of ${targetCompany || "the company"}'s team, contribute to core strategic initiatives, and help drive sustainable impact as a **${cleanedRole} in Berlin**.`;
 
     const compClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
-    const selectedClProjectIds = isFinanceRole
-      ? ["cl-loreal-finance", "cl-agentic-ai-finance", "cl-property-price", "cl-video-onboarding"]
-      : ["cl-video-onboarding", "cl-agentic-ai-finance", "cl-figma-agile", "cl-ai-digital-twin"];
+    
+    const selectedClProjectIds = scoredCl.length >= 4
+      ? scoredCl.slice(0, 4).map((p: any) => p.id)
+      : isFinanceRole
+        ? ["cl-loreal-finance", "cl-agentic-ai-finance", "cl-property-price", "cl-video-onboarding"]
+        : ["cl-video-onboarding", "cl-agentic-ai-finance", "cl-figma-agile", "cl-ai-digital-twin"];
     
     const fallbackStructuredCL = {
       salutation: `Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}`,

@@ -41,6 +41,7 @@ export const MasterSettingsView: React.FC = () => {
     addProject, 
     deleteProject, 
     updateProject, 
+    toggleProjectAiInclusion,
     updateSettings, 
     setActiveTab 
   } = useResumeStore();
@@ -53,6 +54,7 @@ export const MasterSettingsView: React.FC = () => {
   const [newDesc, setNewDesc] = useState("");
   const [newTags, setNewTags] = useState("");
   const [newShowIcon, setNewShowIcon] = useState(true);
+  const [newProjEnabledForAi, setNewProjEnabledForAi] = useState(true);
 
   // Master Context State
   const [contextJsonStr, setContextJsonStr] = useState(
@@ -285,9 +287,11 @@ export const MasterSettingsView: React.FC = () => {
 
   const handleToggleClProject = (id: string) => {
     setClProjects(
-      clProjects.map((p) =>
-        p.id === id ? { ...p, enabled: p.enabled === false ? true : false } : p
-      )
+      clProjects.map((p) => {
+        if (p.id !== id) return p;
+        const nextState = p.enabled === false ? true : false;
+        return { ...p, enabled: nextState, enabledForAi: nextState };
+      })
     );
   };
 
@@ -313,11 +317,14 @@ export const MasterSettingsView: React.FC = () => {
       visible: true,
       defaultOrder: resume.projects.length + 1,
       tags: tagsArray,
+      enabledForAi: newProjEnabledForAi,
+      enabled: newProjEnabledForAi,
     });
 
     setNewTitle("");
     setNewDesc("");
     setNewTags("");
+    setNewProjEnabledForAi(true);
   };
 
   const handleSaveContext = () => {
@@ -1135,16 +1142,31 @@ export const MasterSettingsView: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-5">
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newShowIcon}
-                    onChange={(e) => setNewShowIcon(e.target.checked)}
-                    className="rounded border-slate-300 text-indigo-600 focus:ring-0"
-                  />
-                  <span>Show external link icon ↗</span>
-                </label>
+              <div className="flex items-center justify-between pt-5 gap-3">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newShowIcon}
+                      onChange={(e) => setNewShowIcon(e.target.checked)}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-0"
+                    />
+                    <span>Show external link icon ↗</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewProjEnabledForAi(!newProjEnabledForAi)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition-all ${
+                      newProjEnabledForAi
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${newProjEnabledForAi ? "bg-emerald-500" : "bg-amber-500"}`} />
+                    <span>{newProjEnabledForAi ? "AI Consideration: Active" : "AI Consideration: Excluded"}</span>
+                  </button>
+                </div>
 
                 <button
                   type="submit"
@@ -1165,44 +1187,69 @@ export const MasterSettingsView: React.FC = () => {
             </h3>
 
             <div className="grid grid-cols-1 gap-3">
-              {resume.projects.map((proj, idx) => (
-                <div
-                  key={proj.id}
-                  className="p-5 bg-white border border-slate-200 rounded-2xl space-y-3 shadow-xs hover:border-slate-300 transition-all"
-                >
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200 self-start">
-                      #{idx + 1}
-                    </span>
+              {resume.projects.map((proj, idx) => {
+                const isAiActive = proj.enabledForAi !== false && proj.enabled !== false;
 
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={proj.title}
-                        onChange={(e) => updateProject(proj.id, { title: e.target.value })}
-                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500"
-                        placeholder="Project Title"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                      <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold border ${
-                        proj.visible 
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                          : "bg-slate-100 text-slate-500 border-slate-200"
-                      }`}>
-                        {proj.visible ? "Active on Resume" : "Pool Asset (Inactive)"}
+                return (
+                  <div
+                    key={proj.id}
+                    className={`p-5 rounded-2xl space-y-3 transition-all ${
+                      isAiActive
+                        ? "bg-white border border-slate-200 shadow-xs hover:border-slate-300"
+                        : "bg-amber-50/20 border border-amber-200/60 opacity-80"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200 self-start">
+                        #{idx + 1}
                       </span>
 
-                      <button
-                        onClick={() => deleteProject(proj.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                        title="Delete Project"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={proj.title}
+                          onChange={(e) => updateProject(proj.id, { title: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500"
+                          placeholder="Project Title"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => toggleProjectAiInclusion(proj.id)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1.5 transition-all ${
+                            isAiActive
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                              : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                          }`}
+                          title={
+                            isAiActive
+                              ? "Active in AI tailoring. Click to exclude from AI consideration."
+                              : "Excluded from AI consideration (retained in history). Click to reactivate."
+                          }
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${isAiActive ? "bg-emerald-500" : "bg-amber-500"}`} />
+                          {isAiActive ? "AI: Active" : "AI: Excluded"}
+                        </button>
+
+                        <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold border ${
+                          proj.visible 
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200" 
+                            : "bg-slate-100 text-slate-500 border-slate-200"
+                        }`}>
+                          {proj.visible ? "On Canvas" : "Hidden"}
+                        </span>
+
+                        <button
+                          onClick={() => deleteProject(proj.id)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                          title="Delete Project"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
                   <TipTapInput
                     value={proj.description}
@@ -1233,7 +1280,8 @@ export const MasterSettingsView: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
         </div>

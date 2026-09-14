@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useResumeStore } from "@/lib/store";
 import {
   FileText,
@@ -20,6 +21,10 @@ import {
   Loader2,
   Cloud,
   Check,
+  FileQuestion,
+  Copy,
+  CheckCheck,
+  X,
 } from "lucide-react";
 import { exportResumeToPdf, exportCoverLetterToPdf } from "@/lib/pdfExport";
 
@@ -35,10 +40,22 @@ export const Header: React.FC = () => {
     resume,
     structuredCoverLetter,
     cloudSyncStatus,
+    screeningAnswers,
   } = useResumeStore();
 
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showScreeningModal, setShowScreeningModal] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copiedQuestionIndex, setCopiedQuestionIndex] = useState<number | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const stripMarkdown = (str: string) => str.replace(/\*\*(.*?)\*\*/g, "$1");
 
   const handleSave = () => {
     saveCurrentApplication();
@@ -220,6 +237,21 @@ export const Header: React.FC = () => {
           </button>
         </div>
 
+        {/* Screening Answers Portal Button (Shows when questions exist) */}
+        {screeningAnswers && screeningAnswers.length > 0 && (
+          <button
+            onClick={() => setShowScreeningModal(true)}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 shadow-xs transition-colors"
+            title="Open Screening Answers copy/paste drawer"
+          >
+            <FileQuestion className="w-3.5 h-3.5 text-amber-600" />
+            <span className="hidden sm:inline">Screening Answers</span>
+            <span className="w-4 h-4 rounded-full bg-amber-600 text-white text-[10px] flex items-center justify-center font-bold">
+              {screeningAnswers.length}
+            </span>
+          </button>
+        )}
+
         {/* Save Application Button */}
         <button
           onClick={handleSave}
@@ -262,6 +294,146 @@ export const Header: React.FC = () => {
           )}
         </button>
       </div>
+
+      {/* Quick Screening Answers Modal (Mounted directly to document.body to avoid header stacking context) */}
+      {showScreeningModal && isMounted && typeof document !== "undefined" && createPortal(
+        <div 
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setShowScreeningModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
+                  <FileQuestion className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Application Screening Answers ({screeningAnswers.length})
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Copy and paste directly into job portal screening question fields
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const formatted = screeningAnswers
+                      .map((item, idx) => `Question ${idx + 1}: ${item.question}\n\nAnswer:\n${stripMarkdown(item.answer)}`)
+                      .join("\n\n" + "═".repeat(40) + "\n\n");
+                    navigator.clipboard.writeText(formatted);
+                    setCopiedAll(true);
+                    setTimeout(() => setCopiedAll(false), 2000);
+                  }}
+                  className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-xs transition-colors"
+                >
+                  {copiedAll ? (
+                    <>
+                      <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700">Copied All!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy All Q&A</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowScreeningModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 transition-colors"
+                  title="Close (Esc)"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-y-auto space-y-3.5 flex-1 bg-slate-50/50">
+              {screeningAnswers.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white border border-slate-200 rounded-xl p-4 space-y-2.5 shadow-xs"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 rounded mr-2">
+                        Q{idx + 1}
+                      </span>
+                      <span className="text-xs font-bold text-slate-900 leading-snug">
+                        {item.question}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(item.question);
+                          setCopiedQuestionIndex(idx);
+                          setTimeout(() => setCopiedQuestionIndex(null), 2000);
+                        }}
+                        className="text-[11px] font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md border border-slate-200 transition-colors"
+                        title="Copy Question"
+                      >
+                        {copiedQuestionIndex === idx ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-700 font-bold">Copied Q</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Copy Q</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(stripMarkdown(item.answer));
+                          setCopiedIndex(idx);
+                          setTimeout(() => setCopiedIndex(null), 2000);
+                        }}
+                        className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 flex items-center gap-1 px-3 py-1 rounded-md shadow-xs transition-colors"
+                        title="Copy Answer to Clipboard"
+                      >
+                        {copiedIndex === idx ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-white" />
+                            <span>Copied Answer!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy Answer</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-slate-800 leading-relaxed whitespace-pre-wrap bg-slate-50/70 p-3 rounded-lg border border-slate-200 font-sans text-xs">
+                    {item.answer.split(/(\*\*[^*]+\*\*)/g).map((part, pIdx) => {
+                      if (part.startsWith("**") && part.endsWith("**")) {
+                        return (
+                          <strong key={pIdx} className="font-bold text-slate-900">
+                            {part.slice(2, -2)}
+                          </strong>
+                        );
+                      }
+                      return <span key={pIdx}>{part}</span>;
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </header>
   );
 };

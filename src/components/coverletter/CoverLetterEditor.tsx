@@ -15,7 +15,13 @@ import {
   ChevronUp,
   FileDown,
   RefreshCw,
-  FolderGit2
+  FolderGit2,
+  Loader2,
+  Wand2,
+  AlertCircle,
+  CheckCircle2,
+  Terminal,
+  Cpu,
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 import { exportCoverLetterToPdf } from "@/lib/pdfExport";
@@ -31,7 +37,11 @@ export const CoverLetterEditor: React.FC = () => {
     masterContext,
     targetCompany,
     targetRole,
-    setTargetInfo
+    setTargetInfo,
+    geminiApiKey,
+    selectedAiModel,
+    targetJobDescription,
+    saveCurrentApplication,
   } = useResumeStore();
 
   const cl = structuredCoverLetter;
@@ -104,6 +114,118 @@ export const CoverLetterEditor: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // AI Refinement Console State
+  const [refinementPrompt, setRefinementPrompt] = useState("");
+  const [isRefining, setIsRefining] = useState(false);
+  const [refineSuccess, setRefineSuccess] = useState<string | null>(null);
+  const [refineError, setRefineError] = useState<string | null>(null);
+  const [showRefineConsole, setShowRefineConsole] = useState(true);
+  const [refineLogs, setRefineLogs] = useState<string[]>([]);
+  const [showRefineLogs, setShowRefineLogs] = useState(false);
+  const [refinedModelMeta, setRefinedModelMeta] = useState<{
+    modelUsed: string;
+    durationMs?: number;
+    fallbackNotice?: string | null;
+  } | null>(null);
+
+  const refineLogRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (refineLogRef.current) {
+      refineLogRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [refineLogs]);
+
+  const addRefineLog = (msg: string) => {
+    const time = new Date().toLocaleTimeString("en-US", { hour12: false });
+    setRefineLogs((prev) => [...prev, `[${time}] ${msg}`]);
+  };
+
+  const handleRefineCoverLetter = async (promptOverride?: string) => {
+    const textToUse = promptOverride || refinementPrompt;
+    if (!textToUse.trim()) {
+      setRefineError("Please enter your refinement instructions.");
+      return;
+    }
+
+    setIsRefining(true);
+    setRefineError(null);
+    setRefineSuccess(null);
+    setShowRefineLogs(true);
+    setRefineLogs([]);
+    setRefinedModelMeta(null);
+
+    const primaryModel = selectedAiModel || "gemini-3.8-flash";
+    addRefineLog(`🚀 Initializing Cover Letter AI Refiner for ${targetCompany || "Target Company"}...`);
+    addRefineLog(`⚡ Preferred model: ${primaryModel} (Fallback chain: 3.8-flash → 3.7-flash → 3.6-flash)`);
+    addRefineLog(`📋 Parsing refinement instructions (${textToUse.trim().length} chars)...`);
+    addRefineLog(`🔒 Enforcing ATS Rulebook: 0 em-dashes, 3-5 sentence paragraphs, 1-2 blow multi-project proof, bold KPI phrases`);
+
+    try {
+      const t1 = setTimeout(() => {
+        addRefineLog(`🤖 Sending prompt to Google Gemini API with candidate master context...`);
+      }, 700);
+
+      const t2 = setTimeout(() => {
+        addRefineLog(`✍️ Synthesizing refined intro, 3 body paragraphs, and matching project proof...`);
+      }, 1800);
+
+      const res = await fetch("/api/cover-letter/refine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentCoverLetter: structuredCoverLetter,
+          refinementInstructions: textToUse.trim(),
+          jobDescription: targetJobDescription || "",
+          targetCompany: targetCompany || "",
+          targetRole: targetRole || "",
+          masterContext,
+          apiKey: geminiApiKey,
+          modelName: primaryModel,
+        }),
+      });
+
+      clearTimeout(t1);
+      clearTimeout(t2);
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to refine cover letter.");
+      }
+
+      const json = await res.json();
+      if (json.data) {
+        setStructuredCoverLetter(json.data);
+        const actualModel = json.modelUsed || primaryModel;
+        setRefinedModelMeta({
+          modelUsed: actualModel,
+          durationMs: json.durationMs,
+          fallbackNotice: json.fallbackNotice,
+        });
+
+        addRefineLog(`✅ Refinement response received and validated against schema`);
+        addRefineLog(`🤖 Confirmed Model: ${actualModel} (Live Google Gemini API)`);
+        if (json.durationMs) {
+          addRefineLog(`⏱️ Generation time: ${(json.durationMs / 1000).toFixed(1)}s`);
+        }
+        if (json.fallbackNotice) {
+          addRefineLog(`ℹ️ ${json.fallbackNotice}`);
+        }
+
+        const snapshotName = `${targetCompany || "Company"} - Refined Cover Letter`;
+        saveCurrentApplication(snapshotName);
+        addRefineLog(`💾 Automatically saved snapshot to Application History.`);
+
+        setRefineSuccess(`Cover Letter refined successfully by ${actualModel}! (Snapshot saved to History)`);
+      }
+    } catch (err: any) {
+      addRefineLog(`❌ Refinement Error: ${err.message}`);
+      setRefineError(err.message || "An error occurred while refining.");
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   const handleCompanyChange = (newCompany: string) => {
     setTargetInfo(targetRole, newCompany, "");
     const clean = newCompany.replace(/[^a-zA-Z0-9_-]/g, "");
@@ -116,6 +238,169 @@ export const CoverLetterEditor: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/60 text-slate-800">
+      {/* ── AI COVER LETTER REFINEMENT CONSOLE ── */}
+      <div className="bg-gradient-to-br from-indigo-50/95 via-white to-purple-50/80 border border-indigo-200/90 rounded-2xl p-4 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-indigo-800 font-bold text-xs">
+            <Sparkles className="w-4 h-4 text-indigo-600 animate-pulse" />
+            <span>AI Refinement Console</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-100/90 text-indigo-700 border border-indigo-200 font-normal">
+              Style Prompt Preserved
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowRefineConsole(!showRefineConsole)}
+            className="text-[11px] text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-semibold"
+          >
+            {showRefineConsole ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            <span>{showRefineConsole ? "Collapse" : "Expand Console"}</span>
+          </button>
+        </div>
+
+        {showRefineConsole && (
+          <div className="space-y-3 pt-1">
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              Give custom instructions to refine this cover letter while strictly preserving Usman&apos;s ATS rules, zero em-dash policy, bold KPI metrics, and &quot;1-2 blow&quot; multi-project proof.
+            </p>
+
+            <textarea
+              value={refinementPrompt}
+              onChange={(e) => setRefinementPrompt(e.target.value)}
+              rows={3}
+              placeholder="e.g. 'Make paragraph 2 highlight my HTW Berlin master thesis and regression model in Python', 'Focus more on n8n process automation and 13% reduction', 'Make tone more technical & concise'..."
+              className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 font-sans shadow-2xs"
+            />
+
+            {/* Quick Prompt Chips */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                Quick Refinement Shortcuts:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: "📊 Focus on Python & Regression", prompt: "Make body paragraph 2 emphasize my HTW Berlin master's thesis regression study across 3,600 tracks and Python/SQL analytical rigor." },
+                  { label: "⚡ Emphasize n8n & Automation", prompt: "Highlight my n8n workflow automations and the 13% reduction in manual processing time with bolded metrics." },
+                  { label: "🏢 Highlight HashMove SaaS", prompt: "Strengthen the enterprise B2B SaaS achievements at HashMove, highlighting the 362% feature adoption increase and Jira/Notion PRDs." },
+                  { label: "🎓 Academic & Teaching Leadership", prompt: "Highlight my IBA Teaching Assistant role mentoring 250+ students in advanced data analytics and statistical modeling." },
+                  { label: "🎯 Technical PM & Agile Tone", prompt: "Tailor the tone toward Technical Product Management with backlog prioritization and cross-functional engineering coordination." },
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setRefinementPrompt(chip.prompt)}
+                    className="text-[10px] px-2 py-1 rounded-lg bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200/70 font-medium transition-colors shadow-2xs"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>Auto-saves Snapshot to History</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleRefineCoverLetter()}
+                disabled={isRefining || !refinementPrompt.trim()}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+              >
+                {isRefining ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Refining with AI...</span>
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span>Refine Cover Letter with AI</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Model Confirmation Badge */}
+            {refinedModelMeta && (
+              <div className="p-3 bg-emerald-50/90 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-start gap-2.5 shadow-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-bold">
+                      Live AI Confirmed: {refinedModelMeta.modelUsed}
+                    </span>
+                    {refinedModelMeta.durationMs && (
+                      <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                        {(refinedModelMeta.durationMs / 1000).toFixed(1)}s
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] mt-0.5 text-emerald-800 leading-relaxed">
+                    {refinedModelMeta.fallbackNotice ||
+                      `Tailored by Google Gemini (${refinedModelMeta.modelUsed}) with full style rulebook preservation.`}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Live AI Execution Console Drawer */}
+            {showRefineLogs && (
+              <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg animate-in fade-in">
+                <div className="bg-slate-900/90 px-3.5 py-2 border-b border-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-mono font-semibold text-slate-300">
+                    <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Live AI Refinement Console</span>
+                    {isRefining && (
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowRefineLogs(!showRefineLogs)}
+                    className="text-slate-400 hover:text-slate-200 text-[11px] font-mono"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-44 overflow-y-auto space-y-1.5 leading-relaxed">
+                  {refineLogs.map((log, index) => (
+                    <div key={index} className="flex items-start gap-1.5">
+                      <span>{log}</span>
+                    </div>
+                  ))}
+                  {isRefining && (
+                    <div className="flex items-center gap-1 text-slate-400 animate-pulse">
+                      <span>[Executing refinement step...]</span>
+                      <span className="inline-block w-1.5 h-3 bg-emerald-400 ml-1" />
+                    </div>
+                  )}
+                  <div ref={refineLogRef} />
+                </div>
+              </div>
+            )}
+
+            {refineSuccess && (
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{refineSuccess}</span>
+              </div>
+            )}
+
+            {refineError && (
+              <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-800">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{refineError}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Top Banner with Action Controls */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

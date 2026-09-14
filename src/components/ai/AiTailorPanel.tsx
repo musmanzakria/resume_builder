@@ -36,21 +36,26 @@ export const AiTailorPanel: React.FC = () => {
     resume,
     masterContext,
     updateSettings,
+    screeningQuestions,
+    setScreeningQuestions,
+    screeningAnswers,
+    setScreeningAnswers,
+    saveCurrentApplication,
   } = useResumeStore();
 
   const [jd, setJd] = useState(targetJobDescription || "");
   const [company, setCompany] = useState(targetCompany || "");
   const [role, setRole] = useState(targetRole || "");
   const [additionalContext, setAdditionalContext] = useState("");
-  const [screeningQuestions, setScreeningQuestions] = useState("");
-  const [screeningAnswers, setScreeningAnswers] = useState<{ question: string; answer: string }[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copiedQuestionIndex, setCopiedQuestionIndex] = useState<number | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState(geminiApiKey || "");
   const [modelInput, setModelInput] = useState(selectedAiModel || "gemini-3.8-flash");
   const [customModel, setCustomModel] = useState("");
   const [apiKeySaved, setApiKeySaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMode, setLoadingMode] = useState<"all" | "resume_only">("all");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
@@ -94,7 +99,7 @@ export const AiTailorPanel: React.FC = () => {
     setConsoleLogs((prev) => [...prev, `[${time}] ${msg}`]);
   };
 
-  const handleTailor = async () => {
+  const handleTailor = async (mode: "all" | "resume_only" = "all") => {
     if (!jd.trim()) {
       setErrorMsg("Please paste a Job Description first.");
       return;
@@ -102,6 +107,7 @@ export const AiTailorPanel: React.FC = () => {
 
     setTargetInfo(role, company, jd);
     setIsLoading(true);
+    setLoadingMode(mode);
     setErrorMsg(null);
     setSuccessMsg(null);
     setShowConsole(true);
@@ -109,7 +115,7 @@ export const AiTailorPanel: React.FC = () => {
 
     const activeModel = modelInput === "custom" && customModel.trim() ? customModel.trim() : modelInput;
 
-    addLog(`🚀 Starting AI Tailoring Engine for ${company || "Target Company"}...`);
+    addLog(`🚀 Starting AI Tailoring Engine for ${company || "Target Company"} [Mode: ${mode === "resume_only" ? "Resume Only" : "Resume + Cover Letter"}]...`);
     addLog(`⚡ Initializing model: ${activeModel}`);
     addLog(`📄 Parsing Job Description (${jd.length} chars) & Master Career Knowledge Base...`);
     if (additionalContext.trim()) {
@@ -118,16 +124,20 @@ export const AiTailorPanel: React.FC = () => {
 
     try {
       const logTimer1 = setTimeout(() => {
-        addLog(`🎯 Matching HashMove Experience Preset against role requirements...`);
+        addLog(`🎯 Matching Experience Preset against role requirements...`);
       }, 600);
 
       const logTimer2 = setTimeout(() => {
-        addLog(`📊 Scoring and ranking Top ${resume.settings.aiProjectCount || 5} projects from master pool...`);
+        addLog(`📊 Scoring and ranking Top ${resume.settings.aiProjectCount || 5} active projects from master pool...`);
       }, 1200);
 
       const logTimer3 = setTimeout(() => {
-        addLog(`✍️ Synthesizing tailored 3-4 line bio & closing sentence...`);
-        addLog(`💌 Generating German/English structured cover letter...`);
+        if (mode === "resume_only") {
+          addLog(`⚡ Synthesizing tailored 3-4 line bio & closing sentence (Skipping Cover Letter)...`);
+        } else {
+          addLog(`✍️ Synthesizing tailored 3-4 line bio & closing sentence...`);
+          addLog(`💌 Generating German/English structured cover letter...`);
+        }
       }, 1800);
 
       const res = await fetch("/api/tailor", {
@@ -144,6 +154,7 @@ export const AiTailorPanel: React.FC = () => {
           masterResumeData: resume,
           masterContext,
           topN: resume.settings.aiProjectCount || 5,
+          mode,
         }),
       });
 
@@ -188,12 +199,20 @@ export const AiTailorPanel: React.FC = () => {
         selectedProjectIds: tailoredData.selectedProjectIds || tailoredData.project_ranking?.slice(0, resume.settings.aiProjectCount || 5),
         tailoredSummary: tailoredData.tailoredSummary || tailoredData.tailored_summary,
         closingLine: tailoredData.closingLine || tailoredData.closing_line,
-        coverLetter: tailoredData.coverLetter || tailoredData.cover_letter,
-        structuredCoverLetter: tailoredData.structuredCoverLetter,
+        coverLetter: mode === "resume_only" ? undefined : (tailoredData.coverLetter || tailoredData.cover_letter),
+        structuredCoverLetter: mode === "resume_only" ? undefined : tailoredData.structuredCoverLetter,
         company: company || tailoredData.company,
       });
 
-      addLog(`✅ Complete! Live Resume Canvas and Cover Letter updated successfully.`);
+      // Automatically take a snapshot after AI generation succeeds
+      try {
+        saveCurrentApplication();
+        addLog(`💾 Automatically saved snapshot to Application History.`);
+      } catch (saveErr) {
+        console.warn("Auto-save failed:", saveErr);
+      }
+
+      addLog(`✅ Complete! ${mode === "resume_only" ? "Resume canvas tailored" : "Live Resume Canvas and Cover Letter updated"} successfully.`);
       if (isRealAi) {
         addLog(`🤖 Confirmed Model: ${actualModel} (Live Google Gemini API)`);
         if (resJson.fallbackNotice) {
@@ -202,7 +221,11 @@ export const AiTailorPanel: React.FC = () => {
       } else {
         addLog(`⚠️ Notice: Google API high demand (503). Gold-standard rulebook heuristics applied.`);
       }
-      setSuccessMsg(`Resume & Cover Letter successfully tailored for ${company || "Target Role"}!`);
+      setSuccessMsg(
+        mode === "resume_only"
+          ? `Resume tailored successfully for ${company || "Target Role"}! (Snapshot auto-saved)`
+          : `Resume & Cover Letter tailored successfully for ${company || "Target Role"}! (Snapshot auto-saved)`
+      );
     } catch (err: any) {
       console.error(err);
       addLog(`❌ Error: ${err.message || "Failed to run AI tailoring"}`);
@@ -212,15 +235,25 @@ export const AiTailorPanel: React.FC = () => {
     }
   };
 
-  const handleCopyAnswer = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
+  const stripMarkdown = (str: string) => str.replace(/\*\*(.*?)\*\*/g, "$1");
+
+  const handleCopyAnswer = (text: string, index: number, clean: boolean = true) => {
+    const toCopy = clean ? stripMarkdown(text) : text;
+    navigator.clipboard.writeText(toCopy);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleCopyAllAnswers = () => {
+  const handleCopyQuestion = (text: string, index: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedQuestionIndex(index);
+    setTimeout(() => setCopiedQuestionIndex(null), 2000);
+  };
+
+  const handleCopyAllAnswers = (cleanOrEvent?: boolean | React.MouseEvent) => {
+    const clean = typeof cleanOrEvent === "boolean" ? cleanOrEvent : true;
     const formatted = screeningAnswers
-      .map((item, idx) => `Question ${idx + 1}: ${item.question}\n\nAnswer:\n${item.answer}`)
+      .map((item, idx) => `Question ${idx + 1}: ${item.question}\n\nAnswer:\n${clean ? stripMarkdown(item.answer) : item.answer}`)
       .join("\n\n" + "═".repeat(40) + "\n\n");
     navigator.clipboard.writeText(formatted);
     setCopiedAll(true);
@@ -321,24 +354,46 @@ export const AiTailorPanel: React.FC = () => {
         </div>
       )}
 
-      {/* TOP ACTION BUTTON: Run AI Tailoring (Prominently Placed at Top) */}
-      <button
-        onClick={handleTailor}
-        disabled={isLoading}
-        className="w-full py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-indigo-500/25 transition-all active:scale-[0.99] disabled:opacity-60"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Tailoring Resume & Cover Letter ({modelInput})...</span>
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4" />
-            <span>Run AI Tailoring (Resume + Cover Letter)</span>
-          </>
-        )}
-      </button>
+      {/* TOP ACTION BUTTONS: Resume Only & Resume + Cover Letter */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <button
+          onClick={() => handleTailor("resume_only")}
+          disabled={isLoading}
+          className="py-3 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition-all active:scale-[0.99] disabled:opacity-60"
+          title="Fast tailoring for Resume only (skips cover letter generation)"
+        >
+          {isLoading && loadingMode === "resume_only" ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Tailoring Resume...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 text-blue-200" />
+              <span>Tailor Resume Only</span>
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={() => handleTailor("all")}
+          disabled={isLoading}
+          className="py-3 px-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/25 transition-all active:scale-[0.99] disabled:opacity-60"
+          title="Tailors both Resume and German/English Cover Letter"
+        >
+          {isLoading && loadingMode === "all" ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Tailoring Everything...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>Resume + Cover Letter</span>
+            </>
+          )}
+        </button>
+      </div>
 
       {/* Error & Success Alerts */}
       {errorMsg && (
@@ -529,36 +584,89 @@ export const AiTailorPanel: React.FC = () => {
         {screeningAnswers.length > 0 && (
           <div className="mt-3 space-y-3 pt-3 border-t border-slate-200">
             <div className="text-xs font-bold text-slate-800 flex items-center justify-between">
-              <span>Tailored Application Answers ({screeningAnswers.length})</span>
+              <span className="flex items-center gap-1.5">
+                <FileQuestion className="w-3.5 h-3.5 text-indigo-600" />
+                Tailored Application Answers ({screeningAnswers.length})
+              </span>
+              <button
+                onClick={handleCopyAllAnswers}
+                className="text-[11px] text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200 transition-colors"
+              >
+                {copiedAll ? (
+                  <>
+                    <CheckCheck className="w-3 h-3 text-emerald-600" />
+                    <span className="text-emerald-700 font-bold">Copied All!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3" />
+                    <span>Copy All (Q&A)</span>
+                  </>
+                )}
+              </button>
             </div>
             {screeningAnswers.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-xs"
+                className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5 text-xs shadow-xs"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-bold text-slate-900">
-                    Q{idx + 1}: {item.question}
-                  </span>
-                  <button
-                    onClick={() => handleCopyAnswer(item.answer, idx)}
-                    className="shrink-0 text-[11px] font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-xs transition-colors"
-                  >
-                    {copiedIndex === idx ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-600" />
-                        <span className="text-emerald-700 font-bold">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3 text-slate-500" />
-                        <span>Copy Answer</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex-1">
+                    <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 rounded mr-2">
+                      Q{idx + 1}
+                    </span>
+                    <span className="font-semibold text-slate-900 leading-snug">
+                      {item.question}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => handleCopyQuestion(item.question, idx)}
+                      className="text-[10px] font-medium text-slate-600 hover:text-indigo-600 flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-xs transition-colors"
+                      title="Copy Question Text"
+                    >
+                      {copiedQuestionIndex === idx ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-700 font-bold">Copied Q!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-slate-400" />
+                          <span>Copy Q</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleCopyAnswer(item.answer, idx)}
+                      className="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 flex items-center gap-1 px-2.5 py-1 rounded-md shadow-xs transition-colors"
+                      title="Copy Tailored Answer for pasting into portal"
+                    >
+                      {copiedIndex === idx ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-white" />
+                          <span>Copied Answer!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Answer</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="text-slate-800 leading-relaxed whitespace-pre-wrap bg-white p-2.5 rounded-lg border border-slate-200 font-sans">
-                  {item.answer}
+                <div className="text-slate-800 leading-relaxed whitespace-pre-wrap bg-white p-3 rounded-lg border border-slate-200 font-sans text-xs">
+                  {item.answer.split(/(\*\*[^*]+\*\*)/g).map((part, pIdx) => {
+                    if (part.startsWith("**") && part.endsWith("**")) {
+                      return (
+                        <strong key={pIdx} className="font-bold text-slate-900">
+                          {part.slice(2, -2)}
+                        </strong>
+                      );
+                    }
+                    return <span key={pIdx}>{part}</span>;
+                  })}
                 </div>
               </div>
             ))}

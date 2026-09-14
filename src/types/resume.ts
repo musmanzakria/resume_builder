@@ -53,6 +53,8 @@ export interface ProjectItem {
   defaultOrder: number;
   tags?: string[];
   deep_context?: string;
+  enabledForAi?: boolean;
+  enabled?: boolean;
 }
 
 export interface SkillCategory {
@@ -135,6 +137,8 @@ export interface SavedApplication {
   updatedAt: string;
   resumeData: ResumeData;
   coverLetter: string;
+  structuredCoverLetter?: any;
+  screeningAnswers?: { question: string; answer: string }[];
   selectedPresetKey: string;
   selectedSkillKey: string;
   selectedProjectIds: string[];
