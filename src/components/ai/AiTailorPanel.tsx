@@ -19,6 +19,7 @@ import {
   Copy,
   CheckCheck,
   FileQuestion,
+  Square,
 } from "lucide-react";
 import { NumberStepper } from "@/components/common/NumberStepper";
 
@@ -71,6 +72,7 @@ export const AiTailorPanel: React.FC = () => {
   const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
   const [showConsole, setShowConsole] = useState(false);
   const consoleBottomRef = useRef<HTMLDivElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (consoleBottomRef.current) {
@@ -99,6 +101,15 @@ export const AiTailorPanel: React.FC = () => {
     setConsoleLogs((prev) => [...prev, `[${time}] ${msg}`]);
   };
 
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+    addLog("🛑 Generation cancelled by user.");
+  };
+
   const handleTailor = async (mode: "all" | "resume_only" = "all") => {
     if (!jd.trim()) {
       setErrorMsg("Please paste a Job Description first.");
@@ -116,33 +127,20 @@ export const AiTailorPanel: React.FC = () => {
     const activeModel = modelInput === "custom" && customModel.trim() ? customModel.trim() : modelInput;
 
     addLog(`🚀 Starting AI Tailoring Engine for ${company || "Target Company"} [Mode: ${mode === "resume_only" ? "Resume Only" : "Resume + Cover Letter"}]...`);
-    addLog(`⚡ Initializing model: ${activeModel}`);
+    addLog(`⚡ Selected model: ${activeModel}`);
     addLog(`📄 Parsing Job Description (${jd.length} chars) & Master Career Knowledge Base...`);
     if (additionalContext.trim()) {
       addLog(`📝 Incorporating custom additional context (${additionalContext.trim().length} chars)...`);
     }
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
-      const logTimer1 = setTimeout(() => {
-        addLog(`🎯 Matching Experience Preset against role requirements...`);
-      }, 600);
-
-      const logTimer2 = setTimeout(() => {
-        addLog(`📊 Scoring and ranking Top ${resume.settings.aiProjectCount || 5} active projects from master pool...`);
-      }, 1200);
-
-      const logTimer3 = setTimeout(() => {
-        if (mode === "resume_only") {
-          addLog(`⚡ Synthesizing tailored 3-4 line bio & closing sentence (Skipping Cover Letter)...`);
-        } else {
-          addLog(`✍️ Synthesizing tailored 3-4 line bio & closing sentence...`);
-          addLog(`💌 Generating German/English structured cover letter...`);
-        }
-      }, 1800);
-
       const res = await fetch("/api/tailor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abortController.signal,
         body: JSON.stringify({
           jobDescription: jd,
           targetCompany: company,
@@ -158,16 +156,50 @@ export const AiTailorPanel: React.FC = () => {
         }),
       });
 
-      clearTimeout(logTimer1);
-      clearTimeout(logTimer2);
-      clearTimeout(logTimer3);
-
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to tailor resume with AI.");
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Request failed with status ${res.status}`);
       }
 
-      const resJson = await res.json();
+      let resJson: any = null;
+
+      if (res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const item = JSON.parse(line);
+              if (item.type === "status") {
+                addLog(item.message);
+              } else if (item.type === "result") {
+                resJson = item;
+              } else if (item.type === "error") {
+                throw new Error(item.error || "Failed to tailor resume with AI.");
+              }
+            } catch (pErr: any) {
+              if (pErr.message && !pErr.message.includes("JSON")) {
+                throw pErr;
+              }
+            }
+          }
+        }
+      } else {
+        resJson = await res.json();
+      }
+
+      if (!resJson) {
+        throw new Error("No response received from AI tailoring engine.");
+      }
+
       const tailoredData = resJson.data || resJson;
       const isRealAi = resJson.isRealAi !== false && resJson.modelUsed !== "rulebook-heuristic";
       const actualModel = resJson.modelUsed || activeModel;
@@ -227,11 +259,16 @@ export const AiTailorPanel: React.FC = () => {
           : `Resume & Cover Letter tailored successfully for ${company || "Target Role"}! (Snapshot auto-saved)`
       );
     } catch (err: any) {
+      if (err.name === "AbortError") {
+        addLog(`🛑 Generation cancelled by user.`);
+        return;
+      }
       console.error(err);
       addLog(`❌ Error: ${err.message || "Failed to run AI tailoring"}`);
       setErrorMsg(err.message || "An unexpected error occurred during AI tailoring.");
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -354,45 +391,59 @@ export const AiTailorPanel: React.FC = () => {
         </div>
       )}
 
-      {/* TOP ACTION BUTTONS: Resume Only & Resume + Cover Letter */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <button
-          onClick={() => handleTailor("resume_only")}
-          disabled={isLoading}
-          className="py-3 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition-all active:scale-[0.99] disabled:opacity-60"
-          title="Fast tailoring for Resume only (skips cover letter generation)"
-        >
-          {isLoading && loadingMode === "resume_only" ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Tailoring Resume...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 text-blue-200" />
-              <span>Tailor Resume Only</span>
-            </>
-          )}
-        </button>
+      {/* TOP ACTION BUTTONS: Resume Only & Resume + Cover Letter + Stop Abort Button */}
+      <div className="flex items-center gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1">
+          <button
+            onClick={() => handleTailor("resume_only")}
+            disabled={isLoading}
+            className="py-3 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition-all active:scale-[0.99] disabled:opacity-60"
+            title="Fast tailoring for Resume only (skips cover letter generation)"
+          >
+            {isLoading && loadingMode === "resume_only" ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Tailoring Resume...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-blue-200" />
+                <span>Tailor Resume Only</span>
+              </>
+            )}
+          </button>
 
-        <button
-          onClick={() => handleTailor("all")}
-          disabled={isLoading}
-          className="py-3 px-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/25 transition-all active:scale-[0.99] disabled:opacity-60"
-          title="Tailors both Resume and German/English Cover Letter"
-        >
-          {isLoading && loadingMode === "all" ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Tailoring Everything...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Resume + Cover Letter</span>
-            </>
-          )}
-        </button>
+          <button
+            onClick={() => handleTailor("all")}
+            disabled={isLoading}
+            className="py-3 px-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/25 transition-all active:scale-[0.99] disabled:opacity-60"
+            title="Tailors both Resume and German/English Cover Letter"
+          >
+            {isLoading && loadingMode === "all" ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Tailoring Everything...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Resume + Cover Letter</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {isLoading && (
+          <button
+            type="button"
+            onClick={handleStop}
+            className="py-3 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all animate-in fade-in shrink-0"
+            title="Stop / Abort in-flight AI generation"
+          >
+            <Square className="w-3.5 h-3.5 fill-current" />
+            <span>Stop</span>
+          </button>
+        )}
       </div>
 
       {/* Error & Success Alerts */}

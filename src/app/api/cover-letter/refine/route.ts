@@ -118,112 +118,225 @@ ${JSON.stringify(masterContext || {})}
       let fallbackNotice: string | null = null;
       const startTime = Date.now();
 
-      for (const currentModel of candidateModels) {
-        try {
-          console.log(`[Cover Letter Refine] Attempting model: ${currentModel}...`);
-          const model = genAI.getGenerativeModel({
-            model: currentModel,
-            generationConfig: {
-              responseMimeType: "application/json",
-              temperature: 0.3,
-            },
-          });
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const sendStatus = (msg: string) => {
+            try {
+              controller.enqueue(encoder.encode(JSON.stringify({ type: "status", message: msg }) + "\n"));
+            } catch {}
+          };
 
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout after 40s on ${currentModel}`)), 40000)
-          );
+          const isTransientError = (err: any): boolean => {
+            if (!err) return false;
+            const msg = (err.message || "").toLowerCase();
+            const status = err.status || err.statusCode;
+            return (
+              status === 503 ||
+              status === 429 ||
+              status === 500 ||
+              status === 502 ||
+              status === 504 ||
+              msg.includes("503") ||
+              msg.includes("429") ||
+              msg.includes("unavailable") ||
+              msg.includes("resource_exhausted") ||
+              msg.includes("high demand") ||
+              msg.includes("overloaded") ||
+              msg.includes("capacity") ||
+              msg.includes("fetch failed") ||
+              msg.includes("econnreset") ||
+              msg.includes("etimedout")
+            );
+          };
 
-          const generatePromise = model.generateContent([
-            { text: systemPrompt },
-            { text: userPrompt },
-          ]);
+          const isClientError = (err: any): boolean => {
+            if (!err) return false;
+            const msg = (err.message || "").toLowerCase();
+            const status = err.status || err.statusCode;
+            return (
+              status === 400 ||
+              status === 401 ||
+              status === 403 ||
+              msg.includes("api_key_invalid") ||
+              msg.includes("api key not valid") ||
+              msg.includes("permission denied")
+            );
+          };
 
-          const result: any = await Promise.race([generatePromise, timeoutPromise]);
-          const responseText = result.response.text();
-          const cleaned = responseText
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .trim();
+          try {
+            modelLoop: for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
+              const currentModel = candidateModels[mIdx];
+              if (req.signal.aborted) {
+                sendStatus(`🛑 Request cancelled by client.`);
+                break;
+              }
 
-          parsedData = JSON.parse(cleaned);
-          actualModelUsed = currentModel;
+              if (mIdx > 0) {
+                sendStatus(`⚡ Cascading to fallback model: ${currentModel}...`);
+              } else {
+                sendStatus(`⚡ Connecting to primary model: ${currentModel}...`);
+              }
 
-          if (currentModel !== primaryModel) {
-            fallbackNotice = `Note: ${primaryModel} was at high capacity. Refinement generated seamlessly via ${currentModel}.`;
-          }
-          break;
-        } catch (modelErr: any) {
-          console.warn(`[Cover Letter Refine] Model ${currentModel} error:`, modelErr.message);
-        }
-      }
+              const maxRetries = 2;
+              for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                if (req.signal.aborted) break modelLoop;
 
-      if (parsedData && actualModelUsed) {
-        // Sanitize output
-        if (parsedData.intro) {
-          parsedData.intro = parsedData.intro.replace(/[—–]/g, ", ");
-        }
-        if (Array.isArray(parsedData.bodyParagraphs)) {
-          parsedData.bodyParagraphs = parsedData.bodyParagraphs.map((p: any) => ({
-            heading: (p.heading || "").replace(/[—–]/g, "").trim(),
-            body: (p.body || "").replace(/[—–]/g, ", ").trim(),
-          }));
-        }
+                try {
+                  console.log(`[Cover Letter Refine] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
+                  const model = genAI.getGenerativeModel({
+                    model: currentModel,
+                    generationConfig: {
+                      responseMimeType: "application/json",
+                      // Per Google guidelines for Gemini 3.x, keep temperature at default
+                    },
+                  });
 
-        // Validate selectedClProjectIds
-        const validClIds = new Set(clPool.map((p: any) => p.id));
-        const resolvedClIds: string[] = [];
-        if (Array.isArray(parsedData.selectedClProjectIds)) {
-          for (const rawId of parsedData.selectedClProjectIds) {
-            if (!rawId || typeof rawId !== "string") continue;
-            if (validClIds.has(rawId)) {
-              if (!resolvedClIds.includes(rawId)) resolvedClIds.push(rawId);
-              continue;
+                  const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error(`Timeout after 75s on ${currentModel}`)), 75000)
+                  );
+
+                  const generatePromise = model.generateContent([
+                    { text: systemPrompt },
+                    { text: userPrompt },
+                  ]);
+
+                  const result: any = await Promise.race([generatePromise, timeoutPromise]);
+                  const responseText = result.response.text();
+                  const cleaned = responseText
+                    .replace(/```json/g, "")
+                    .replace(/```/g, "")
+                    .trim();
+
+                  parsedData = JSON.parse(cleaned);
+                  actualModelUsed = currentModel;
+
+                  if (currentModel !== primaryModel) {
+                    fallbackNotice = `Note: ${primaryModel} was at high capacity. Refinement generated seamlessly via ${currentModel}.`;
+                    sendStatus(`ℹ️ ${fallbackNotice}`);
+                  }
+                  sendStatus(`✨ Received refinement from ${currentModel}. Validating format...`);
+                  break modelLoop;
+                } catch (modelErr: any) {
+                  console.warn(`[Cover Letter Refine] Model ${currentModel} error:`, modelErr.message);
+
+                  if (req.signal.aborted) break modelLoop;
+
+                  if (isClientError(modelErr)) {
+                    sendStatus(`❌ API Key or Client Error on ${currentModel}: ${modelErr.message}`);
+                    break modelLoop;
+                  }
+
+                  if (attempt < maxRetries && isTransientError(modelErr)) {
+                    const delay = Math.min(6000, 1000 * Math.pow(2, attempt) + Math.floor(Math.random() * 500));
+                    sendStatus(`⏳ ${currentModel} high demand / 503. Exponential backoff retry in ${(delay / 1000).toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})...`);
+                    await new Promise((r) => setTimeout(r, delay));
+                  } else {
+                    sendStatus(`⚠️ ${currentModel} attempt failed: ${modelErr.message}`);
+                    break;
+                  }
+                }
+              }
             }
-            const cleanRaw = rawId.toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
-            const matched = clPool.find((p: any) => {
-              const pTitle = (p.title || "").toLowerCase();
-              const pId = (p.id || "").toLowerCase();
-              return (
-                pId === rawId.toLowerCase() ||
-                pTitle === rawId.toLowerCase() ||
-                (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
-                (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
+
+            if (parsedData && actualModelUsed) {
+              // Sanitize output
+              if (parsedData.intro) {
+                parsedData.intro = parsedData.intro.replace(/[—–]/g, ", ");
+              }
+              if (Array.isArray(parsedData.bodyParagraphs)) {
+                parsedData.bodyParagraphs = parsedData.bodyParagraphs.map((p: any) => ({
+                  heading: (p.heading || "").replace(/[—–]/g, "").trim(),
+                  body: (p.body || "").replace(/[—–]/g, ", ").trim(),
+                }));
+              }
+
+              // Validate selectedClProjectIds
+              const validClIds = new Set(clPool.map((p: any) => p.id));
+              const resolvedClIds: string[] = [];
+              if (Array.isArray(parsedData.selectedClProjectIds)) {
+                for (const rawId of parsedData.selectedClProjectIds) {
+                  if (!rawId || typeof rawId !== "string") continue;
+                  if (validClIds.has(rawId)) {
+                    if (!resolvedClIds.includes(rawId)) resolvedClIds.push(rawId);
+                    continue;
+                  }
+                  const cleanRaw = rawId.toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
+                  const matched = clPool.find((p: any) => {
+                    const pTitle = (p.title || "").toLowerCase();
+                    const pId = (p.id || "").toLowerCase();
+                    return (
+                      pId === rawId.toLowerCase() ||
+                      pTitle === rawId.toLowerCase() ||
+                      (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
+                      (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
+                    );
+                  });
+                  if (matched && !resolvedClIds.includes(matched.id)) {
+                    resolvedClIds.push(matched.id);
+                  }
+                }
+              }
+              if (resolvedClIds.length < 4) {
+                for (const p of clPool) {
+                  if (!resolvedClIds.includes(p.id)) {
+                    resolvedClIds.push(p.id);
+                    if (resolvedClIds.length >= 4) break;
+                  }
+                }
+              }
+              parsedData.selectedClProjectIds = resolvedClIds.slice(0, 4);
+
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    type: "result",
+                    success: true,
+                    data: parsedData,
+                    modelRequested: primaryModel,
+                    modelUsed: actualModelUsed,
+                    fallbackNotice,
+                    isRealAi: true,
+                    durationMs: Date.now() - startTime,
+                  }) + "\n"
+                )
               );
-            });
-            if (matched && !resolvedClIds.includes(matched.id)) {
-              resolvedClIds.push(matched.id);
+              controller.close();
+              return;
             }
+          } catch (streamErr: any) {
+            console.error("[Cover Letter Refine] Stream error:", streamErr);
           }
-        }
-        if (resolvedClIds.length < 4) {
-          for (const p of clPool) {
-            if (!resolvedClIds.includes(p.id)) {
-              resolvedClIds.push(p.id);
-              if (resolvedClIds.length >= 4) break;
-            }
-          }
-        }
-        parsedData.selectedClProjectIds = resolvedClIds.slice(0, 4);
 
-        return NextResponse.json({
-          success: true,
-          data: parsedData,
-          modelRequested: primaryModel,
-          modelUsed: actualModelUsed,
-          fallbackNotice,
-          isRealAi: true,
-          durationMs: Date.now() - startTime,
-        });
-      }
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                type: "error",
+                success: false,
+                error:
+                  "Unable to connect to Google Gemini API (attempted gemini-3.8-flash, 3.7-flash, 3.6-flash). Please verify your Gemini API key in AI Tailor settings.",
+              }) + "\n"
+            )
+          );
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+        },
+      });
     }
 
     return NextResponse.json(
       {
         success: false,
         error:
-          "Unable to connect to Google Gemini API (attempted gemini-3.8-flash, 3.7-flash, 3.6-flash). Please verify your Gemini API key in AI Tailor settings.",
+          "Unable to connect to Google Gemini API. Please verify your Gemini API key in AI Tailor settings.",
       },
-      { status: 503 }
+      { status: 401 }
     );
   } catch (error: any) {
     console.error("Cover Letter Refine error:", error);

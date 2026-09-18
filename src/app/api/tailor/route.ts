@@ -273,6 +273,100 @@ ${JSON.stringify(masterContext || {})}
     });
     scoredCl.sort((a: any, b: any) => b.score - a.score);
 
+    const generateFallback = () => {
+      let chosenPreset = "growth_marketing";
+      let chosenSkill = "product_marketing";
+
+      if (isFinanceRole) {
+        chosenPreset = "data_analytics";
+        chosenSkill = "product_marketing";
+      } else if (jdLower.includes("data") || jdLower.includes("sql") || jdLower.includes("bi") || jdLower.includes("analyst") || jdLower.includes("analytics")) {
+        chosenPreset = "data_analytics";
+        chosenSkill = "product_marketing";
+      } else if (jdLower.includes("product manager") || jdLower.includes("pm") || jdLower.includes("roadmap") || jdLower.includes("scrum") || jdLower.includes("user stories") || jdLower.includes("backlog")) {
+        chosenPreset = "product_management";
+        chosenSkill = "product_management";
+      } else if (jdLower.includes("gdpr") || jdLower.includes("compliance") || jdLower.includes("security") || jdLower.includes("operations")) {
+        chosenPreset = "gdpr_operations";
+        chosenSkill = "product_marketing";
+      }
+
+      const selectedProjectIds = scoredProjects.slice(0, topN).map((p: any) => p.id);
+
+      let fallbackSummary = "";
+      if (isFinanceRole) {
+        fallbackSummary = `A data-driven professional with strong analytical skills, experienced in leveraging **data and performance metrics** to inform business strategies, optimize operations, and drive impactful decisions. I thrive in commercially focused teams with hands-on experience in **Excel/Google Sheets, SQL, CRM systems, and Tableau**. Skilled at collecting, analyzing, and maintaining key performance data and automating workflows using tools like **n8n** to ensure real-time accuracy.`;
+      } else if (chosenPreset === "data_analytics") {
+        fallbackSummary = `A data-driven professional with strong analytical skills, experienced in leveraging **data and performance metrics** to inform business strategies, optimize operations, and drive impactful decisions. I thrive in commercially focused teams with hands-on experience in **Excel/Google Sheets, SQL, CRM systems, and Tableau**. Skilled at collecting, analyzing, and maintaining key performance data and automating workflows using tools like **n8n** to ensure real-time accuracy.`;
+      } else if (chosenPreset === "product_management") {
+        fallbackSummary = `Product Analyst with experience in **SaaS ERP ecosystems, user research, and Agile sprint execution**, skilled at translating user needs and operational data into high-impact product features. I bring strong skills in **process mapping, backlog prioritization, and cross-functional coordination** across engineering and commercial teams, backed by an **8.5 IELTS score** and builder mindset.`;
+      } else {
+        fallbackSummary = `Product Marketing professional with expertise in **SEO, Content Strategy, and Growth**, experienced in delivering measurable adoption through data-driven storytelling and clear positioning. I bring practical skills in **marketing automation, paid acquisition, and Figma design**, a strong understanding of editorial workflows, and excellent communication skills in English (**8.5 IELTS / C2**), and growing German proficiency (A2).`;
+      }
+
+      const fallbackClosing = `I am eager to be an integral part of ${targetCompany || "the company"}'s team, contribute to core strategic initiatives, and help drive sustainable impact as a **${cleanedRole} in Berlin**.`;
+
+      const compClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
+      
+      const selectedClProjectIds = scoredCl.length >= 4
+        ? scoredCl.slice(0, 4).map((p: any) => p.id)
+        : isFinanceRole
+          ? ["cl-loreal-finance", "cl-agentic-ai-finance", "cl-property-price", "cl-video-onboarding"]
+          : ["cl-video-onboarding", "cl-agentic-ai-finance", "cl-figma-agile", "cl-ai-digital-twin"];
+      
+      const fallbackStructuredCL = {
+        salutation: `Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}`,
+        intro: `I'm Usman, a data-driven Master's student at HTW Berlin with B2B SaaS experience in shipping tech modules. I was thrilled to find the **${cleanedRole}** position at **${targetCompany || "the company"}**, as it perfectly aligns with my background in driving product adoption and my passion for empowering teams through data.`,
+        bodyParagraphs: [
+          {
+            heading: "Execution and Cross-Functional Coordination",
+            body: `You need someone who can coordinate seamlessly across diverse teams and translate complex operational goals into structured, high-impact results. At HashMove, I collaborated closely across Product, Engineering, and Go-to-Market teams to drive enterprise feature rollouts, managing feedback loops and maintaining structured PRDs in **Jira and Notion**. Furthermore, in my academic leadership as an IBA Teaching Assistant, I coordinated coursework and mentored over **250+ students in advanced data analytics and statistical modeling**, ensuring clear communication across technical and non-technical stakeholders.`
+          },
+          {
+            heading: "Process Automation and Analytical Tools",
+            body: `I have a proactive builder mindset dedicated to eliminating operational bottlenecks and empowering teams through data. I built advanced **Excel models (LAMBDA, VLOOKUP, dynamic arrays)** and automated multi-step workflows using **n8n**, achieving a **13% reduction in manual processing time** for commercial operations. In parallel, I developed interactive **Tableau and Power BI dashboards** to give leadership real-time visibility into mission-critical KPIs, ensuring transparent, data-backed decision-making.`
+          },
+          {
+            heading: "Data-Driven Mindset and Articulate Communication",
+            body: `I bring strong analytical rigor paired with articulate, native-level communication backed by an **8.5 IELTS score (C2)**. In my master's thesis at HTW Berlin, I conducted extensive multivariate regression analysis across **3,600 data points** to extract actionable predictive insights. I excel at translating complex technical architectures into intuitive documentation, engaging stakeholder presentations, and persuasive business collateral that fosters organizational alignment.`
+          }
+        ],
+        selectedClProjectIds,
+        projectCount: 4,
+        availabilityText: "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation.",
+        documentTitle: `CoverLetter_UsmanZakria_${compClean || "Company"}`
+      };
+
+      const fallbackCoverLetter = `${fallbackStructuredCL.salutation}\n\n${fallbackStructuredCL.intro}\n\n${fallbackStructuredCL.bodyParagraphs.map(p => `${p.heading}\n${p.body}`).join("\n\n")}\n\nWarm Regards,\nUsman Zakria\nBerlin | +49 170 695 9515 | m.usmanzakria@gmail.com | Portfolio Link | 8.5 IELTS`;
+
+      let fallbackScreeningAnswers: { question: string; answer: string }[] = [];
+      if (screeningQuestions && screeningQuestions.trim()) {
+        const qList = screeningQuestions
+          .split(/\n+/)
+          .map((q: string) => q.replace(/^[0-9]+[\.\)\-]\s*/, "").trim())
+          .filter((q: string) => q.length > 5);
+
+        fallbackScreeningAnswers = qList.map((q: string) => ({
+          question: q,
+          answer: `At HashMove, I collaborated across Product and Go-to-Market teams to deliver enterprise SaaS solutions, driving a **362% increase in feature adoption**. Combining practical experience in **n8n workflow automation**, advanced **Excel modeling**, and an **8.5 IELTS score (C2)** with my Master's studies at HTW Berlin, I translate operational complexity into structured execution and clear communication aligned with ${targetCompany || "the team"}'s strategic goals.`
+        }));
+      }
+
+      return {
+        data: {
+          selectedPresetKey: chosenPreset,
+          selectedSkillKey: chosenSkill,
+          selectedProjectIds,
+          tailoredSummary: fallbackSummary,
+          closingLine: fallbackClosing,
+          coverLetter: fallbackCoverLetter,
+          structuredCoverLetter: fallbackStructuredCL,
+          screeningAnswers: fallbackScreeningAnswers,
+          company: targetCompany || "Company"
+        }
+      };
+    };
+
     if (apiKey) {
       const primaryModel = modelName || "gemini-3.8-flash";
       // Priority chain: start with user's chosen model, then fall back to high-availability variants if 503/429
@@ -291,259 +385,288 @@ ${JSON.stringify(masterContext || {})}
       let fallbackNotice: string | null = null;
       const startTime = Date.now();
 
-      for (const currentModel of candidateModels) {
-        try {
-          console.log(`[AI Tailor] Attempting model: ${currentModel}...`);
-          const model = genAI.getGenerativeModel({
-            model: currentModel,
-            generationConfig: {
-              responseMimeType: "application/json",
-              temperature: 0.25,
-            },
-          });
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const sendStatus = (msg: string) => {
+            try {
+              controller.enqueue(encoder.encode(JSON.stringify({ type: "status", message: msg }) + "\n"));
+            } catch {}
+          };
 
-          // 45 second timeout per model attempt to allow deep reasoning & screening answers
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout after 45s on ${currentModel}`)), 45000)
-          );
+          const isTransientError = (err: any): boolean => {
+            if (!err) return false;
+            const msg = (err.message || "").toLowerCase();
+            const status = err.status || err.statusCode;
+            return (
+              status === 503 ||
+              status === 429 ||
+              status === 500 ||
+              status === 502 ||
+              status === 504 ||
+              msg.includes("503") ||
+              msg.includes("429") ||
+              msg.includes("unavailable") ||
+              msg.includes("resource_exhausted") ||
+              msg.includes("high demand") ||
+              msg.includes("overloaded") ||
+              msg.includes("capacity") ||
+              msg.includes("fetch failed") ||
+              msg.includes("econnreset") ||
+              msg.includes("etimedout")
+            );
+          };
 
-          const generatePromise = model.generateContent([
-            { text: systemPrompt },
-            { text: userPrompt },
-          ]);
+          const isClientError = (err: any): boolean => {
+            if (!err) return false;
+            const msg = (err.message || "").toLowerCase();
+            const status = err.status || err.statusCode;
+            return (
+              status === 400 ||
+              status === 401 ||
+              status === 403 ||
+              msg.includes("api_key_invalid") ||
+              msg.includes("api key not valid") ||
+              msg.includes("permission denied")
+            );
+          };
 
-          const result: any = await Promise.race([generatePromise, timeoutPromise]);
-          const responseText = result.response.text();
-          const cleaned = responseText
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .trim();
-
-          parsedData = JSON.parse(cleaned);
-          actualModelUsed = currentModel;
-
-          if (currentModel !== primaryModel) {
-            fallbackNotice = `Note: ${primaryModel} was at high capacity (503). Live response generated seamlessly via ${currentModel}.`;
-            console.log(`[AI Tailor] ${fallbackNotice}`);
-          }
-          break; // Successfully generated with live AI!
-        } catch (modelErr: any) {
-          console.warn(`[AI Tailor] Model ${currentModel} error:`, modelErr.message);
-        }
-      }
-
-      if (parsedData && actualModelUsed) {
-        // Sanitize output to guarantee zero em-dashes
-        if (parsedData.tailoredSummary) {
-          parsedData.tailoredSummary = parsedData.tailoredSummary
-            .replace(/[—–]/g, ", ")
-            .replace(/\s+/g, " ")
-            .trim();
-        }
-        if (parsedData.closingLine) {
-          parsedData.closingLine = parsedData.closingLine
-            .replace(/[—–]/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-        }
-
-        // Sanitize structuredCoverLetter
-        if (parsedData.structuredCoverLetter) {
-          if (parsedData.structuredCoverLetter.intro) {
-            parsedData.structuredCoverLetter.intro = parsedData.structuredCoverLetter.intro.replace(/[—–]/g, ", ");
-          }
-          if (Array.isArray(parsedData.structuredCoverLetter.bodyParagraphs)) {
-            parsedData.structuredCoverLetter.bodyParagraphs = parsedData.structuredCoverLetter.bodyParagraphs.map((p: any) => ({
-              heading: (p.heading || "").replace(/[—–]/g, "").trim(),
-              body: (p.body || "").replace(/[—–]/g, ", ").trim()
-            }));
-          }
-
-          // Sanitize structuredCoverLetter.selectedClProjectIds
-          const validClIds = new Set(eligibleClPool.map((p: any) => p.id));
-          const resolvedClIds: string[] = [];
-          if (Array.isArray(parsedData.structuredCoverLetter.selectedClProjectIds)) {
-            for (const rawId of parsedData.structuredCoverLetter.selectedClProjectIds) {
-              if (!rawId || typeof rawId !== "string") continue;
-              if (validClIds.has(rawId)) {
-                if (!resolvedClIds.includes(rawId)) resolvedClIds.push(rawId);
-                continue;
+          try {
+            modelLoop: for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
+              const currentModel = candidateModels[mIdx];
+              if (req.signal.aborted) {
+                sendStatus(`🛑 Request cancelled by client.`);
+                break;
               }
-              const cleanRaw = rawId.toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
-              const matched = eligibleClPool.find((p: any) => {
-                const pTitle = (p.title || "").toLowerCase();
-                const pId = (p.id || "").toLowerCase();
-                return (
-                  pId === rawId.toLowerCase() ||
-                  pTitle === rawId.toLowerCase() ||
-                  (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
-                  (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
-                );
-              });
-              if (matched && !resolvedClIds.includes(matched.id)) {
-                resolvedClIds.push(matched.id);
+
+              if (mIdx > 0) {
+                sendStatus(`⚡ Cascading to fallback model: ${currentModel}...`);
+              } else {
+                sendStatus(`⚡ Connecting to primary model: ${currentModel}...`);
+              }
+
+              const maxRetries = 2; // Up to 2 retries per model for transient errors
+              for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                if (req.signal.aborted) break modelLoop;
+
+                try {
+                  console.log(`[AI Tailor] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
+                  const model = genAI.getGenerativeModel({
+                    model: currentModel,
+                    generationConfig: {
+                      responseMimeType: "application/json",
+                      // Per Google's official Gemini 3.x guidelines: do not override temperature below default (1.0)
+                    },
+                  });
+
+                  // 75 second timeout per model attempt to allow deep reasoning & screening answers
+                  const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error(`Timeout after 75s on ${currentModel}`)), 75000)
+                  );
+
+                  const generatePromise = model.generateContent([
+                    { text: systemPrompt },
+                    { text: userPrompt },
+                  ]);
+
+                  const result: any = await Promise.race([generatePromise, timeoutPromise]);
+                  const responseText = result.response.text();
+                  const cleaned = responseText
+                    .replace(/```json/g, "")
+                    .replace(/```/g, "")
+                    .trim();
+
+                  parsedData = JSON.parse(cleaned);
+                  actualModelUsed = currentModel;
+
+                  if (currentModel !== primaryModel) {
+                    fallbackNotice = `Note: ${primaryModel} was at high capacity (503). Live response generated seamlessly via ${currentModel}.`;
+                    console.log(`[AI Tailor] ${fallbackNotice}`);
+                    sendStatus(`ℹ️ ${fallbackNotice}`);
+                  }
+                  sendStatus(`✨ Received response from ${currentModel}. Formatting tailored output...`);
+                  break modelLoop; // Successfully generated with live AI!
+                } catch (modelErr: any) {
+                  console.warn(`[AI Tailor] Model ${currentModel} (attempt ${attempt + 1}) error:`, modelErr.message);
+
+                  if (req.signal.aborted) break modelLoop;
+
+                  if (isClientError(modelErr)) {
+                    sendStatus(`❌ API Key or Client Error on ${currentModel}: ${modelErr.message}`);
+                    break modelLoop; // Do not retry client auth errors
+                  }
+
+                  if (attempt < maxRetries && isTransientError(modelErr)) {
+                    const delay = Math.min(6000, 1000 * Math.pow(2, attempt) + Math.floor(Math.random() * 500));
+                    sendStatus(`⏳ ${currentModel} high demand / 503. Exponential backoff retry in ${(delay / 1000).toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})...`);
+                    await new Promise((r) => setTimeout(r, delay));
+                  } else {
+                    sendStatus(`⚠️ ${currentModel} attempt failed: ${modelErr.message}`);
+                    break; // Move to next candidate model in cascade
+                  }
+                }
               }
             }
-          }
-          if (resolvedClIds.length < 4) {
-            for (const sp of scoredCl) {
-              if (!resolvedClIds.includes(sp.id)) {
-                resolvedClIds.push(sp.id);
-                if (resolvedClIds.length >= 4) break;
+
+            if (parsedData && actualModelUsed) {
+              // Sanitize output to guarantee zero em-dashes
+              if (parsedData.tailoredSummary) {
+                parsedData.tailoredSummary = parsedData.tailoredSummary
+                  .replace(/[—–]/g, ", ")
+                  .replace(/\s+/g, " ")
+                  .trim();
               }
-            }
-          }
-          parsedData.structuredCoverLetter.selectedClProjectIds = resolvedClIds.slice(0, 4);
-        }
+              if (parsedData.closingLine) {
+                parsedData.closingLine = parsedData.closingLine
+                  .replace(/[—–]/g, " ")
+                  .replace(/\s+/g, " ")
+                  .trim();
+              }
 
-        // Sanitize and resolve selectedProjectIds against the active projectPool
-        const validPoolIds = new Set(projectPool.map((p: any) => p.id));
-        const resolvedProjectIds: string[] = [];
+              // Sanitize structuredCoverLetter
+              if (parsedData.structuredCoverLetter) {
+                if (parsedData.structuredCoverLetter.intro) {
+                  parsedData.structuredCoverLetter.intro = parsedData.structuredCoverLetter.intro.replace(/[—–]/g, ", ");
+                }
+                if (Array.isArray(parsedData.structuredCoverLetter.bodyParagraphs)) {
+                  parsedData.structuredCoverLetter.bodyParagraphs = parsedData.structuredCoverLetter.bodyParagraphs.map((p: any) => ({
+                    heading: (p.heading || "").replace(/[—–]/g, "").trim(),
+                    body: (p.body || "").replace(/[—–]/g, ", ").trim()
+                  }));
+                }
 
-        if (Array.isArray(parsedData.selectedProjectIds)) {
-          for (const rawId of parsedData.selectedProjectIds) {
-            if (!rawId || typeof rawId !== "string") continue;
-            // 1. Direct match with an enabled project
-            if (validPoolIds.has(rawId)) {
-              if (!resolvedProjectIds.includes(rawId)) resolvedProjectIds.push(rawId);
-              continue;
-            }
-            // 2. Cross-match: if model returned a CL ID, title, or slug
-            const cleanRaw = rawId.toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
-            const matched = projectPool.find((p: any) => {
-              const pTitle = (p.title || "").toLowerCase();
-              const pId = (p.id || "").toLowerCase();
-              return (
-                pId === rawId.toLowerCase() ||
-                pTitle === rawId.toLowerCase() ||
-                (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
-                (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
+                // Sanitize structuredCoverLetter.selectedClProjectIds
+                const validClIds = new Set(eligibleClPool.map((p: any) => p.id));
+                const resolvedClIds: string[] = [];
+                if (Array.isArray(parsedData.structuredCoverLetter.selectedClProjectIds)) {
+                  for (const rawId of parsedData.structuredCoverLetter.selectedClProjectIds) {
+                    if (!rawId || typeof rawId !== "string") continue;
+                    if (validClIds.has(rawId)) {
+                      if (!resolvedClIds.includes(rawId)) resolvedClIds.push(rawId);
+                      continue;
+                    }
+                    const cleanRaw = rawId.toLowerCase().replace(/^(cl-|proj-)/, "").replace(/[-_]/g, " ").trim();
+                    const matched = eligibleClPool.find((p: any) => {
+                      const pTitle = (p.title || "").toLowerCase();
+                      const pId = (p.id || "").toLowerCase();
+                      return (
+                        pId === rawId.toLowerCase() ||
+                        pTitle === rawId.toLowerCase() ||
+                        (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
+                        (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
+                      );
+                    });
+                    if (matched && !resolvedClIds.includes(matched.id)) {
+                      resolvedClIds.push(matched.id);
+                    }
+                  }
+                }
+                if (resolvedClIds.length < 4) {
+                  for (const sp of scoredCl) {
+                    if (!resolvedClIds.includes(sp.id)) {
+                      resolvedClIds.push(sp.id);
+                      if (resolvedClIds.length >= 4) break;
+                    }
+                  }
+                }
+                parsedData.structuredCoverLetter.selectedClProjectIds = resolvedClIds.slice(0, 4);
+              }
+
+              // Sanitize and resolve selectedProjectIds against the active projectPool
+              const validPoolIds = new Set(projectPool.map((p: any) => p.id));
+              const resolvedProjectIds: string[] = [];
+              if (Array.isArray(parsedData.selectedProjectIds)) {
+                for (const rawId of parsedData.selectedProjectIds) {
+                  if (!rawId || typeof rawId !== "string") continue;
+                  if (validPoolIds.has(rawId)) {
+                    if (!resolvedProjectIds.includes(rawId)) resolvedProjectIds.push(rawId);
+                    continue;
+                  }
+                  const cleanRaw = rawId.toLowerCase().replace(/^(proj-|cl-)/, "").replace(/[-_]/g, " ").trim();
+                  const matched = projectPool.find((p: any) => {
+                    const pTitle = (p.title || "").toLowerCase();
+                    const pId = (p.id || "").toLowerCase();
+                    return (
+                      pId === rawId.toLowerCase() ||
+                      pTitle === rawId.toLowerCase() ||
+                      (cleanRaw.length > 3 && (pTitle.includes(cleanRaw) || cleanRaw.includes(pTitle))) ||
+                      (cleanRaw.includes("spotify") && (pTitle.includes("spotify") || pId.includes("spotify")))
+                    );
+                  });
+                  if (matched && !resolvedProjectIds.includes(matched.id)) {
+                    resolvedProjectIds.push(matched.id);
+                  }
+                }
+              }
+
+              if (resolvedProjectIds.length < topN) {
+                for (const sp of scoredProjects) {
+                  if (!resolvedProjectIds.includes(sp.id)) {
+                    resolvedProjectIds.push(sp.id);
+                    if (resolvedProjectIds.length >= topN) break;
+                  }
+                }
+              }
+              parsedData.selectedProjectIds = resolvedProjectIds.slice(0, topN);
+
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    type: "result",
+                    success: true,
+                    data: parsedData,
+                    modelRequested: primaryModel,
+                    modelUsed: actualModelUsed,
+                    fallbackNotice,
+                    isRealAi: true,
+                    durationMs: Date.now() - startTime,
+                  }) + "\n"
+                )
               );
-            });
-            if (matched && !resolvedProjectIds.includes(matched.id)) {
-              resolvedProjectIds.push(matched.id);
+              controller.close();
+              return;
             }
+
+            sendStatus(`⚠️ All Gemini models unavailable or timed out. Falling back to rulebook heuristics...`);
+            console.warn("[AI Tailor] All Gemini models were unavailable or timed out. Falling back to rulebook heuristic.");
+          } catch (streamErr: any) {
+            console.error("[AI Tailor] Stream error:", streamErr);
           }
-        }
 
-        // 3. If fewer than topN projects resolved, backfill from top scored candidates
-        if (resolvedProjectIds.length < topN) {
-          for (const sp of scoredProjects) {
-            if (!resolvedProjectIds.includes(sp.id)) {
-              resolvedProjectIds.push(sp.id);
-              if (resolvedProjectIds.length >= topN) break;
-            }
-          }
-        }
-        parsedData.selectedProjectIds = resolvedProjectIds.slice(0, topN);
-
-        return NextResponse.json({
-          success: true,
-          data: parsedData,
-          modelRequested: primaryModel,
-          modelUsed: actualModelUsed,
-          fallbackNotice,
-          isRealAi: true,
-          durationMs: Date.now() - startTime,
-        });
-      }
-
-      console.warn("[AI Tailor] All Gemini models were unavailable or timed out. Falling back to rulebook heuristic.");
-    }
-
-    // Rulebook-guided heuristic classifier if API call fails or key is invalid
-    let chosenPreset = "growth_marketing";
-    let chosenSkill = "product_marketing";
-
-    if (isFinanceRole) {
-      chosenPreset = "data_analytics";
-      chosenSkill = "product_marketing";
-    } else if (jdLower.includes("data") || jdLower.includes("sql") || jdLower.includes("bi") || jdLower.includes("analyst") || jdLower.includes("analytics")) {
-      chosenPreset = "data_analytics";
-      chosenSkill = "product_marketing";
-    } else if (jdLower.includes("product manager") || jdLower.includes("pm") || jdLower.includes("roadmap") || jdLower.includes("scrum") || jdLower.includes("user stories") || jdLower.includes("backlog")) {
-      chosenPreset = "product_management";
-      chosenSkill = "product_management";
-    } else if (jdLower.includes("gdpr") || jdLower.includes("compliance") || jdLower.includes("security") || jdLower.includes("operations")) {
-      chosenPreset = "gdpr_operations";
-      chosenSkill = "product_marketing";
-    }
-
-    const selectedProjectIds = scoredProjects.slice(0, topN).map((p: any) => p.id);
-
-    // Rulebook-conforming fallback matching Usman's voice
-    let fallbackSummary = "";
-    if (isFinanceRole) {
-      fallbackSummary = `A data-driven professional with strong analytical skills, experienced in leveraging **data and performance metrics** to inform business strategies, optimize operations, and drive impactful decisions. I thrive in commercially focused teams with hands-on experience in **Excel/Google Sheets, SQL, CRM systems, and Tableau**. Skilled at collecting, analyzing, and maintaining key performance data and automating workflows using tools like **n8n** to ensure real-time accuracy.`;
-    } else if (chosenPreset === "data_analytics") {
-      fallbackSummary = `A data-driven professional with strong analytical skills, experienced in leveraging **data and performance metrics** to inform business strategies, optimize operations, and drive impactful decisions. I thrive in commercially focused teams with hands-on experience in **Excel/Google Sheets, SQL, CRM systems, and Tableau**. Skilled at collecting, analyzing, and maintaining key performance data and automating workflows using tools like **n8n** to ensure real-time accuracy.`;
-    } else if (chosenPreset === "product_management") {
-      fallbackSummary = `Product Analyst with experience in **SaaS ERP ecosystems, user research, and Agile sprint execution**, skilled at translating user needs and operational data into high-impact product features. I bring strong skills in **process mapping, backlog prioritization, and cross-functional coordination** across engineering and commercial teams, backed by an **8.5 IELTS score** and builder mindset.`;
-    } else {
-      fallbackSummary = `Product Marketing professional with expertise in **SEO, Content Strategy, and Growth**, experienced in delivering measurable adoption through data-driven storytelling and clear positioning. I bring practical skills in **marketing automation, paid acquisition, and Figma design**, a strong understanding of editorial workflows, and excellent communication skills in English (**8.5 IELTS / C2**), and growing German proficiency (A2).`;
-    }
-
-    const fallbackClosing = `I am eager to be an integral part of ${targetCompany || "the company"}'s team, contribute to core strategic initiatives, and help drive sustainable impact as a **${cleanedRole} in Berlin**.`;
-
-    const compClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
-    
-    const selectedClProjectIds = scoredCl.length >= 4
-      ? scoredCl.slice(0, 4).map((p: any) => p.id)
-      : isFinanceRole
-        ? ["cl-loreal-finance", "cl-agentic-ai-finance", "cl-property-price", "cl-video-onboarding"]
-        : ["cl-video-onboarding", "cl-agentic-ai-finance", "cl-figma-agile", "cl-ai-digital-twin"];
-    
-    const fallbackStructuredCL = {
-      salutation: `Dear ${targetCompany ? `${targetCompany} Team,` : "Hiring Team,"}`,
-      intro: `I'm Usman, a data-driven Master's student at HTW Berlin with B2B SaaS experience in shipping tech modules. I was thrilled to find the **${cleanedRole}** position at **${targetCompany || "the company"}**, as it perfectly aligns with my background in driving product adoption and my passion for empowering teams through data.`,
-      bodyParagraphs: [
-        {
-          heading: "Execution and Cross-Functional Coordination",
-          body: `You need someone who can coordinate seamlessly across diverse teams and translate complex operational goals into structured, high-impact results. At HashMove, I collaborated closely across Product, Engineering, and Go-to-Market teams to drive enterprise feature rollouts, managing feedback loops and maintaining structured PRDs in **Jira and Notion**. Furthermore, in my academic leadership as an IBA Teaching Assistant, I coordinated coursework and mentored over **250+ students in advanced data analytics and statistical modeling**, ensuring clear communication across technical and non-technical stakeholders.`
+          // Generate fallback data
+          const fallbackResult = generateFallback();
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                type: "result",
+                success: true,
+                data: fallbackResult.data,
+                modelRequested: primaryModel,
+                modelUsed: "rulebook-heuristic",
+                isRealAi: false,
+                fallbackNotice: "Google Gemini API was experiencing high demand (503). Generated using gold-standard rulebook heuristics with substantial multi-project paragraphs.",
+                durationMs: Date.now() - startTime,
+              }) + "\n"
+            )
+          );
+          controller.close();
         },
-        {
-          heading: "Process Automation and Analytical Tools",
-          body: `I have a proactive builder mindset dedicated to eliminating operational bottlenecks and empowering teams through data. I built advanced **Excel models (LAMBDA, VLOOKUP, dynamic arrays)** and automated multi-step workflows using **n8n**, achieving a **13% reduction in manual processing time** for commercial operations. In parallel, I developed interactive **Tableau and Power BI dashboards** to give leadership real-time visibility into mission-critical KPIs, ensuring transparent, data-backed decision-making.`
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
         },
-        {
-          heading: "Data-Driven Mindset and Articulate Communication",
-          body: `I bring strong analytical rigor paired with articulate, native-level communication backed by an **8.5 IELTS score (C2)**. In my master's thesis at HTW Berlin, I conducted extensive multivariate regression analysis across **3,600 data points** to extract actionable predictive insights. I excel at translating complex technical architectures into intuitive documentation, engaging stakeholder presentations, and persuasive business collateral that fosters organizational alignment.`
-        }
-      ],
-      selectedClProjectIds,
-      projectCount: 4,
-      availabilityText: "I’m based in Berlin and immediately available. I speak English (C2) and German (learning A2) and thrive in fast-paced, collaborative environments that value growth and experimentation.",
-      documentTitle: `CoverLetter_UsmanZakria_${compClean || "Company"}`
-    };
-
-    const fallbackCoverLetter = `${fallbackStructuredCL.salutation}\n\n${fallbackStructuredCL.intro}\n\n${fallbackStructuredCL.bodyParagraphs.map(p => `${p.heading}\n${p.body}`).join("\n\n")}\n\nWarm Regards,\nUsman Zakria\nBerlin | +49 170 695 9515 | m.usmanzakria@gmail.com | Portfolio Link | 8.5 IELTS`;
-
-    let fallbackScreeningAnswers: { question: string; answer: string }[] = [];
-    if (screeningQuestions && screeningQuestions.trim()) {
-      const qList = screeningQuestions
-        .split(/\n+/)
-        .map((q: string) => q.replace(/^[0-9]+[\.\)\-]\s*/, "").trim())
-        .filter((q: string) => q.length > 5);
-
-      fallbackScreeningAnswers = qList.map((q: string) => ({
-        question: q,
-        answer: `At HashMove, I collaborated across Product and Go-to-Market teams to deliver enterprise SaaS solutions, driving a **362% increase in feature adoption**. Combining practical experience in **n8n workflow automation**, advanced **Excel modeling**, and an **8.5 IELTS score (C2)** with my Master's studies at HTW Berlin, I translate operational complexity into structured execution and clear communication aligned with ${targetCompany || "the team"}'s strategic goals.`
-      }));
+      });
     }
 
+    // Heuristic generator if no API key is provided
+    const fallback = generateFallback();
     return NextResponse.json({
+      type: "result",
       success: true,
-      data: {
-        selectedPresetKey: chosenPreset,
-        selectedSkillKey: chosenSkill,
-        selectedProjectIds,
-        tailoredSummary: fallbackSummary,
-        closingLine: fallbackClosing,
-        coverLetter: fallbackCoverLetter,
-        structuredCoverLetter: fallbackStructuredCL,
-        screeningAnswers: fallbackScreeningAnswers,
-        company: targetCompany || "Company"
-      },
+      data: fallback.data,
       modelRequested: modelName || "gemini-3.8-flash",
       modelUsed: "rulebook-heuristic",
       isRealAi: false,

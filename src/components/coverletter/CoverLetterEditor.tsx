@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   Terminal,
   Cpu,
+  Square,
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 import { exportCoverLetterToPdf } from "@/lib/pdfExport";
@@ -129,6 +130,7 @@ export const CoverLetterEditor: React.FC = () => {
   } | null>(null);
 
   const refineLogRef = React.useRef<HTMLDivElement | null>(null);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
     if (refineLogRef.current) {
@@ -139,6 +141,15 @@ export const CoverLetterEditor: React.FC = () => {
   const addRefineLog = (msg: string) => {
     const time = new Date().toLocaleTimeString("en-US", { hour12: false });
     setRefineLogs((prev) => [...prev, `[${time}] ${msg}`]);
+  };
+
+  const handleStopRefining = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsRefining(false);
+    addRefineLog("🛑 Refinement cancelled by user.");
   };
 
   const handleRefineCoverLetter = async (promptOverride?: string) => {
@@ -157,22 +168,18 @@ export const CoverLetterEditor: React.FC = () => {
 
     const primaryModel = selectedAiModel || "gemini-3.8-flash";
     addRefineLog(`🚀 Initializing Cover Letter AI Refiner for ${targetCompany || "Target Company"}...`);
-    addRefineLog(`⚡ Preferred model: ${primaryModel} (Fallback chain: 3.8-flash → 3.7-flash → 3.6-flash)`);
+    addRefineLog(`⚡ Selected model: ${primaryModel}`);
     addRefineLog(`📋 Parsing refinement instructions (${textToUse.trim().length} chars)...`);
     addRefineLog(`🔒 Enforcing ATS Rulebook: 0 em-dashes, 3-5 sentence paragraphs, 1-2 blow multi-project proof, bold KPI phrases`);
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
-      const t1 = setTimeout(() => {
-        addRefineLog(`🤖 Sending prompt to Google Gemini API with candidate master context...`);
-      }, 700);
-
-      const t2 = setTimeout(() => {
-        addRefineLog(`✍️ Synthesizing refined intro, 3 body paragraphs, and matching project proof...`);
-      }, 1800);
-
       const res = await fetch("/api/cover-letter/refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abortController.signal,
         body: JSON.stringify({
           currentCoverLetter: structuredCoverLetter,
           refinementInstructions: textToUse.trim(),
@@ -185,16 +192,47 @@ export const CoverLetterEditor: React.FC = () => {
         }),
       });
 
-      clearTimeout(t1);
-      clearTimeout(t2);
-
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to refine cover letter.");
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Failed to refine cover letter (status ${res.status}).`);
       }
 
-      const json = await res.json();
-      if (json.data) {
+      let json: any = null;
+
+      if (res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const item = JSON.parse(line);
+              if (item.type === "status") {
+                addRefineLog(item.message);
+              } else if (item.type === "result") {
+                json = item;
+              } else if (item.type === "error") {
+                throw new Error(item.error || "Failed to refine cover letter.");
+              }
+            } catch (pErr: any) {
+              if (pErr.message && !pErr.message.includes("JSON")) {
+                throw pErr;
+              }
+            }
+          }
+        }
+      } else {
+        json = await res.json();
+      }
+
+      if (json && json.data) {
         setStructuredCoverLetter(json.data);
         const actualModel = json.modelUsed || primaryModel;
         setRefinedModelMeta({
@@ -217,12 +255,19 @@ export const CoverLetterEditor: React.FC = () => {
         addRefineLog(`💾 Automatically saved snapshot to Application History.`);
 
         setRefineSuccess(`Cover Letter refined successfully by ${actualModel}! (Snapshot saved to History)`);
+      } else if (!json) {
+        throw new Error("No response received from cover letter refinement engine.");
       }
     } catch (err: any) {
+      if (err.name === "AbortError") {
+        addRefineLog(`🛑 Refinement cancelled by user.`);
+        return;
+      }
       addRefineLog(`❌ Refinement Error: ${err.message}`);
       setRefineError(err.message || "An error occurred while refining.");
     } finally {
       setIsRefining(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -304,24 +349,38 @@ export const CoverLetterEditor: React.FC = () => {
                 <span>Auto-saves Snapshot to History</span>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleRefineCoverLetter()}
-                disabled={isRefining || !refinementPrompt.trim()}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
-              >
-                {isRefining ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Refining with AI...</span>
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="w-3.5 h-3.5" />
-                    <span>Refine Cover Letter with AI</span>
-                  </>
+              <div className="flex items-center gap-2">
+                {isRefining && (
+                  <button
+                    type="button"
+                    onClick={handleStopRefining}
+                    className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all animate-in fade-in"
+                    title="Stop AI refinement"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                    <span>Stop</span>
+                  </button>
                 )}
-              </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleRefineCoverLetter()}
+                  disabled={isRefining || !refinementPrompt.trim()}
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                >
+                  {isRefining ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Refining with AI...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-3.5 h-3.5" />
+                      <span>Refine Cover Letter with AI</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Model Confirmation Badge */}

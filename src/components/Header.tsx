@@ -92,9 +92,6 @@ export const Header: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-bold text-slate-900 text-sm tracking-tight">Appliant</h1>
-            <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-              AI Tailor
-            </span>
             <span
               className={`hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${
                 cloudSyncStatus === "saving"
@@ -122,119 +119,89 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Mode Tabs */}
-      <nav className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-        <button
-          onClick={() => setActiveTab("editor")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            activeTab === "editor"
-              ? "bg-white text-indigo-700 shadow-sm border border-slate-200/80 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <Sliders className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Content</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("presets")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            activeTab === "presets"
-              ? "bg-white text-indigo-700 shadow-sm border border-slate-200/80 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Presets</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("ai")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            activeTab === "ai"
-              ? "bg-indigo-600 text-white shadow-sm font-semibold"
-              : "text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 animate-pulse text-indigo-500" />
-          <span>AI Tailor</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("cover-letter")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            activeTab === "cover-letter"
-              ? "bg-white text-indigo-700 shadow-sm border border-slate-200/80 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <Mail className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Cover Letter</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("design")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            activeTab === "design"
-              ? "bg-white text-indigo-700 shadow-sm border border-slate-200/80 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <Palette className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Styling</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("history")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            activeTab === "history"
-              ? "bg-white text-indigo-700 shadow-sm border border-slate-200/80 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <History className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Saved Jobs</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("settings")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            activeTab === "settings"
-              ? "bg-white text-indigo-700 shadow-sm border border-slate-200/80 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <Database className="w-3.5 h-3.5" />
-          <span className="hidden lg:inline">Master Assets</span>
-        </button>
+      {/* Main Mode Tabs - Collapsed Icon Navigation with Smooth Hover/Active Inline Expansion */}
+      <nav className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-xs">
+        {[
+          { id: "editor", label: "Content", icon: Sliders },
+          { id: "presets", label: "Presets", icon: FileText },
+          { id: "ai", label: "AI Tailor", icon: Sparkles, isAi: true },
+          { id: "cover-letter", label: "Cover Letter", icon: Mail },
+          { id: "design", label: "Styling", icon: Palette },
+          { id: "history", label: "Saved Jobs", icon: History },
+          { id: "settings", label: "Master Assets", icon: Database },
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              title={tab.label}
+              className={`group flex items-center h-8 px-2.5 rounded-lg text-xs font-medium transition-all duration-200 select-none ${
+                isActive
+                  ? tab.isAi
+                    ? "bg-indigo-600 text-white shadow-xs font-semibold"
+                    : "bg-white text-indigo-700 shadow-xs border border-slate-200 font-semibold"
+                  : tab.isAi
+                  ? "text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
+              }`}
+            >
+              <Icon
+                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+                  tab.isAi && isActive
+                    ? "text-white"
+                    : tab.isAi
+                    ? "text-indigo-500 animate-pulse"
+                    : "text-current"
+                }`}
+              />
+              <span
+                className={`overflow-hidden whitespace-nowrap transition-all duration-200 ease-in-out ${
+                  isActive
+                    ? "max-w-[120px] opacity-100 ml-1.5 font-semibold"
+                    : "max-w-0 opacity-0 ml-0 group-hover:max-w-[120px] group-hover:opacity-100 group-hover:ml-1.5"
+                }`}
+              >
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
-      {/* Right Controls: Zoom, Save, Download PDF, Print */}
+      {/* Right Controls: Two-Stack Zoom, Screening Answers, Save Icon, Download */}
       <div className="flex items-center gap-2">
-        {/* Zoom Controls */}
-        <div className="hidden xl:flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 text-slate-600">
-          <button
-            onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))}
-            className="p-1 hover:text-slate-900 hover:bg-slate-200/80 rounded"
-            title="Zoom Out"
-          >
-            <ZoomOut className="w-3.5 h-3.5" />
-          </button>
-          <span className="text-[11px] px-2 font-mono font-medium">{Math.round(previewZoom * 100)}%</span>
-          <button
-            onClick={() => setPreviewZoom(Math.min(1.5, previewZoom + 0.1))}
-            className="p-1 hover:text-slate-900 hover:bg-slate-200/80 rounded"
-            title="Zoom In"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setPreviewZoom(1.0)}
-            className="p-1 hover:text-slate-900 hover:bg-slate-200/80 rounded"
-            title="Reset Zoom (100%)"
-          >
-            <Maximize2 className="w-3 h-3" />
-          </button>
+        {/* Two-Stack Zoom Control (Ref: Screenshot 2) */}
+        <div className="hidden md:flex flex-col bg-white border border-slate-200 rounded-xl p-1 shadow-xs select-none">
+          <div className="flex items-center justify-between gap-2 px-1 mb-0.5">
+            <span className="text-[10px] font-mono font-bold text-slate-700 tracking-tight">
+              {Math.round(previewZoom * 100)}%
+            </span>
+            <button
+              onClick={() => setPreviewZoom(1.0)}
+              className="text-slate-400 hover:text-slate-700 transition-colors p-0.5"
+              title="Reset Zoom (100%)"
+            >
+              <Maximize2 className="w-2.5 h-2.5" />
+            </button>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPreviewZoom(Math.max(0.5, Number((previewZoom - 0.1).toFixed(1))))}
+              className="w-6 h-4 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center transition-colors leading-none"
+              title="Zoom Out"
+            >
+              −
+            </button>
+            <button
+              onClick={() => setPreviewZoom(Math.min(1.5, Number((previewZoom + 0.1).toFixed(1))))}
+              className="w-6 h-4 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center transition-colors leading-none"
+              title="Zoom In"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Screening Answers Portal Button (Shows when questions exist) */}
@@ -252,25 +219,20 @@ export const Header: React.FC = () => {
           </button>
         )}
 
-        {/* Save Application Button */}
+        {/* Save Application Button (Compact Save Icon) */}
         <button
           onClick={handleSave}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
             savedSuccess
-              ? "bg-emerald-600 text-white"
-              : "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-xs"
           }`}
+          title={savedSuccess ? "Application Snapshot Saved!" : "Save Application Snapshot"}
         >
           {savedSuccess ? (
-            <>
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>Saved!</span>
-            </>
+            <CheckCircle className="w-4 h-4" />
           ) : (
-            <>
-              <Save className="w-3.5 h-3.5 text-slate-500" />
-              <span className="hidden sm:inline">Save Snapshot</span>
-            </>
+            <Save className="w-4 h-4 text-slate-600" />
           )}
         </button>
 
@@ -278,18 +240,18 @@ export const Header: React.FC = () => {
         <button
           onClick={handleDownloadPdf}
           disabled={isExporting}
-          className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-60"
+          className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all disabled:opacity-60"
           title="Download exact 100% Vector ATS-Compliant PDF"
         >
           {isExporting ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Exporting PDF...</span>
+              <span>Exporting...</span>
             </>
           ) : (
             <>
               <Download className="w-3.5 h-3.5" />
-              <span>Download PDF</span>
+              <span>Download</span>
             </>
           )}
         </button>
