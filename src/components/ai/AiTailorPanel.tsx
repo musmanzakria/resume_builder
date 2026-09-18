@@ -84,6 +84,7 @@ export const AiTailorPanel: React.FC = () => {
     { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash (Latest Workhorse)" },
     { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Hybrid Reasoning)" },
     { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash (Fast & Stable)" },
+    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" },
     { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (Deep Reasoning)" },
     { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
     { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },

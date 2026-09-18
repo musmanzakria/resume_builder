@@ -1397,6 +1397,7 @@ export const MasterSettingsView: React.FC = () => {
                 <option value="gemini-3.8-flash">Gemini 3.8 Flash (Latest Workhorse)</option>
                 <option value="gemini-3.7-flash">Gemini 3.7 Flash (Hybrid Reasoning)</option>
                 <option value="gemini-3.6-flash">Gemini 3.6 Flash (Fast & Stable)</option>
+                <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
                 <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning)</option>
                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                 <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
