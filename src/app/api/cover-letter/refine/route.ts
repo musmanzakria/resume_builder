@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
         maxDelayMs: number;
         timeoutMs: number;
       };
+      modelAttempts?: Record<string, number>;
     }> = [];
 
     if (Array.isArray(incomingProfiles) && incomingProfiles.length > 0) {
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
             maxDelayMs: 8000,
             timeoutMs: 65000,
           },
+          modelAttempts: p.modelAttempts || {},
         }));
     }
 
@@ -82,6 +84,7 @@ export async function POST(req: NextRequest) {
           maxDelayMs: 8000,
           timeoutMs: 65000,
         },
+        modelAttempts: {},
       }));
     }
 
@@ -251,15 +254,20 @@ ${JSON.stringify(masterContext || {})}
                   break keyLoop;
                 }
 
-                sendStatus(`⚡ [${profile.name}] Stage ${mIdx + 1}/${cascade.length}: Connecting to ${currentModel}...`);
+                const configuredAttempts =
+                  profile.modelAttempts && typeof profile.modelAttempts[currentModel] === "number"
+                    ? profile.modelAttempts[currentModel]
+                    : ((backoff.maxRetries ?? 1) + 1);
+                const totalAttempts = Math.max(1, configuredAttempts);
 
-                const maxRetries = backoff.maxRetries ?? 2;
-                for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                sendStatus(`⚡ [${profile.name}] Stage ${mIdx + 1}/${cascade.length}: Target model ${currentModel} (${totalAttempts} attempt${totalAttempts > 1 ? "s" : ""} allocated)...`);
+
+                for (let attempt = 0; attempt < totalAttempts; attempt++) {
                   if (req.signal.aborted) break keyLoop;
 
                   const attemptStart = Date.now();
                   try {
-                    console.log(`[Cover Letter Refine] [${profile.name}] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
+                    console.log(`[Cover Letter Refine] [${profile.name}] Attempting model: ${currentModel} (attempt ${attempt + 1}/${totalAttempts})...`);
                     const model = genAI.getGenerativeModel({
                       model: currentModel,
                       generationConfig: {
@@ -292,7 +300,7 @@ ${JSON.stringify(masterContext || {})}
                     if (currentModel !== cascade[0]) {
                       fallbackNotice = `Note: Primary model was at high capacity. Refined live via ${currentModel} using "${profile.name}".`;
                     }
-                    sendStatus(`✨ [${profile.name}] Success! Refinement generated via ${currentModel} in ${attemptDuration}s.`);
+                    sendStatus(`✨ [${profile.name}] Success! Refinement generated via ${currentModel} (attempt ${attempt + 1}/${totalAttempts}) in ${attemptDuration}s.`);
                     break keyLoop;
                   } catch (modelErr: any) {
                     const attemptDuration = ((Date.now() - attemptStart) / 1000).toFixed(1);
@@ -323,14 +331,18 @@ ${JSON.stringify(masterContext || {})}
                       }
                     }
 
-                    if (attempt < maxRetries && isTransientError(modelErr)) {
+                    if (attempt + 1 < totalAttempts && isTransientError(modelErr)) {
                       const baseDelay = backoff.initialDelayMs || 1500;
                       const maxDelay = backoff.maxDelayMs || 8000;
                       const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt) + Math.floor(Math.random() * 400));
-                      sendStatus(`⏳ [${profile.name}] 503 Server Overloaded on ${currentModel}. Exponential backoff waiting ${(delay / 1000).toFixed(1)}s (Retry ${attempt + 1}/${maxRetries})...`);
+                      sendStatus(`⏳ [${profile.name}] 503 Server Overloaded on ${currentModel}. Exponential backoff pause ${(delay / 1000).toFixed(1)}s before attempt ${attempt + 2}/${totalAttempts}...`);
                       await new Promise((r) => setTimeout(r, delay));
                     } else {
-                      sendStatus(`⚠️ [${profile.name}] ${currentModel} attempt ${attempt + 1} failed (${attemptDuration}s): ${modelErr.message}`);
+                      if (totalAttempts > 1) {
+                        sendStatus(`⚠️ [${profile.name}] ${currentModel} exhausted all ${totalAttempts} attempt(s) (${attemptDuration}s on last call). Cascading to next candidate...`);
+                      } else {
+                        sendStatus(`⚠️ [${profile.name}] ${currentModel} single attempt failed (${attemptDuration}s): ${modelErr.message}. Cascading immediately...`);
+                      }
                       break;
                     }
                   }

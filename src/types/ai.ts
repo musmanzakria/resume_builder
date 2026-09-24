@@ -14,9 +14,10 @@ export interface ApiProfileBackoffConfig {
 export interface ApiProfile {
   id: string;
   name: string;           // e.g. "Usman's API", "Man Spider API", "Paid API"
-  apiKey: string;         // Secret key
+  apiKey: string;         // Gemini API Key
   enabled: boolean;
   modelCascade: string[]; // Ordered list of model IDs to cycle through
+  modelAttempts?: Record<string, number>; // Specific attempts per model code, e.g. { "gemini-3.8-flash": 1, "gemini-3.6-flash": 2 }
   backoffConfig: ApiProfileBackoffConfig;
 }
 
