@@ -42,6 +42,9 @@ export const AiTailorPanel: React.FC = () => {
     screeningAnswers,
     setScreeningAnswers,
     saveCurrentApplication,
+    apiProfiles,
+    availableModels,
+    setActiveTab,
   } = useResumeStore();
 
   const [jd, setJd] = useState(targetJobDescription || "");
@@ -63,6 +66,7 @@ export const AiTailorPanel: React.FC = () => {
   const [lastModelMeta, setLastModelMeta] = useState<{
     modelRequested: string;
     modelUsed: string;
+    profileUsed?: string;
     isRealAi: boolean;
     fallbackNotice?: string | null;
     durationMs?: number;
@@ -80,16 +84,6 @@ export const AiTailorPanel: React.FC = () => {
     }
   }, [consoleLogs]);
 
-  const availableModels = [
-    { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash (Latest Workhorse)" },
-    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Hybrid Reasoning)" },
-    { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash (Fast & Stable)" },
-    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" },
-    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (Deep Reasoning)" },
-    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
-    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
-    { id: "custom", name: "Custom Model..." },
-  ];
 
   const handleSaveApiKey = () => {
     setGeminiApiKey(apiKeyInput.trim());
@@ -149,6 +143,7 @@ export const AiTailorPanel: React.FC = () => {
           additionalContext: additionalContext.trim(),
           screeningQuestions: screeningQuestions.trim(),
           apiKey: apiKeyInput.trim(),
+          apiProfiles: apiProfiles.length > 0 ? apiProfiles : undefined,
           modelName: activeModel,
           masterResumeData: resume,
           masterContext,
@@ -208,6 +203,7 @@ export const AiTailorPanel: React.FC = () => {
       setLastModelMeta({
         modelRequested: resJson.modelRequested || activeModel,
         modelUsed: actualModel,
+        profileUsed: resJson.profileUsed,
         isRealAi,
         fallbackNotice: resJson.fallbackNotice,
         durationMs: resJson.durationMs,
@@ -338,11 +334,14 @@ export const AiTailorPanel: React.FC = () => {
               }}
               className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-medium focus:outline-none focus:border-indigo-500"
             >
-              {availableModels.map((m) => (
+              {(availableModels || []).map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
                 </option>
               ))}
+              {!availableModels?.some((m) => m.id === "custom") && (
+                <option value="custom">Custom Model...</option>
+              )}
             </select>
 
             {modelInput === "custom" && (
@@ -404,6 +403,35 @@ export const AiTailorPanel: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Active Profiles Pipeline Summary */}
+          {apiProfiles.length > 0 && (
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-700">Active API Profiles Pool ({apiProfiles.filter((p) => p.enabled).length}):</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("settings")}
+                  className="text-indigo-600 hover:text-indigo-800 font-bold text-[11px]"
+                >
+                  Configure Profiles & Cascades ➔
+                </button>
+              </div>
+              <div className="space-y-1.5 font-mono text-[10px]">
+                {apiProfiles.map((p, idx) => (
+                  <div key={p.id} className="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 truncate mr-2">
+                      <span className="font-bold text-slate-700">#{idx + 1} {p.name}:</span>
+                      <span className="text-slate-500 truncate">{p.modelCascade.join(" → ")}</span>
+                    </div>
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0 ${p.enabled ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}`}>
+                      {p.enabled ? "Active" : "Off"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -488,7 +516,7 @@ export const AiTailorPanel: React.FC = () => {
             <div className="flex items-center justify-between gap-1">
               <span className="font-bold">
                 {lastModelMeta.isRealAi
-                  ? `Live AI Confirmed: ${lastModelMeta.modelUsed}`
+                  ? `Live AI Confirmed: ${lastModelMeta.modelUsed}${lastModelMeta.profileUsed ? ` via "${lastModelMeta.profileUsed}"` : ""}`
                   : "Rulebook Heuristics Applied"}
               </span>
               {lastModelMeta.durationMs && (

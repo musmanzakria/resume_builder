@@ -40,6 +40,7 @@ export const CoverLetterEditor: React.FC = () => {
     targetRole,
     setTargetInfo,
     geminiApiKey,
+    apiProfiles,
     selectedAiModel,
     targetJobDescription,
     saveCurrentApplication,
@@ -125,6 +126,7 @@ export const CoverLetterEditor: React.FC = () => {
   const [showRefineLogs, setShowRefineLogs] = useState(false);
   const [refinedModelMeta, setRefinedModelMeta] = useState<{
     modelUsed: string;
+    profileUsed?: string;
     durationMs?: number;
     fallbackNotice?: string | null;
   } | null>(null);
@@ -188,6 +190,7 @@ export const CoverLetterEditor: React.FC = () => {
           targetRole: targetRole || "",
           masterContext,
           apiKey: geminiApiKey,
+          apiProfiles,
           modelName: primaryModel,
         }),
       });
@@ -237,6 +240,7 @@ export const CoverLetterEditor: React.FC = () => {
         const actualModel = json.modelUsed || primaryModel;
         setRefinedModelMeta({
           modelUsed: actualModel,
+          profileUsed: json.profileUsed,
           durationMs: json.durationMs,
           fallbackNotice: json.fallbackNotice,
         });
@@ -391,6 +395,7 @@ export const CoverLetterEditor: React.FC = () => {
                   <div className="flex items-center justify-between gap-1">
                     <span className="font-bold">
                       Live AI Confirmed: {refinedModelMeta.modelUsed}
+                      {refinedModelMeta.profileUsed ? ` via "${refinedModelMeta.profileUsed}"` : ""}
                     </span>
                     {refinedModelMeta.durationMs && (
                       <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">

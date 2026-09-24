@@ -1,3 +1,5 @@
+export * from "./ai";
+
 export interface PersonalInfo {
   fullName: string;
   email: string;

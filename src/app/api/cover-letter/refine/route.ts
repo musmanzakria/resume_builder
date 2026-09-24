@@ -12,23 +12,78 @@ export async function POST(req: NextRequest) {
       targetCompany = "",
       masterContext,
       apiKey: userApiKey,
+      apiProfiles: incomingProfiles,
       modelName = "gemini-3.8-flash",
     } = body;
 
-    const rawKeysInput =
-      userApiKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      "";
+    // Resolve active API profiles pool
+    let profilesToUse: Array<{
+      id: string;
+      name: string;
+      apiKey: string;
+      enabled: boolean;
+      modelCascade: string[];
+      backoffConfig?: {
+        maxRetries: number;
+        initialDelayMs: number;
+        maxDelayMs: number;
+        timeoutMs: number;
+      };
+    }> = [];
 
-    const apiKeys: string[] = Array.from(
-      new Set<string>(
-        rawKeysInput
-          .split(/[\n,;\s]+/)
-          .map((k: string) => k.trim())
-          .filter((k: string) => k.length > 5)
-      )
-    );
+    if (Array.isArray(incomingProfiles) && incomingProfiles.length > 0) {
+      profilesToUse = incomingProfiles
+        .filter((p: any) => p && p.enabled !== false && typeof p.apiKey === "string" && p.apiKey.trim().length > 5)
+        .map((p: any) => ({
+          id: p.id || `prof-${Math.random().toString(36).substring(2, 6)}`,
+          name: p.name || "Configured API",
+          apiKey: p.apiKey.trim(),
+          enabled: true,
+          modelCascade:
+            Array.isArray(p.modelCascade) && p.modelCascade.length > 0
+              ? p.modelCascade
+              : ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"],
+          backoffConfig: p.backoffConfig || {
+            maxRetries: 2,
+            initialDelayMs: 1500,
+            maxDelayMs: 8000,
+            timeoutMs: 65000,
+          },
+        }));
+    }
+
+    if (profilesToUse.length === 0) {
+      const rawKeysInput =
+        userApiKey ||
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        "";
+
+      const apiKeys: string[] = Array.from(
+        new Set<string>(
+          rawKeysInput
+            .split(/[\n,;\s]+/)
+            .map((k: string) => k.trim())
+            .filter((k: string) => k.length > 5)
+        )
+      );
+
+      profilesToUse = apiKeys.map((k, idx) => ({
+        id: `prof-legacy-${idx}`,
+        name: idx === 0 ? "Usman's API" : `Backup API #${idx + 1}`,
+        apiKey: k,
+        enabled: true,
+        modelCascade: idx === 0
+          ? ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"]
+          : ["gemini-3.6-flash", "gemini-3.5-flash"],
+        backoffConfig: {
+          maxRetries: 2,
+          initialDelayMs: 1500,
+          maxDelayMs: 8000,
+          timeoutMs: 65000,
+        },
+      }));
+    }
 
     if (!refinementInstructions || !refinementInstructions.trim()) {
       return NextResponse.json(
@@ -110,20 +165,11 @@ CANDIDATE MASTER CONTEXT:
 ${JSON.stringify(masterContext || {})}
 `;
 
-    if (apiKeys.length > 0) {
+    if (profilesToUse.length > 0) {
       const primaryModel = modelName || "gemini-3.8-flash";
-      const candidateModels = Array.from(
-        new Set([
-          primaryModel,
-          "gemini-3.8-flash",
-          "gemini-3.7-flash",
-          "gemini-3.6-flash",
-          "gemini-3.5-flash",
-        ])
-      );
-
       let parsedData: any = null;
       let actualModelUsed: string | null = null;
+      let actualProfileUsed: string | null = null;
       let fallbackNotice: string | null = null;
       const startTime = Date.now();
 
@@ -174,48 +220,56 @@ ${JSON.stringify(masterContext || {})}
           };
 
           try {
-            keyLoop: for (let kIdx = 0; kIdx < apiKeys.length; kIdx++) {
-              const currentKey = apiKeys[kIdx];
+            keyLoop: for (let pIdx = 0; pIdx < profilesToUse.length; pIdx++) {
+              const profile = profilesToUse[pIdx];
               const maskedKey =
-                currentKey.length > 10
-                  ? `${currentKey.slice(0, 4)}...${currentKey.slice(-4)}`
-                  : `Key #${kIdx + 1}`;
+                profile.apiKey.length > 10
+                  ? `${profile.apiKey.slice(0, 4)}...${profile.apiKey.slice(-4)}`
+                  : `Key #${pIdx + 1}`;
 
-              if (apiKeys.length > 1) {
-                sendStatus(`🔑 Activating API Key ${kIdx + 1} of ${apiKeys.length} (${maskedKey})...`);
-              }
+              const backoff = profile.backoffConfig || {
+                maxRetries: 2,
+                initialDelayMs: 1500,
+                maxDelayMs: 8000,
+                timeoutMs: 65000,
+              };
 
-              const genAI = new GoogleGenerativeAI(currentKey);
+              const cascade =
+                profile.modelCascade && profile.modelCascade.length > 0
+                  ? profile.modelCascade
+                  : [primaryModel, "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"];
 
-              modelLoop: for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
-                const currentModel = candidateModels[mIdx];
+              sendStatus(`🔑 [Profile ${pIdx + 1}/${profilesToUse.length}] Activating "${profile.name}" (${maskedKey})`);
+              sendStatus(`📋 Pipeline Cascade: ${cascade.join(" → ")}`);
+
+              const genAI = new GoogleGenerativeAI(profile.apiKey);
+
+              modelLoop: for (let mIdx = 0; mIdx < cascade.length; mIdx++) {
+                const currentModel = cascade[mIdx];
                 if (req.signal.aborted) {
                   sendStatus(`🛑 Request cancelled by client.`);
                   break keyLoop;
                 }
 
-                if (mIdx > 0) {
-                  sendStatus(`⚡ Cascading to fallback model: ${currentModel}...`);
-                } else {
-                  sendStatus(`⚡ Connecting to primary model: ${currentModel}...`);
-                }
+                sendStatus(`⚡ [${profile.name}] Stage ${mIdx + 1}/${cascade.length}: Connecting to ${currentModel}...`);
 
-                const maxRetries = 2;
+                const maxRetries = backoff.maxRetries ?? 2;
                 for (let attempt = 0; attempt <= maxRetries; attempt++) {
                   if (req.signal.aborted) break keyLoop;
 
+                  const attemptStart = Date.now();
                   try {
-                    console.log(`[Cover Letter Refine] [Key ${kIdx + 1}/${apiKeys.length}] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
+                    console.log(`[Cover Letter Refine] [${profile.name}] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
                     const model = genAI.getGenerativeModel({
                       model: currentModel,
                       generationConfig: {
                         responseMimeType: "application/json",
-                        // Per Google guidelines for Gemini 3.x, keep temperature at default
                       },
                     });
 
+                    const timeoutMs = backoff.timeoutMs || 65000;
                     const timeoutPromise = new Promise((_, reject) =>
-                      setTimeout(() => reject(new Error(`Timeout after 75s on ${currentModel}`)), 75000)
+                      setTimeout(() => reject(new Error(`Timeout after ${(timeoutMs / 1000).toFixed(0)}s on ${currentModel}`)), timeoutMs)
                     );
 
                     const generatePromise = model.generateContent([
@@ -232,15 +286,17 @@ ${JSON.stringify(masterContext || {})}
 
                     parsedData = JSON.parse(cleaned);
                     actualModelUsed = currentModel;
+                    actualProfileUsed = profile.name;
 
-                    if (currentModel !== primaryModel) {
-                      fallbackNotice = `Note: ${primaryModel} was at high capacity. Refinement generated seamlessly via ${currentModel}.`;
-                      sendStatus(`ℹ️ ${fallbackNotice}`);
+                    const attemptDuration = ((Date.now() - attemptStart) / 1000).toFixed(1);
+                    if (currentModel !== cascade[0]) {
+                      fallbackNotice = `Note: Primary model was at high capacity. Refined live via ${currentModel} using "${profile.name}".`;
                     }
-                    sendStatus(`✨ Received refinement from ${currentModel} using Key ${kIdx + 1}. Validating format...`);
+                    sendStatus(`✨ [${profile.name}] Success! Refinement generated via ${currentModel} in ${attemptDuration}s.`);
                     break keyLoop;
                   } catch (modelErr: any) {
-                    console.warn(`[Cover Letter Refine] Key ${kIdx + 1}, Model ${currentModel} error:`, modelErr.message);
+                    const attemptDuration = ((Date.now() - attemptStart) / 1000).toFixed(1);
+                    console.warn(`[Cover Letter Refine] [${profile.name}] ${currentModel} attempt ${attempt + 1} failed after ${attemptDuration}s:`, modelErr.message);
 
                     if (req.signal.aborted) break keyLoop;
 
@@ -249,27 +305,32 @@ ${JSON.stringify(masterContext || {})}
                       (modelErr.message || "").toLowerCase().includes("resource_exhausted") ||
                       (modelErr.message || "").toLowerCase().includes("quota");
 
-                    if (isQuotaOrRateLimit && kIdx < apiKeys.length - 1) {
-                      sendStatus(`⚠️ Key ${kIdx + 1} reached quota/rate limits (429). Instantly cycling to backup Key ${kIdx + 2}...`);
-                      break modelLoop;
+                    if (isQuotaOrRateLimit) {
+                      sendStatus(`⚠️ [${profile.name}] 429 Rate Limit / Quota Exceeded on ${currentModel} (after ${attemptDuration}s).`);
+                      if (pIdx < profilesToUse.length - 1) {
+                        sendStatus(`🔄 Cycling immediately from "${profile.name}" to next Profile "${profilesToUse[pIdx + 1].name}"...`);
+                        break modelLoop;
+                      }
                     }
 
                     if (isClientError(modelErr)) {
-                      if (kIdx < apiKeys.length - 1) {
-                        sendStatus(`⚠️ Key ${kIdx + 1} error (${modelErr.message}). Cycling to backup Key ${kIdx + 2}...`);
+                      sendStatus(`❌ [${profile.name}] API Key or Auth error on ${currentModel}: ${modelErr.message}`);
+                      if (pIdx < profilesToUse.length - 1) {
+                        sendStatus(`🔄 Cycling to next Profile "${profilesToUse[pIdx + 1].name}"...`);
                         break modelLoop;
                       } else {
-                        sendStatus(`❌ API Key Error on ${currentModel}: ${modelErr.message}`);
                         break modelLoop;
                       }
                     }
 
                     if (attempt < maxRetries && isTransientError(modelErr)) {
-                      const delay = Math.min(6000, 1000 * Math.pow(2, attempt) + Math.floor(Math.random() * 500));
-                      sendStatus(`⏳ ${currentModel} high demand / 503. Exponential backoff retry in ${(delay / 1000).toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})...`);
+                      const baseDelay = backoff.initialDelayMs || 1500;
+                      const maxDelay = backoff.maxDelayMs || 8000;
+                      const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt) + Math.floor(Math.random() * 400));
+                      sendStatus(`⏳ [${profile.name}] 503 Server Overloaded on ${currentModel}. Exponential backoff waiting ${(delay / 1000).toFixed(1)}s (Retry ${attempt + 1}/${maxRetries})...`);
                       await new Promise((r) => setTimeout(r, delay));
                     } else {
-                      sendStatus(`⚠️ ${currentModel} attempt failed: ${modelErr.message}`);
+                      sendStatus(`⚠️ [${profile.name}] ${currentModel} attempt ${attempt + 1} failed (${attemptDuration}s): ${modelErr.message}`);
                       break;
                     }
                   }
@@ -277,8 +338,8 @@ ${JSON.stringify(masterContext || {})}
               }
 
               if (parsedData) break keyLoop;
-              if (kIdx < apiKeys.length - 1) {
-                sendStatus(`🔄 Key ${kIdx + 1} (${maskedKey}) exhausted across models. Cycling to backup Key ${kIdx + 2}...`);
+              if (pIdx < profilesToUse.length - 1) {
+                sendStatus(`⚠️ "${profile.name}" exhausted its configured cascade. Failing over to [Profile ${pIdx + 2}/${profilesToUse.length}] "${profilesToUse[pIdx + 1].name}"...`);
               }
             }
 
@@ -338,6 +399,7 @@ ${JSON.stringify(masterContext || {})}
                     data: parsedData,
                     modelRequested: primaryModel,
                     modelUsed: actualModelUsed,
+                    profileUsed: actualProfileUsed,
                     fallbackNotice,
                     isRealAi: true,
                     durationMs: Date.now() - startTime,
@@ -347,6 +409,8 @@ ${JSON.stringify(masterContext || {})}
               controller.close();
               return;
             }
+
+            sendStatus(`⚠️ All configured API profiles & cascades exhausted for refinement.`);
           } catch (streamErr: any) {
             console.error("[Cover Letter Refine] Stream error:", streamErr);
           }

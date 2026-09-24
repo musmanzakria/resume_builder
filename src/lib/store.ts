@@ -9,7 +9,11 @@ import {
   OtherExperienceItem,
   AwardItem,
   CustomSectionItem,
-  ExperiencePreset
+  ExperiencePreset,
+  ApiProfile,
+  AvailableModelItem,
+  DEFAULT_AVAILABLE_MODELS,
+  DEFAULT_BACKOFF_CONFIG,
 } from "@/types/resume";
 import { initialMasterContext, StructuredCoverLetter, initialStructuredCoverLetter } from "./initialData";
 
@@ -362,12 +366,21 @@ interface ResumeStoreState {
   isAiLoading: boolean;
   aiStatusMessage: string;
   cloudSyncStatus: "synced" | "saving" | "offline" | "error";
+  apiProfiles: ApiProfile[];
+  availableModels: AvailableModelItem[];
 
   // Actions
   setCloudSyncStatus: (status: "synced" | "saving" | "offline" | "error") => void;
   loadFromCloudData: (cloudData: { resume?: any; structuredCoverLetter?: any; savedApplications?: any[] }) => void;
   setGeminiApiKey: (key: string) => void;
   setSelectedAiModel: (model: string) => void;
+  addApiProfile: (profile: Omit<ApiProfile, "id">) => void;
+  updateApiProfile: (id: string, updates: Partial<ApiProfile>) => void;
+  deleteApiProfile: (id: string) => void;
+  toggleApiProfile: (id: string) => void;
+  reorderApiProfiles: (startIndex: number, endIndex: number) => void;
+  addAvailableModel: (model: AvailableModelItem) => void;
+  deleteAvailableModel: (id: string) => void;
   updatePersonalInfo: (data: Partial<ResumeData["personal"]>) => void;
   updateSummary: (content: string, closingLine?: string) => void;
 
@@ -498,6 +511,8 @@ export const useResumeStore = create<ResumeStoreState>()(
       isAiLoading: false,
       aiStatusMessage: "",
       cloudSyncStatus: "synced",
+      apiProfiles: [],
+      availableModels: DEFAULT_AVAILABLE_MODELS,
 
       setCloudSyncStatus: (status) => set({ cloudSyncStatus: status }),
       loadFromCloudData: (cloudData) =>
@@ -519,8 +534,77 @@ export const useResumeStore = create<ResumeStoreState>()(
           };
         }),
 
-      setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+      setGeminiApiKey: (key) =>
+        set((state) => {
+          const trimmed = key.trim();
+          if (state.apiProfiles.length > 0) {
+            const updated = [...state.apiProfiles];
+            updated[0] = { ...updated[0], apiKey: trimmed };
+            return { geminiApiKey: trimmed, apiProfiles: updated };
+          }
+          const defaultProf: ApiProfile = {
+            id: "prof-" + Date.now(),
+            name: "Primary API",
+            apiKey: trimmed,
+            enabled: true,
+            modelCascade: state.availableModels.map((m) => m.id),
+            backoffConfig: { ...DEFAULT_BACKOFF_CONFIG },
+          };
+          return { geminiApiKey: trimmed, apiProfiles: [defaultProf] };
+        }),
+
       setSelectedAiModel: (model) => set({ selectedAiModel: model }),
+
+      addApiProfile: (profile) =>
+        set((state) => ({
+          apiProfiles: [
+            ...state.apiProfiles,
+            {
+              ...profile,
+              id: "prof-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
+            },
+          ],
+        })),
+
+      updateApiProfile: (id, updates) =>
+        set((state) => ({
+          apiProfiles: state.apiProfiles.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+        })),
+
+      deleteApiProfile: (id) =>
+        set((state) => ({
+          apiProfiles: state.apiProfiles.filter((p) => p.id !== id),
+        })),
+
+      toggleApiProfile: (id) =>
+        set((state) => ({
+          apiProfiles: state.apiProfiles.map((p) =>
+            p.id === id ? { ...p, enabled: !p.enabled } : p
+          ),
+        })),
+
+      reorderApiProfiles: (startIndex, endIndex) =>
+        set((state) => {
+          const list = [...state.apiProfiles];
+          const [removed] = list.splice(startIndex, 1);
+          list.splice(endIndex, 0, removed);
+          return { apiProfiles: list };
+        }),
+
+      addAvailableModel: (model) =>
+        set((state) => {
+          if (state.availableModels.some((m) => m.id === model.id)) return state;
+          return { availableModels: [...state.availableModels, model] };
+        }),
+
+      deleteAvailableModel: (id) =>
+        set((state) => ({
+          availableModels: state.availableModels.filter((m) => m.id !== id),
+          apiProfiles: state.apiProfiles.map((p) => ({
+            ...p,
+            modelCascade: p.modelCascade.filter((m) => m !== id),
+          })),
+        })),
 
       updatePersonalInfo: (data) =>
         set((state) => ({
@@ -1431,6 +1515,50 @@ export const useResumeStore = create<ResumeStoreState>()(
         if (merged.resume?.settings) {
           if (merged.resume.settings.page1ProjectCount === undefined) {
             merged.resume.settings.page1ProjectCount = 1;
+          }
+        }
+
+        // Ensure availableModels has default clean models
+        if (!merged.availableModels || merged.availableModels.length === 0) {
+          merged.availableModels = DEFAULT_AVAILABLE_MODELS;
+        }
+
+        // Migrate legacy geminiApiKey or ensure apiProfiles exists
+        if (!merged.apiProfiles || merged.apiProfiles.length === 0) {
+          const rawKeyStr = (merged.geminiApiKey || "").trim();
+          if (rawKeyStr.length > 5) {
+            const keys = Array.from(
+              new Set<string>(
+                rawKeyStr
+                  .split(/[\n,;\s]+/)
+                  .map((k: string) => k.trim())
+                  .filter((k: string) => k.length > 5)
+              )
+            );
+            if (keys.length > 0) {
+              merged.apiProfiles = keys.map((k, idx) => ({
+                id: `prof-${Date.now()}-${idx}`,
+                name: idx === 0 ? "Usman's API" : `Backup API #${idx + 1}`,
+                apiKey: k,
+                enabled: true,
+                modelCascade: idx === 0
+                  ? ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"]
+                  : ["gemini-3.6-flash", "gemini-3.5-flash"],
+                backoffConfig: { ...DEFAULT_BACKOFF_CONFIG },
+              }));
+            }
+          }
+          if (!merged.apiProfiles || merged.apiProfiles.length === 0) {
+            merged.apiProfiles = [
+              {
+                id: "prof-usman-default",
+                name: "Usman's API",
+                apiKey: "",
+                enabled: true,
+                modelCascade: ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"],
+                backoffConfig: { ...DEFAULT_BACKOFF_CONFIG },
+              },
+            ];
           }
         }
         return merged;

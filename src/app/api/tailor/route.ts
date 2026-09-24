@@ -13,25 +13,80 @@ export async function POST(req: NextRequest) {
       masterContext,
       topN = 5,
       apiKey: userApiKey,
+      apiProfiles: incomingProfiles,
       modelName = "gemini-3.8-flash",
       screeningQuestions,
       mode = "all", // "all" | "resume_only"
     } = body;
 
-    const rawKeysInput =
-      userApiKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      "";
+    // Resolve active API profiles pool
+    let profilesToUse: Array<{
+      id: string;
+      name: string;
+      apiKey: string;
+      enabled: boolean;
+      modelCascade: string[];
+      backoffConfig?: {
+        maxRetries: number;
+        initialDelayMs: number;
+        maxDelayMs: number;
+        timeoutMs: number;
+      };
+    }> = [];
 
-    const apiKeys: string[] = Array.from(
-      new Set<string>(
-        rawKeysInput
-          .split(/[\n,;\s]+/)
-          .map((k: string) => k.trim())
-          .filter((k: string) => k.length > 5)
-      )
-    );
+    if (Array.isArray(incomingProfiles) && incomingProfiles.length > 0) {
+      profilesToUse = incomingProfiles
+        .filter((p: any) => p && p.enabled !== false && typeof p.apiKey === "string" && p.apiKey.trim().length > 5)
+        .map((p: any) => ({
+          id: p.id || `prof-${Math.random().toString(36).substring(2, 6)}`,
+          name: p.name || "Configured API",
+          apiKey: p.apiKey.trim(),
+          enabled: true,
+          modelCascade:
+            Array.isArray(p.modelCascade) && p.modelCascade.length > 0
+              ? p.modelCascade
+              : ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"],
+          backoffConfig: p.backoffConfig || {
+            maxRetries: 2,
+            initialDelayMs: 1500,
+            maxDelayMs: 8000,
+            timeoutMs: 65000,
+          },
+        }));
+    }
+
+    if (profilesToUse.length === 0) {
+      const rawKeysInput =
+        userApiKey ||
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        "";
+
+      const apiKeys: string[] = Array.from(
+        new Set<string>(
+          rawKeysInput
+            .split(/[\n,;\s]+/)
+            .map((k: string) => k.trim())
+            .filter((k: string) => k.length > 5)
+        )
+      );
+
+      profilesToUse = apiKeys.map((k, idx) => ({
+        id: `prof-legacy-${idx}`,
+        name: idx === 0 ? "Usman's API" : `Backup API #${idx + 1}`,
+        apiKey: k,
+        enabled: true,
+        modelCascade: idx === 0
+          ? ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"]
+          : ["gemini-3.6-flash", "gemini-3.5-flash"],
+        backoffConfig: {
+          maxRetries: 2,
+          initialDelayMs: 1500,
+          maxDelayMs: 8000,
+          timeoutMs: 65000,
+        },
+      }));
+    }
 
     const isResumeOnly = mode === "resume_only";
 
@@ -376,21 +431,11 @@ ${JSON.stringify(masterContext || {})}
       };
     };
 
-    if (apiKeys.length > 0) {
+    if (profilesToUse.length > 0) {
       const primaryModel = modelName || "gemini-3.8-flash";
-      // Priority chain: start with user's chosen model, then fall back to high-availability variants if 503/429
-      const candidateModels = Array.from(
-        new Set([
-          primaryModel,
-          "gemini-3.8-flash",
-          "gemini-3.7-flash",
-          "gemini-3.6-flash",
-          "gemini-3.5-flash",
-        ])
-      );
-
       let parsedData: any = null;
       let actualModelUsed: string | null = null;
+      let actualProfileUsed: string | null = null;
       let fallbackNotice: string | null = null;
       const startTime = Date.now();
 
@@ -441,38 +486,46 @@ ${JSON.stringify(masterContext || {})}
           };
 
           try {
-            keyLoop: for (let kIdx = 0; kIdx < apiKeys.length; kIdx++) {
-              const currentKey = apiKeys[kIdx];
+            keyLoop: for (let pIdx = 0; pIdx < profilesToUse.length; pIdx++) {
+              const profile = profilesToUse[pIdx];
               const maskedKey =
-                currentKey.length > 10
-                  ? `${currentKey.slice(0, 4)}...${currentKey.slice(-4)}`
-                  : `Key #${kIdx + 1}`;
+                profile.apiKey.length > 10
+                  ? `${profile.apiKey.slice(0, 4)}...${profile.apiKey.slice(-4)}`
+                  : `Key #${pIdx + 1}`;
 
-              if (apiKeys.length > 1) {
-                sendStatus(`🔑 Activating API Key ${kIdx + 1} of ${apiKeys.length} (${maskedKey})...`);
-              }
+              const backoff = profile.backoffConfig || {
+                maxRetries: 2,
+                initialDelayMs: 1500,
+                maxDelayMs: 8000,
+                timeoutMs: 65000,
+              };
 
-              const genAI = new GoogleGenerativeAI(currentKey);
+              const cascade =
+                profile.modelCascade && profile.modelCascade.length > 0
+                  ? profile.modelCascade
+                  : [primaryModel, "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"];
 
-              modelLoop: for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
-                const currentModel = candidateModels[mIdx];
+              sendStatus(`🔑 [Profile ${pIdx + 1}/${profilesToUse.length}] Activating "${profile.name}" (${maskedKey})`);
+              sendStatus(`📋 Pipeline Cascade: ${cascade.join(" → ")}`);
+
+              const genAI = new GoogleGenerativeAI(profile.apiKey);
+
+              modelLoop: for (let mIdx = 0; mIdx < cascade.length; mIdx++) {
+                const currentModel = cascade[mIdx];
                 if (req.signal.aborted) {
                   sendStatus(`🛑 Request cancelled by client.`);
                   break keyLoop;
                 }
 
-                if (mIdx > 0) {
-                  sendStatus(`⚡ Cascading to fallback model: ${currentModel}...`);
-                } else {
-                  sendStatus(`⚡ Connecting to model: ${currentModel}...`);
-                }
+                sendStatus(`⚡ [${profile.name}] Stage ${mIdx + 1}/${cascade.length}: Connecting to ${currentModel}...`);
 
-                const maxRetries = 2; // Up to 2 retries per model for transient errors
+                const maxRetries = backoff.maxRetries ?? 2;
                 for (let attempt = 0; attempt <= maxRetries; attempt++) {
                   if (req.signal.aborted) break keyLoop;
 
+                  const attemptStart = Date.now();
                   try {
-                    console.log(`[AI Tailor] [Key ${kIdx + 1}/${apiKeys.length}] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
+                    console.log(`[AI Tailor] [${profile.name}] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
                     const model = genAI.getGenerativeModel({
                       model: currentModel,
                       generationConfig: {
@@ -480,9 +533,9 @@ ${JSON.stringify(masterContext || {})}
                       },
                     });
 
-                    // 75 second timeout per model attempt to allow deep reasoning & screening answers
+                    const timeoutMs = backoff.timeoutMs || 65000;
                     const timeoutPromise = new Promise((_, reject) =>
-                      setTimeout(() => reject(new Error(`Timeout after 75s on ${currentModel}`)), 75000)
+                      setTimeout(() => reject(new Error(`Timeout after ${(timeoutMs / 1000).toFixed(0)}s on ${currentModel}`)), timeoutMs)
                     );
 
                     const generatePromise = model.generateContent([
@@ -499,16 +552,18 @@ ${JSON.stringify(masterContext || {})}
 
                     parsedData = JSON.parse(cleaned);
                     actualModelUsed = currentModel;
+                    actualProfileUsed = profile.name;
 
-                    if (currentModel !== primaryModel) {
-                      fallbackNotice = `Note: ${primaryModel} was at high capacity (503). Live response generated seamlessly via ${currentModel}.`;
+                    const attemptDuration = ((Date.now() - attemptStart) / 1000).toFixed(1);
+                    if (currentModel !== cascade[0]) {
+                      fallbackNotice = `Note: Primary model was at high capacity (503). Tailored live via ${currentModel} using "${profile.name}".`;
                       console.log(`[AI Tailor] ${fallbackNotice}`);
-                      sendStatus(`ℹ️ ${fallbackNotice}`);
                     }
-                    sendStatus(`✨ Received response from ${currentModel} using Key ${kIdx + 1}. Formatting tailored output...`);
+                    sendStatus(`✨ [${profile.name}] Success! Received complete response from ${currentModel} in ${attemptDuration}s.`);
                     break keyLoop; // Successfully generated with live AI!
                   } catch (modelErr: any) {
-                    console.warn(`[AI Tailor] Key ${kIdx + 1}, Model ${currentModel} (attempt ${attempt + 1}) error:`, modelErr.message);
+                    const attemptDuration = ((Date.now() - attemptStart) / 1000).toFixed(1);
+                    console.warn(`[AI Tailor] [${profile.name}] ${currentModel} attempt ${attempt + 1} failed after ${attemptDuration}s:`, modelErr.message);
 
                     if (req.signal.aborted) break keyLoop;
 
@@ -517,27 +572,32 @@ ${JSON.stringify(masterContext || {})}
                       (modelErr.message || "").toLowerCase().includes("resource_exhausted") ||
                       (modelErr.message || "").toLowerCase().includes("quota");
 
-                    if (isQuotaOrRateLimit && kIdx < apiKeys.length - 1) {
-                      sendStatus(`⚠️ Key ${kIdx + 1} reached quota/rate limits (429). Instantly cycling to backup Key ${kIdx + 2}...`);
-                      break modelLoop; // Skip rest of models for this key, cycle to next key
+                    if (isQuotaOrRateLimit) {
+                      sendStatus(`⚠️ [${profile.name}] 429 Rate Limit / Quota Exceeded on ${currentModel} (after ${attemptDuration}s).`);
+                      if (pIdx < profilesToUse.length - 1) {
+                        sendStatus(`🔄 Cycling immediately from "${profile.name}" to next Profile "${profilesToUse[pIdx + 1].name}"...`);
+                        break modelLoop; // Skip rest of models for this key, cycle to next profile!
+                      }
                     }
 
                     if (isClientError(modelErr)) {
-                      if (kIdx < apiKeys.length - 1) {
-                        sendStatus(`⚠️ Key ${kIdx + 1} error (${modelErr.message}). Cycling to backup Key ${kIdx + 2}...`);
+                      sendStatus(`❌ [${profile.name}] API Key or Auth error on ${currentModel}: ${modelErr.message}`);
+                      if (pIdx < profilesToUse.length - 1) {
+                        sendStatus(`🔄 Cycling to next Profile "${profilesToUse[pIdx + 1].name}"...`);
                         break modelLoop;
                       } else {
-                        sendStatus(`❌ API Key Error on ${currentModel}: ${modelErr.message}`);
                         break modelLoop;
                       }
                     }
 
                     if (attempt < maxRetries && isTransientError(modelErr)) {
-                      const delay = Math.min(6000, 1000 * Math.pow(2, attempt) + Math.floor(Math.random() * 500));
-                      sendStatus(`⏳ ${currentModel} high demand / 503. Exponential backoff retry in ${(delay / 1000).toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})...`);
+                      const baseDelay = backoff.initialDelayMs || 1500;
+                      const maxDelay = backoff.maxDelayMs || 8000;
+                      const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt) + Math.floor(Math.random() * 400));
+                      sendStatus(`⏳ [${profile.name}] 503 Server Overloaded on ${currentModel}. Exponential backoff waiting ${(delay / 1000).toFixed(1)}s (Retry ${attempt + 1}/${maxRetries})...`);
                       await new Promise((r) => setTimeout(r, delay));
                     } else {
-                      sendStatus(`⚠️ ${currentModel} attempt failed: ${modelErr.message}`);
+                      sendStatus(`⚠️ [${profile.name}] ${currentModel} attempt ${attempt + 1} failed (${attemptDuration}s): ${modelErr.message}`);
                       break; // Move to next candidate model in cascade
                     }
                   }
@@ -545,8 +605,8 @@ ${JSON.stringify(masterContext || {})}
               }
 
               if (parsedData) break keyLoop;
-              if (kIdx < apiKeys.length - 1) {
-                sendStatus(`🔄 Key ${kIdx + 1} (${maskedKey}) exhausted across models. Cycling to backup Key ${kIdx + 2}...`);
+              if (pIdx < profilesToUse.length - 1) {
+                sendStatus(`⚠️ "${profile.name}" exhausted its configured cascade. Failing over to [Profile ${pIdx + 2}/${profilesToUse.length}] "${profilesToUse[pIdx + 1].name}"...`);
               }
             }
 
@@ -659,6 +719,7 @@ ${JSON.stringify(masterContext || {})}
                     data: parsedData,
                     modelRequested: primaryModel,
                     modelUsed: actualModelUsed,
+                    profileUsed: actualProfileUsed,
                     fallbackNotice,
                     isRealAi: true,
                     durationMs: Date.now() - startTime,
@@ -669,8 +730,8 @@ ${JSON.stringify(masterContext || {})}
               return;
             }
 
-            sendStatus(`⚠️ All Gemini models unavailable or timed out. Falling back to rulebook heuristics...`);
-            console.warn("[AI Tailor] All Gemini models were unavailable or timed out. Falling back to rulebook heuristic.");
+            sendStatus(`⚠️ All configured API profiles & cascades exhausted. Falling back to gold-standard rulebook heuristics...`);
+            console.warn("[AI Tailor] All configured profiles and models were exhausted. Falling back to rulebook heuristic.");
           } catch (streamErr: any) {
             console.error("[AI Tailor] Stream error:", streamErr);
           }
