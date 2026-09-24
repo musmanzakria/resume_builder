@@ -320,7 +320,7 @@ export const ApiProfilesManager: React.FC = () => {
                   {/* API Key Input */}
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-slate-600 flex items-center justify-between">
-                      <span>API Secret Key</span>
+                      <span>Gemini API Key (AIzaSy...)</span>
                       <button
                         type="button"
                         onClick={() => toggleKeyVisibility(prof.id)}
@@ -660,7 +660,7 @@ export const ApiProfilesManager: React.FC = () => {
 
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">
-                  Gemini API Secret Key
+                  Gemini API Key (AIzaSy...)
                 </label>
                 <input
                   type="password"
