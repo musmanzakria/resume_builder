@@ -129,12 +129,12 @@ export const CoverLetterEditor: React.FC = () => {
     fallbackNotice?: string | null;
   } | null>(null);
 
-  const refineLogRef = React.useRef<HTMLDivElement | null>(null);
+  const refineContainerRef = React.useRef<HTMLDivElement | null>(null);
   const abortControllerRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
-    if (refineLogRef.current) {
-      refineLogRef.current.scrollIntoView({ behavior: "smooth" });
+    if (refineContainerRef.current) {
+      refineContainerRef.current.scrollTop = refineContainerRef.current.scrollHeight;
     }
   }, [refineLogs]);
 
@@ -426,7 +426,10 @@ export const CoverLetterEditor: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-44 overflow-y-auto space-y-1.5 leading-relaxed">
+                <div
+                  ref={refineContainerRef}
+                  className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-44 overflow-y-auto space-y-1.5 leading-relaxed"
+                >
                   {refineLogs.map((log, index) => (
                     <div key={index} className="flex items-start gap-1.5">
                       <span>{log}</span>
@@ -438,7 +441,6 @@ export const CoverLetterEditor: React.FC = () => {
                       <span className="inline-block w-1.5 h-3 bg-emerald-400 ml-1" />
                     </div>
                   )}
-                  <div ref={refineLogRef} />
                 </div>
               </div>
             )}

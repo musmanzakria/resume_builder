@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 import { initialMasterContext } from "@/lib/initialData";
+import { APP_VERSION, RELEASE_DATE } from "@/lib/version";
 
 export const MasterSettingsView: React.FC = () => {
   const { 
@@ -1351,38 +1352,53 @@ export const MasterSettingsView: React.FC = () => {
 
           <div className="max-w-xl space-y-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Gemini API Key
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="password"
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700 block">
+                  Gemini API Key(s)
+                </label>
+                {(() => {
+                  const detectedCount = apiKeyVal
+                    .split(/[\n,;\s]+/)
+                    .map((k) => k.trim())
+                    .filter((k) => k.length > 5).length;
+                  return detectedCount > 0 ? (
+                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      {detectedCount} {detectedCount === 1 ? "Key Configured" : "Keys in Pool"}
+                    </span>
+                  ) : null;
+                })()}
+              </div>
+              <div className="space-y-2">
+                <textarea
                   value={apiKeyVal}
                   onChange={(e) => setApiKeyVal(e.target.value)}
-                  placeholder="AQ.Ab8RN6K..."
-                  className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 font-mono"
+                  rows={2}
+                  placeholder="Paste 1 or more Gemini API keys (separated by newline or comma) to automatically cycle if rate-limited..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed"
                 />
-                <button
-                  type="button"
-                  onClick={handleSaveApiKey}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-                >
-                  {apiKeySaved ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Saved!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3.5 h-3.5" />
-                      <span>Save Key</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] text-slate-500">
+                    Stored securely in local storage. Cycles to backup keys automatically if 429/quota limits are reached.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSaveApiKey}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors shrink-0"
+                  >
+                    {apiKeySaved ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Saved!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save Key Pool</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Stored securely in your browser's persistent state.
-              </p>
             </div>
 
             <div>
@@ -1402,6 +1418,13 @@ export const MasterSettingsView: React.FC = () => {
                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                 <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
               </select>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+              <span>Appliant Build Version:</span>
+              <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                v{APP_VERSION} • {RELEASE_DATE}
+              </span>
             </div>
           </div>
         </div>

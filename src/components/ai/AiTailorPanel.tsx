@@ -71,12 +71,12 @@ export const AiTailorPanel: React.FC = () => {
   // Live Console State
   const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
   const [showConsole, setShowConsole] = useState(false);
-  const consoleBottomRef = useRef<HTMLDivElement | null>(null);
+  const consoleContainerRef = useRef<HTMLDivElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (consoleBottomRef.current) {
-      consoleBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    if (consoleContainerRef.current) {
+      consoleContainerRef.current.scrollTop = consoleContainerRef.current.scrollHeight;
     }
   }, [consoleLogs]);
 
@@ -358,36 +358,51 @@ export const AiTailorPanel: React.FC = () => {
 
           {/* API Key Input & Persistent Save */}
           <div className="space-y-1 pt-1">
-            <label className="font-semibold text-slate-700 block">Gemini API Key</label>
-            <div className="flex gap-2">
-              <input
-                type="password"
+            <div className="flex items-center justify-between">
+              <label className="font-semibold text-slate-700 block">Gemini API Key(s)</label>
+              {(() => {
+                const detectedCount = apiKeyInput
+                  .split(/[\n,;\s]+/)
+                  .map((k) => k.trim())
+                  .filter((k) => k.length > 5).length;
+                return detectedCount > 0 ? (
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {detectedCount} {detectedCount === 1 ? "Key Configured" : "Keys in Failover Pool"}
+                  </span>
+                ) : null;
+              })()}
+            </div>
+            <div className="space-y-2">
+              <textarea
                 value={apiKeyInput}
                 onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="AQ.Ab8RN6K..."
-                className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 font-mono text-xs"
+                rows={2}
+                placeholder="Paste 1 or more Gemini API keys (separated by newline or comma) to automatically cycle if rate-limited..."
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500 font-mono text-xs leading-relaxed"
               />
-              <button
-                type="button"
-                onClick={handleSaveApiKey}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors shrink-0"
-              >
-                {apiKeySaved ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-white" />
-                    <span>Saved</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save Key</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] text-slate-500">
+                  Multiple keys will automatically failover if one hits quota/rate limits (429/503).
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSaveApiKey}
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors shrink-0"
+                >
+                  {apiKeySaved ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-white" />
+                      <span>Saved</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save Key Pool</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-            <p className="text-[10px] text-slate-500 pt-0.5">
-              Key is securely saved to your browser local storage.
-            </p>
           </div>
         </div>
       )}
@@ -518,7 +533,10 @@ export const AiTailorPanel: React.FC = () => {
             </button>
           </div>
 
-          <div className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-48 overflow-y-auto space-y-1.5 leading-relaxed">
+          <div
+            ref={consoleContainerRef}
+            className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-48 overflow-y-auto space-y-1.5 leading-relaxed"
+          >
             {consoleLogs.map((log, index) => (
               <div key={index} className="flex items-start gap-1.5">
                 <span>{log}</span>
@@ -530,7 +548,6 @@ export const AiTailorPanel: React.FC = () => {
                 <span className="inline-block w-1.5 h-3 bg-emerald-400 ml-1" />
               </div>
             )}
-            <div ref={consoleBottomRef} />
           </div>
         </div>
       )}

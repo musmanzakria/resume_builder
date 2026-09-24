@@ -27,6 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { exportResumeToPdf, exportCoverLetterToPdf } from "@/lib/pdfExport";
+import { APP_VERSION, RELEASE_DATE } from "@/lib/version";
 
 export const Header: React.FC = () => {
   const {
@@ -65,14 +66,14 @@ export const Header: React.FC = () => {
 
   const handleDownloadPdf = async () => {
     setIsExporting(true);
+    const companyClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
     if (activeTab === "cover-letter") {
-      const companyClean = (targetCompany || "Company").replace(/[^a-zA-Z0-9_-]/g, "");
       const filename = structuredCoverLetter?.documentTitle 
         ? (structuredCoverLetter.documentTitle.endsWith(".pdf") ? structuredCoverLetter.documentTitle : `${structuredCoverLetter.documentTitle}.pdf`)
         : `CoverLetter_UsmanZakria_${companyClean}.pdf`;
       await exportCoverLetterToPdf(filename);
     } else {
-      const filename = `${resume.personal.fullName.replace(/\s+/g, "_")}_Resume_${targetCompany || "Master"}.pdf`;
+      const filename = `Resume_UsmanZakria_${companyClean || "Master"}.pdf`;
       await exportResumeToPdf(filename);
     }
     setIsExporting(false);
@@ -92,6 +93,12 @@ export const Header: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-bold text-slate-900 text-sm tracking-tight">Appliant</h1>
+            <span
+              className="text-[10px] font-mono font-semibold px-1.5 py-0.5 text-indigo-700 bg-indigo-50 border border-indigo-200/80 rounded shadow-2xs"
+              title={`Appliant Release v${APP_VERSION} (${RELEASE_DATE})`}
+            >
+              v{APP_VERSION}
+            </span>
             <span
               className={`hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${
                 cloudSyncStatus === "saving"

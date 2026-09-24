@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useResumeStore } from "@/lib/store";
-import { History, ArrowRight, Building2, Calendar, FileText, Sparkles, Trash2, Check } from "lucide-react";
+import { History, ArrowRight, Building2, Calendar, Clock, FileText, Sparkles, Trash2, Check } from "lucide-react";
 
 export const ApplicationHistory: React.FC = () => {
   const { savedApplications, loadApplication, deleteApplication, setActiveTab } = useResumeStore();
@@ -66,9 +66,15 @@ export const ApplicationHistory: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
-                      {new Date(app.createdAt).toLocaleDateString()}
+                    <span
+                      className="text-[10px] font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200 flex items-center gap-1.5"
+                      title={new Date(app.createdAt).toLocaleString()}
+                    >
+                      <Calendar className="w-3 h-3 text-indigo-500 shrink-0" />
+                      <span>{new Date(app.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
+                      <span className="text-slate-300">•</span>
+                      <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span>{new Date(app.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                     </span>
 
                     {/* Delete Snapshot Button */}

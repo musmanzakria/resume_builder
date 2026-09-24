@@ -3,7 +3,7 @@
  * Triggers native browser print formatted with @page { size: A4 portrait; margin: 0; }
  * This guarantees 100% selectable text, crisp vector fonts, and perfect ATS parser compatibility.
  */
-export async function exportResumeToPdf(filename = "Usman_Zakria_Resume.pdf") {
+export async function exportResumeToPdf(filename = "Resume_UsmanZakria.pdf") {
   const originalTitle = document.title;
   try {
     const cleanTitle = filename.replace(/\.pdf$/i, "");

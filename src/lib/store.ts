@@ -1318,14 +1318,17 @@ export const useResumeStore = create<ResumeStoreState>()(
       saveCurrentApplication: (name) => {
         const state = get();
         const id = "app-" + Date.now();
-        const appName = name || `${state.targetCompany || "Company"} - ${state.targetRole || "Position"}`;
+        const now = new Date();
+        const timeFormatted = `${now.toLocaleDateString([], { month: "short", day: "numeric" })} • ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        const appName = name || `${state.targetCompany || "Company"} - ${state.targetRole || "Position"} (${timeFormatted})`;
         const newApp: SavedApplication = {
           id,
+          name: appName,
           company: state.targetCompany || "Unknown Company",
           role: state.targetRole || "Position",
           jobDescription: state.targetJobDescription,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
           resumeData: JSON.parse(JSON.stringify(state.resume)),
           coverLetter: state.activeCoverLetter,
           structuredCoverLetter: state.structuredCoverLetter

@@ -18,11 +18,20 @@ export async function POST(req: NextRequest) {
       mode = "all", // "all" | "resume_only"
     } = body;
 
-    const apiKey =
+    const rawKeysInput =
       userApiKey ||
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
       "";
+
+    const apiKeys: string[] = Array.from(
+      new Set<string>(
+        rawKeysInput
+          .split(/[\n,;\s]+/)
+          .map((k: string) => k.trim())
+          .filter((k: string) => k.length > 5)
+      )
+    );
 
     const isResumeOnly = mode === "resume_only";
 
@@ -367,7 +376,7 @@ ${JSON.stringify(masterContext || {})}
       };
     };
 
-    if (apiKey) {
+    if (apiKeys.length > 0) {
       const primaryModel = modelName || "gemini-3.8-flash";
       // Priority chain: start with user's chosen model, then fall back to high-availability variants if 503/429
       const candidateModels = Array.from(
@@ -380,7 +389,6 @@ ${JSON.stringify(masterContext || {})}
         ])
       );
 
-      const genAI = new GoogleGenerativeAI(apiKey);
       let parsedData: any = null;
       let actualModelUsed: string | null = null;
       let fallbackNotice: string | null = null;
@@ -433,79 +441,112 @@ ${JSON.stringify(masterContext || {})}
           };
 
           try {
-            modelLoop: for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
-              const currentModel = candidateModels[mIdx];
-              if (req.signal.aborted) {
-                sendStatus(`🛑 Request cancelled by client.`);
-                break;
+            keyLoop: for (let kIdx = 0; kIdx < apiKeys.length; kIdx++) {
+              const currentKey = apiKeys[kIdx];
+              const maskedKey =
+                currentKey.length > 10
+                  ? `${currentKey.slice(0, 4)}...${currentKey.slice(-4)}`
+                  : `Key #${kIdx + 1}`;
+
+              if (apiKeys.length > 1) {
+                sendStatus(`🔑 Activating API Key ${kIdx + 1} of ${apiKeys.length} (${maskedKey})...`);
               }
 
-              if (mIdx > 0) {
-                sendStatus(`⚡ Cascading to fallback model: ${currentModel}...`);
-              } else {
-                sendStatus(`⚡ Connecting to primary model: ${currentModel}...`);
-              }
+              const genAI = new GoogleGenerativeAI(currentKey);
 
-              const maxRetries = 2; // Up to 2 retries per model for transient errors
-              for (let attempt = 0; attempt <= maxRetries; attempt++) {
-                if (req.signal.aborted) break modelLoop;
+              modelLoop: for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
+                const currentModel = candidateModels[mIdx];
+                if (req.signal.aborted) {
+                  sendStatus(`🛑 Request cancelled by client.`);
+                  break keyLoop;
+                }
 
-                try {
-                  console.log(`[AI Tailor] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
-                  const model = genAI.getGenerativeModel({
-                    model: currentModel,
-                    generationConfig: {
-                      responseMimeType: "application/json",
-                      // Per Google's official Gemini 3.x guidelines: do not override temperature below default (1.0)
-                    },
-                  });
+                if (mIdx > 0) {
+                  sendStatus(`⚡ Cascading to fallback model: ${currentModel}...`);
+                } else {
+                  sendStatus(`⚡ Connecting to model: ${currentModel}...`);
+                }
 
-                  // 75 second timeout per model attempt to allow deep reasoning & screening answers
-                  const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error(`Timeout after 75s on ${currentModel}`)), 75000)
-                  );
+                const maxRetries = 2; // Up to 2 retries per model for transient errors
+                for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                  if (req.signal.aborted) break keyLoop;
 
-                  const generatePromise = model.generateContent([
-                    { text: systemPrompt },
-                    { text: userPrompt },
-                  ]);
+                  try {
+                    console.log(`[AI Tailor] [Key ${kIdx + 1}/${apiKeys.length}] Attempting model: ${currentModel} (attempt ${attempt + 1}/${maxRetries + 1})...`);
+                    const model = genAI.getGenerativeModel({
+                      model: currentModel,
+                      generationConfig: {
+                        responseMimeType: "application/json",
+                      },
+                    });
 
-                  const result: any = await Promise.race([generatePromise, timeoutPromise]);
-                  const responseText = result.response.text();
-                  const cleaned = responseText
-                    .replace(/```json/g, "")
-                    .replace(/```/g, "")
-                    .trim();
+                    // 75 second timeout per model attempt to allow deep reasoning & screening answers
+                    const timeoutPromise = new Promise((_, reject) =>
+                      setTimeout(() => reject(new Error(`Timeout after 75s on ${currentModel}`)), 75000)
+                    );
 
-                  parsedData = JSON.parse(cleaned);
-                  actualModelUsed = currentModel;
+                    const generatePromise = model.generateContent([
+                      { text: systemPrompt },
+                      { text: userPrompt },
+                    ]);
 
-                  if (currentModel !== primaryModel) {
-                    fallbackNotice = `Note: ${primaryModel} was at high capacity (503). Live response generated seamlessly via ${currentModel}.`;
-                    console.log(`[AI Tailor] ${fallbackNotice}`);
-                    sendStatus(`ℹ️ ${fallbackNotice}`);
-                  }
-                  sendStatus(`✨ Received response from ${currentModel}. Formatting tailored output...`);
-                  break modelLoop; // Successfully generated with live AI!
-                } catch (modelErr: any) {
-                  console.warn(`[AI Tailor] Model ${currentModel} (attempt ${attempt + 1}) error:`, modelErr.message);
+                    const result: any = await Promise.race([generatePromise, timeoutPromise]);
+                    const responseText = result.response.text();
+                    const cleaned = responseText
+                      .replace(/```json/g, "")
+                      .replace(/```/g, "")
+                      .trim();
 
-                  if (req.signal.aborted) break modelLoop;
+                    parsedData = JSON.parse(cleaned);
+                    actualModelUsed = currentModel;
 
-                  if (isClientError(modelErr)) {
-                    sendStatus(`❌ API Key or Client Error on ${currentModel}: ${modelErr.message}`);
-                    break modelLoop; // Do not retry client auth errors
-                  }
+                    if (currentModel !== primaryModel) {
+                      fallbackNotice = `Note: ${primaryModel} was at high capacity (503). Live response generated seamlessly via ${currentModel}.`;
+                      console.log(`[AI Tailor] ${fallbackNotice}`);
+                      sendStatus(`ℹ️ ${fallbackNotice}`);
+                    }
+                    sendStatus(`✨ Received response from ${currentModel} using Key ${kIdx + 1}. Formatting tailored output...`);
+                    break keyLoop; // Successfully generated with live AI!
+                  } catch (modelErr: any) {
+                    console.warn(`[AI Tailor] Key ${kIdx + 1}, Model ${currentModel} (attempt ${attempt + 1}) error:`, modelErr.message);
 
-                  if (attempt < maxRetries && isTransientError(modelErr)) {
-                    const delay = Math.min(6000, 1000 * Math.pow(2, attempt) + Math.floor(Math.random() * 500));
-                    sendStatus(`⏳ ${currentModel} high demand / 503. Exponential backoff retry in ${(delay / 1000).toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})...`);
-                    await new Promise((r) => setTimeout(r, delay));
-                  } else {
-                    sendStatus(`⚠️ ${currentModel} attempt failed: ${modelErr.message}`);
-                    break; // Move to next candidate model in cascade
+                    if (req.signal.aborted) break keyLoop;
+
+                    const isQuotaOrRateLimit =
+                      modelErr.status === 429 ||
+                      (modelErr.message || "").toLowerCase().includes("resource_exhausted") ||
+                      (modelErr.message || "").toLowerCase().includes("quota");
+
+                    if (isQuotaOrRateLimit && kIdx < apiKeys.length - 1) {
+                      sendStatus(`⚠️ Key ${kIdx + 1} reached quota/rate limits (429). Instantly cycling to backup Key ${kIdx + 2}...`);
+                      break modelLoop; // Skip rest of models for this key, cycle to next key
+                    }
+
+                    if (isClientError(modelErr)) {
+                      if (kIdx < apiKeys.length - 1) {
+                        sendStatus(`⚠️ Key ${kIdx + 1} error (${modelErr.message}). Cycling to backup Key ${kIdx + 2}...`);
+                        break modelLoop;
+                      } else {
+                        sendStatus(`❌ API Key Error on ${currentModel}: ${modelErr.message}`);
+                        break modelLoop;
+                      }
+                    }
+
+                    if (attempt < maxRetries && isTransientError(modelErr)) {
+                      const delay = Math.min(6000, 1000 * Math.pow(2, attempt) + Math.floor(Math.random() * 500));
+                      sendStatus(`⏳ ${currentModel} high demand / 503. Exponential backoff retry in ${(delay / 1000).toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})...`);
+                      await new Promise((r) => setTimeout(r, delay));
+                    } else {
+                      sendStatus(`⚠️ ${currentModel} attempt failed: ${modelErr.message}`);
+                      break; // Move to next candidate model in cascade
+                    }
                   }
                 }
+              }
+
+              if (parsedData) break keyLoop;
+              if (kIdx < apiKeys.length - 1) {
+                sendStatus(`🔄 Key ${kIdx + 1} (${maskedKey}) exhausted across models. Cycling to backup Key ${kIdx + 2}...`);
               }
             }
 
