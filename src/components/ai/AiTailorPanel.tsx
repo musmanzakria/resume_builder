@@ -22,6 +22,7 @@ import {
   Square,
 } from "lucide-react";
 import { NumberStepper } from "@/components/common/NumberStepper";
+import { AiExecutionTerminal } from "@/components/common/AiExecutionTerminal";
 
 export const AiTailorPanel: React.FC = () => {
   const {
@@ -542,43 +543,20 @@ export const AiTailorPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Live AI Execution Console */}
-      {showConsole && (
-        <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg animate-in fade-in">
-          <div className="bg-slate-900/90 px-3.5 py-2 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-mono font-semibold text-slate-300">
-              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Live AI Execution Console</span>
-              {isLoading && (
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              )}
-            </div>
-            <button
-              onClick={() => setShowConsole(!showConsole)}
-              className="text-slate-400 hover:text-slate-200"
-            >
-              <ChevronUp className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div
-            ref={consoleContainerRef}
-            className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-48 overflow-y-auto space-y-1.5 leading-relaxed"
-          >
-            {consoleLogs.map((log, index) => (
-              <div key={index} className="flex items-start gap-1.5">
-                <span>{log}</span>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex items-center gap-1 text-slate-400 animate-pulse">
-                <span>[Processing step...]</span>
-                <span className="inline-block w-1.5 h-3 bg-emerald-400 ml-1" />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Live AI Execution Console (Persistent Status Bar when minimized, formatted & exportable) */}
+      <AiExecutionTerminal
+        logs={consoleLogs}
+        isLoading={isLoading}
+        isOpen={showConsole}
+        onToggleOpen={() => setShowConsole(!showConsole)}
+        onClearLogs={() => setConsoleLogs([])}
+        title="Live AI Tailoring Pipeline"
+        contextInfo={{
+          company,
+          role,
+          mode: loadingMode === "resume_only" ? "Resume Only" : "Resume + Cover Letter",
+        }}
+      />
 
       {/* Target Company & Role Inputs */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-xs">

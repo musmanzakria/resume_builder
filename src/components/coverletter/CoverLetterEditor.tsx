@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { TipTapInput } from "@/components/common/TipTapInput";
 import { exportCoverLetterToPdf } from "@/lib/pdfExport";
+import { AiExecutionTerminal } from "@/components/common/AiExecutionTerminal";
 
 export const CoverLetterEditor: React.FC = () => {
   const {
@@ -411,44 +412,20 @@ export const CoverLetterEditor: React.FC = () => {
               </div>
             )}
 
-            {/* Live AI Execution Console Drawer */}
-            {showRefineLogs && (
-              <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg animate-in fade-in">
-                <div className="bg-slate-900/90 px-3.5 py-2 border-b border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-mono font-semibold text-slate-300">
-                    <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Live AI Refinement Console</span>
-                    {isRefining && (
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowRefineLogs(!showRefineLogs)}
-                    className="text-slate-400 hover:text-slate-200 text-[11px] font-mono"
-                  >
-                    Close
-                  </button>
-                </div>
-
-                <div
-                  ref={refineContainerRef}
-                  className="p-3.5 font-mono text-[11px] text-emerald-400/90 max-h-44 overflow-y-auto space-y-1.5 leading-relaxed"
-                >
-                  {refineLogs.map((log, index) => (
-                    <div key={index} className="flex items-start gap-1.5">
-                      <span>{log}</span>
-                    </div>
-                  ))}
-                  {isRefining && (
-                    <div className="flex items-center gap-1 text-slate-400 animate-pulse">
-                      <span>[Executing refinement step...]</span>
-                      <span className="inline-block w-1.5 h-3 bg-emerald-400 ml-1" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {/* Live AI Execution Console (Persistent status bar when minimized & exportable) */}
+            <AiExecutionTerminal
+              logs={refineLogs}
+              isLoading={isRefining}
+              isOpen={showRefineLogs}
+              onToggleOpen={() => setShowRefineLogs(!showRefineLogs)}
+              onClearLogs={() => setRefineLogs([])}
+              title="Live Cover Letter Refinement Pipeline"
+              contextInfo={{
+                company: targetCompany,
+                role: targetRole,
+                mode: "Cover Letter Refinement",
+              }}
+            />
 
             {refineSuccess && (
               <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs text-emerald-800">
