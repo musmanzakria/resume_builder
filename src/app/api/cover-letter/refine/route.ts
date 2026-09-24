@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
         initialDelayMs: number;
         maxDelayMs: number;
         timeoutMs: number;
+        cascadeDelayMs?: number;
       };
       modelAttempts?: Record<string, number>;
     }> = [];
@@ -345,6 +346,14 @@ ${JSON.stringify(masterContext || {})}
                       }
                       break;
                     }
+                  }
+                }
+
+                if (!parsedData && mIdx < cascade.length - 1 && !req.signal.aborted) {
+                  const cascadeDelay = typeof backoff.cascadeDelayMs === "number" ? backoff.cascadeDelayMs : 2000;
+                  if (cascadeDelay > 0) {
+                    sendStatus(`⏳ [${profile.name}] Pausing ${(cascadeDelay / 1000).toFixed(1)}s before cascading to next model ${cascade[mIdx + 1]} (prevents 429 burst limits)...`);
+                    await new Promise((r) => setTimeout(r, cascadeDelay));
                   }
                 }
               }

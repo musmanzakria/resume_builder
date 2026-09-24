@@ -51,6 +51,8 @@ interface CascadeTimelineMetrics {
     stepFastFailoverSec: number;
     stepWorstCaseSec: number;
   }[];
+  cascadeDelaySec: number;
+  cascadeTransitionTotalSeconds: number;
 }
 
 const calculateTimelineMetrics = (profile: ApiProfile): CascadeTimelineMetrics => {
@@ -58,6 +60,7 @@ const calculateTimelineMetrics = (profile: ApiProfile): CascadeTimelineMetrics =
   const timeoutSec = Math.round((backoff.timeoutMs || 65000) / 1000);
   const initialDelaySec = (backoff.initialDelayMs || 1500) / 1000;
   const maxDelaySec = (backoff.maxDelayMs || 8000) / 1000;
+  const cascadeDelaySec = (backoff.cascadeDelayMs !== undefined ? backoff.cascadeDelayMs : 2000) / 1000;
 
   let totalCalls = 0;
   let totalBackoffDelaySeconds = 0;
@@ -90,20 +93,21 @@ const calculateTimelineMetrics = (profile: ApiProfile): CascadeTimelineMetrics =
     };
   });
 
-  const typicalFastFailoverSeconds = modelSteps.reduce(
-    (acc, s) => acc + s.stepFastFailoverSec,
-    0
-  );
-  const maxWorstCaseTimeoutSeconds = modelSteps.reduce(
-    (acc, s) => acc + s.stepWorstCaseSec,
-    0
-  );
+  const numTransitions = Math.max(0, (profile.modelCascade?.length || 0) - 1);
+  const cascadeTransitionTotalSeconds = numTransitions * cascadeDelaySec;
+
+  const typicalFastFailoverSeconds =
+    modelSteps.reduce((acc, s) => acc + s.stepFastFailoverSec, 0) + cascadeTransitionTotalSeconds;
+  const maxWorstCaseTimeoutSeconds =
+    modelSteps.reduce((acc, s) => acc + s.stepWorstCaseSec, 0) + cascadeTransitionTotalSeconds;
 
   return {
     totalCalls,
-    totalBackoffDelaySeconds,
+    totalBackoffDelaySeconds: totalBackoffDelaySeconds + cascadeTransitionTotalSeconds,
     typicalFastFailoverSeconds,
     maxWorstCaseTimeoutSeconds,
+    cascadeDelaySec,
+    cascadeTransitionTotalSeconds,
     modelSteps,
   };
 };
@@ -808,9 +812,16 @@ export const ApiProfilesManager: React.FC = () => {
                                   ))}
 
                                   {sIdx < metrics.modelSteps.length - 1 ? (
-                                    <span className="text-[10px] text-slate-400 font-bold ml-1">
-                                      ➔ Failover to next
-                                    </span>
+                                    <div className="flex items-center gap-1 ml-1">
+                                      {metrics.cascadeDelaySec > 0 && (
+                                        <span className="px-1.5 py-0.5 rounded bg-sky-50 border border-sky-200 text-sky-700 text-[9px] font-bold">
+                                          ⏳ Pause {metrics.cascadeDelaySec.toFixed(1)}s
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] text-slate-400 font-bold">
+                                        ➔ Next Model
+                                      </span>
+                                    </div>
                                   ) : (
                                     <span className="text-[10px] text-emerald-600 font-bold ml-1">
                                       ➔ Exhausted (failover to next profile)
@@ -838,14 +849,14 @@ export const ApiProfilesManager: React.FC = () => {
                         <Clock className="w-3.5 h-3.5 text-indigo-500" />
                         <span>Advanced Timing & Timeout Parameters</span>
                         <span className="text-[10px] text-slate-400 font-normal">
-                          ({backoff.initialDelayMs / 1000}s initial pause • {backoff.maxDelayMs / 1000}s max pause • {backoff.timeoutMs / 1000}s timeout)
+                          ({backoff.initialDelayMs / 1000}s retry pause • {(backoff.cascadeDelayMs !== undefined ? backoff.cascadeDelayMs : 2000) / 1000}s cascade switch pause • {Math.round((backoff.timeoutMs || 65000) / 1000)}s timeout)
                         </span>
                       </span>
                       {isBackoffExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
 
                     {isBackoffExpanded && (
-                      <div className="mt-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs animate-in fade-in">
+                      <div className="mt-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs animate-in fade-in">
                         <div>
                           <label className="text-[10px] font-semibold text-slate-600 block mb-1">
                             Initial Delay Between Retries (ms)
@@ -892,12 +903,37 @@ export const ApiProfilesManager: React.FC = () => {
 
                         <div>
                           <label className="text-[10px] font-semibold text-slate-600 block mb-1">
+                            Delay Between Models (ms)
+                          </label>
+                          <input
+                            type="number"
+                            step={500}
+                            min={0}
+                            max={15000}
+                            value={backoff.cascadeDelayMs !== undefined ? backoff.cascadeDelayMs : 2000}
+                            onChange={(e) =>
+                              updateApiProfile(prof.id, {
+                                backoffConfig: {
+                                  ...backoff,
+                                  cascadeDelayMs: Math.max(0, parseInt(e.target.value) || 0),
+                                },
+                              })
+                            }
+                            className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-md font-mono text-xs"
+                          />
+                          <p className="text-[9px] text-slate-400 mt-0.5">
+                            Pause before switching models (prevents 429 burst rate limits).
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-semibold text-slate-600 block mb-1">
                             Timeout per Attempt (seconds)
                           </label>
                           <input
                             type="number"
                             min={10}
-                            max={180}
+                            max={300}
                             value={Math.round((backoff.timeoutMs || 65000) / 1000)}
                             onChange={(e) =>
                               updateApiProfile(prof.id, {

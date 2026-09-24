@@ -9,6 +9,7 @@ export interface ApiProfileBackoffConfig {
   initialDelayMs: number; // e.g. 1500 ms (1.5s)
   maxDelayMs: number;     // e.g. 8000 ms (8s)
   timeoutMs: number;      // e.g. 65000 ms (65s)
+  cascadeDelayMs?: number; // e.g. 2000 ms (pause before cascading to next model in sequence)
 }
 
 export interface ApiProfile {
@@ -33,4 +34,5 @@ export const DEFAULT_BACKOFF_CONFIG: ApiProfileBackoffConfig = {
   initialDelayMs: 1500,
   maxDelayMs: 8000,
   timeoutMs: 65000,
+  cascadeDelayMs: 2000,
 };
